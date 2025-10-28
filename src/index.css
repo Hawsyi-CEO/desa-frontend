@@ -1,0 +1,256 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Gojek-inspired Color Palette */
+    --primary: #00AA13;
+    --primary-dark: #008F11;
+    --primary-light: #E8F5E9;
+    --secondary: #0081A0;
+    --accent: #EE2737;
+    --success: #00AA13;
+    --warning: #F8B500;
+    --danger: #EE2737;
+    --info: #0081A0;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  /* Modern Card */
+  .modern-card {
+    @apply bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100;
+  }
+  
+  /* Gradient Button Primary */
+  .btn-gradient-primary {
+    @apply bg-gradient-to-r from-[#00AA13] to-[#00CC16] text-white font-semibold;
+    @apply py-2.5 px-6 rounded-lg hover:shadow-lg hover:scale-105;
+    @apply transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#00AA13] focus:ring-offset-2;
+  }
+  
+  /* Stats Card */
+  .stats-card {
+    @apply modern-card p-6 hover:translate-y-[-4px] transition-transform duration-300;
+  }
+  
+  /* Badge Modern */
+  .badge-modern {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-all duration-200;
+  }
+  
+  /* Input Modern */
+  .input-modern {
+    @apply w-full px-4 py-3 rounded-lg border-2 border-gray-200;
+    @apply focus:border-[#00AA13] focus:ring-4 focus:ring-[#00AA13]/10;
+    @apply transition-all duration-200 outline-none;
+  }
+  
+  /* Table Modern */
+  .table-modern {
+    @apply w-full bg-white rounded-xl overflow-hidden shadow-sm;
+  }
+  
+  .table-modern thead {
+    @apply bg-gradient-to-r from-gray-50 to-gray-100;
+  }
+  
+  .table-modern th {
+    @apply px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider;
+  }
+  
+  .table-modern td {
+    @apply px-6 py-4 text-sm text-gray-900;
+  }
+  
+  .table-modern tbody tr {
+    @apply border-t border-gray-100 hover:bg-gray-50 transition-colors duration-150;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+  }
+  
+  .btn-success {
+    @apply bg-green-600 text-white hover:bg-green-700;
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700;
+  }
+  
+  .input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+  
+  .badge {
+    @apply inline-block px-2 py-1 text-xs font-semibold rounded-full;
+  }
+  
+  .badge-primary {
+    @apply bg-primary-100 text-primary-800;
+  }
+  
+  .badge-success {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  .badge-warning {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+  
+  .badge-danger {
+    @apply bg-red-100 text-red-800;
+  }
+  
+  .badge-gray {
+    @apply bg-gray-100 text-gray-800;
+  }
+}
+
+/* Print Styles */
+@media print {
+  /* Hide everything by default */
+  body > *:not(:has(#print-only-surat)):not(:has(#surat-preview)) {
+    display: none !important;
+  }
+  
+  /* Hide sidebar always */
+  aside {
+    display: none !important;
+  }
+  
+  /* Hide modal background */
+  .fixed.inset-0.bg-gray-600,
+  .no-print,
+  .print\\:hidden {
+    display: none !important;
+  }
+  
+  /* Reset body */
+  body, html {
+    margin: 0;
+    padding: 0;
+    background: white;
+    width: 210mm;
+    height: 297mm;
+  }
+  
+  /* Show print-only surat */
+  #print-only-surat {
+    display: block !important;
+    page-break-after: avoid;
+  }
+  
+  /* Show surat preview from modal */
+  #surat-preview {
+    display: block !important;
+    page-break-after: avoid;
+  }
+  
+  /* Hide preview modal container */
+  body > div:has(#surat-preview) {
+    position: static !important;
+    background: white !important;
+  }
+}
+
+/* Toast & Modal Animations */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-toast-in {
+  animation: toast-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-progress {
+  animation: progress linear;
+}
