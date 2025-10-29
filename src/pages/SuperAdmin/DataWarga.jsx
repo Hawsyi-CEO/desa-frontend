@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Search, Eye, Edit, Users, Home, ChevronLeft, ChevronRight, UserCheck, Filter as FilterIcon, RotateCcw, List, Grid3x3, UserPlus, Trash2, X, Calendar, MapPin, Briefcase, Phone, Mail, Lock, User, Hash, Heart, GraduationCap, Droplet } from 'lucide-react';
+import { Search, Eye, Edit, Users, Home, ChevronLeft, ChevronRight, UserCheck, Filter as FilterIcon, RotateCcw, List, Grid3x3, UserPlus, Trash2, X, Calendar, MapPin, Briefcase, Phone, Mail, Lock, User, Hash, Heart, GraduationCap, Droplet, Download } from 'lucide-react';
 import api from '../../services/api';
 import Layout from '../../components/Layout';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
+import { exportToExcel } from '../../utils/excelExport';
 
 export default function DataWarga() {
   const { toast, hideToast, success, error } = useToast();
@@ -30,6 +31,7 @@ export default function DataWarga() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Debug: Check user and token
   useEffect(() => {
@@ -140,6 +142,43 @@ export default function DataWarga() {
     setViewAll(false);
   };
 
+  const handleExportExcel = async () => {
+    try {
+      setExporting(true);
+      
+      // Get all data with current filters
+      const params = {
+        page: 1,
+        limit: 999999, // Get all data
+        search,
+        rt: filterRt,
+        rw: filterRw,
+        jenis_kelamin: filterJenisKelamin,
+        pekerjaan: filterPekerjaan
+      };
+
+      const response = await api.get('/admin/warga', { params });
+      
+      if (response.data.success && response.data.data.length > 0) {
+        // Create filename based on filters
+        let filename = 'data-warga';
+        if (filterRt) filename += `_RT${filterRt}`;
+        if (filterRw) filename += `_RW${filterRw}`;
+        if (filterJenisKelamin) filename += `_${filterJenisKelamin}`;
+        
+        const exportedFile = exportToExcel(response.data.data, filename);
+        success(`Data berhasil diekspor ke ${exportedFile}`);
+      } else {
+        error('Tidak ada data untuk diekspor');
+      }
+    } catch (err) {
+      console.error('Error exporting:', err);
+      error('Gagal mengekspor data: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -147,31 +186,43 @@ export default function DataWarga() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-slate-700 to-slate-900 rounded-xl flex items-center justify-center shadow-lg">
                 <Users className="w-6 h-6 text-white" />
               </div>
               Data Warga
             </h1>
             <p className="text-gray-600 mt-2 ml-13">Kelola dan pantau data seluruh warga desa</p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-          >
-            <UserPlus className="w-5 h-5" />
-            <span>Tambah Warga</span>
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleExportExcel}
+              disabled={exporting || loading || warga.length === 0}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Export data ke Excel sesuai filter"
+            >
+              <Download className="w-5 h-5" />
+              <span className="hidden sm:inline">{exporting ? 'Mengekspor...' : 'Export Excel'}</span>
+              <span className="sm:hidden">{exporting ? '...' : 'Excel'}</span>
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+            >
+              <UserPlus className="w-5 h-5" />
+              <span>Tambah Warga</span>
+            </button>
+          </div>
         </div>
 
         {/* Statistik Cards - Modern with Shadow */}
         {statistik && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-            <div className="group stats-card bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+            <div className="group stats-card bg-gradient-to-br from-slate-700 to-slate-900 text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100 text-sm font-medium">Total Warga</p>
+                  <p className="text-slate-100 text-sm font-medium">Total Warga</p>
                   <p className="text-3xl md:text-4xl font-bold mt-2">{statistik.total_warga?.toLocaleString() || 0}</p>
-                  <p className="text-blue-100 text-xs mt-1">Terdaftar</p>
+                  <p className="text-slate-100 text-xs mt-1">Terdaftar</p>
                 </div>
                 <div className="w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-2xl flex items-center justify-center group-hover:bg-white/30 transition-all">
                   <Users className="w-7 h-7 md:w-8 md:h-8" />
@@ -179,12 +230,12 @@ export default function DataWarga() {
               </div>
             </div>
 
-            <div className="group stats-card bg-gradient-to-br from-green-500 to-green-600 text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+            <div className="group stats-card bg-gradient-to-br from-blue-800 to-blue-950 text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-100 text-sm font-medium">Laki-laki</p>
+                  <p className="text-blue-100 text-sm font-medium">Laki-laki</p>
                   <p className="text-3xl md:text-4xl font-bold mt-2">{statistik.total_laki?.toLocaleString() || 0}</p>
-                  <p className="text-green-100 text-xs mt-1">Warga</p>
+                  <p className="text-blue-100 text-xs mt-1">Warga</p>
                 </div>
                 <div className="w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-2xl flex items-center justify-center group-hover:bg-white/30 transition-all">
                   <UserCheck className="w-7 h-7 md:w-8 md:h-8" />
@@ -205,12 +256,12 @@ export default function DataWarga() {
               </div>
             </div>
 
-            <div className="group stats-card bg-gradient-to-br from-purple-500 to-purple-600 text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
+            <div className="group stats-card bg-gradient-to-br from-gray-600 to-gray-700 text-white hover:shadow-2xl hover:scale-105 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-100 text-sm font-medium">Total KK</p>
+                  <p className="text-gray-100 text-sm font-medium">Total KK</p>
                   <p className="text-3xl md:text-4xl font-bold mt-2">{statistik.total_kk?.toLocaleString() || 0}</p>
-                  <p className="text-purple-100 text-xs mt-1">Kepala Keluarga</p>
+                  <p className="text-gray-100 text-xs mt-1">Kepala Keluarga</p>
                 </div>
                 <div className="w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-2xl flex items-center justify-center group-hover:bg-white/30 transition-all">
                   <Home className="w-7 h-7 md:w-8 md:h-8" />
@@ -242,7 +293,7 @@ export default function DataWarga() {
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-2 px-6 h-12 rounded-xl font-medium transition-all w-full sm:w-auto ${
                 showFilters 
-                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg' 
+                  ? 'bg-slate-700 text-white hover:bg-slate-800 shadow-lg' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -515,10 +566,10 @@ export default function DataWarga() {
                   {/* Left Side: Info & Actions */}
                   <div className="flex flex-wrap items-center gap-3">
                     {pagination.total > 0 && !viewAll && (
-                      <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">
-                        <List className="w-4 h-4 text-blue-600" />
+                      <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+                        <List className="w-4 h-4 text-slate-700" />
                         <p className="text-sm text-gray-700 whitespace-nowrap">
-                          <span className="font-bold text-blue-600">{(currentPage - 1) * currentLimit + 1}</span> - <span className="font-bold text-blue-600">{Math.min(currentPage * currentLimit, pagination.total)}</span> dari <span className="font-bold text-blue-600">{pagination.total?.toLocaleString()}</span> data
+                          <span className="font-bold text-slate-700">{(currentPage - 1) * currentLimit + 1}</span> - <span className="font-bold text-slate-700">{Math.min(currentPage * currentLimit, pagination.total)}</span> dari <span className="font-bold text-slate-700">{pagination.total?.toLocaleString()}</span> data
                         </p>
                       </div>
                     )}
@@ -538,7 +589,7 @@ export default function DataWarga() {
                       <select
                         value={currentLimit}
                         onChange={(e) => handleLimitChange(Number(e.target.value))}
-                        className="input text-sm py-2 px-4 border-gray-300 bg-white rounded-lg shadow-sm font-medium focus:ring-2 focus:ring-blue-500"
+                        className="input text-sm py-2 px-4 border-gray-300 bg-white rounded-lg shadow-sm font-medium focus:ring-2 focus:ring-slate-500"
                       >
                         <option value="5">5 per halaman</option>
                         <option value="10">10 per halaman</option>
@@ -554,7 +605,7 @@ export default function DataWarga() {
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm ${
                           viewAll 
                             ? 'bg-white text-gray-700 hover:bg-gray-100 border-2 border-gray-300' 
-                            : 'bg-blue-600 text-white hover:bg-blue-700 border-2 border-blue-600'
+                            : 'bg-slate-700 text-white hover:bg-slate-800 border-2 border-slate-700'
                         }`}
                       >
                         {viewAll ? (
@@ -598,8 +649,8 @@ export default function DataWarga() {
                                 onClick={() => handlePageChange(page)}
                                 className={`min-w-[40px] h-10 px-3 rounded-lg text-sm font-bold transition-all ${
                                   currentPage === page
-                                    ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg scale-110 ring-2 ring-blue-300'
-                                    : 'border-2 border-gray-300 hover:bg-blue-50 hover:border-blue-500 text-gray-700'
+                                    ? 'bg-gradient-to-br from-slate-700 to-slate-900 text-white shadow-lg scale-110 ring-2 ring-slate-300'
+                                    : 'border-2 border-gray-300 hover:bg-slate-50 hover:border-slate-700 text-gray-700'
                                 }`}
                               >
                                 {page}
@@ -622,8 +673,8 @@ export default function DataWarga() {
                                   onClick={() => handlePageChange(page)}
                                   className={`min-w-[40px] h-10 px-3 rounded-lg text-sm font-bold transition-all ${
                                     currentPage === page
-                                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg scale-110 ring-2 ring-blue-300'
-                                      : 'border-2 border-gray-300 hover:bg-blue-50 hover:border-blue-500 text-gray-700'
+                                      ? 'bg-gradient-to-br from-slate-700 to-slate-900 text-white shadow-lg scale-110 ring-2 ring-slate-300'
+                                      : 'border-2 border-gray-300 hover:bg-slate-50 hover:border-slate-700 text-gray-700'
                                   }`}
                                 >
                                   {page}
@@ -1111,7 +1162,7 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-2xl z-10">
+        <div className="sticky top-0 bg-gradient-to-r from-slate-700 via-slate-800 to-blue-900 text-white p-6 rounded-t-2xl z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -1119,7 +1170,7 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
               </div>
               <div>
                 <h2 className="text-xl font-bold">Tambah Data Warga</h2>
-                <p className="text-sm text-blue-100 mt-1">Login: NIK sebagai username, password default: password123</p>
+                <p className="text-sm text-slate-100 mt-1">Login: NIK sebagai username, password default: password123</p>
               </div>
             </div>
             <button
@@ -1133,20 +1184,20 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
 
         <form onSubmit={handleSubmit} className="p-6">
           {/* Info Box */}
-          <div className="bg-blue-50 border-l-4 border-blue-600 rounded-lg p-4 mb-6">
+          <div className="bg-slate-50 border-l-4 border-slate-700 rounded-lg p-4 mb-6">
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div className="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                 <span className="text-white text-xs font-bold">ℹ</span>
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-blue-900 mb-1">Informasi Login Warga</h3>
-                <ul className="text-sm text-blue-800 space-y-1">
+                <h3 className="font-semibold text-slate-900 mb-1">Informasi Login Warga</h3>
+                <ul className="text-sm text-slate-800 space-y-1">
                   <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
+                    <span className="w-1.5 h-1.5 bg-slate-700 rounded-full"></span>
                     <strong>Username:</strong> NIK yang didaftarkan
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
+                    <span className="w-1.5 h-1.5 bg-slate-700 rounded-full"></span>
                     <strong>Password Default:</strong> password123 (warga dapat mengubahnya setelah login)
                   </li>
                 </ul>
@@ -1158,7 +1209,7 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
             {/* NIK */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Hash className="w-4 h-4 text-blue-600" />
+                <Hash className="w-4 h-4 text-slate-700" />
                 NIK (Username Login) <span className="text-red-500">*</span>
               </label>
               <input
@@ -1512,7 +1563,7 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {loading ? 'Menyimpan...' : 'Tambah Warga'}
             </button>

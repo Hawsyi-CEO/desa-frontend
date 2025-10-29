@@ -13,11 +13,11 @@ const Users = () => {
   const [filterRole, setFilterRole] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [currentLimit, setCurrentLimit] = useState(10);
+  const [currentLimit, setCurrentLimit] = useState(5); // Changed to 5
   const [viewAll, setViewAll] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 10,
+    limit: 5, // Changed to 5
     total: 0,
     totalPages: 0
   });
@@ -25,6 +25,7 @@ const Users = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [stats, setStats] = useState({
@@ -109,10 +110,10 @@ const Users = () => {
 
   const getRoleBadgeColor = (role) => {
     switch (role) {
-      case 'super_admin': return 'bg-gradient-to-r from-purple-500 to-purple-600 text-white';
-      case 'admin': return 'bg-gradient-to-r from-blue-500 to-blue-600 text-white';
-      case 'verifikator': return 'bg-gradient-to-r from-green-500 to-green-600 text-white';
-      case 'warga': return 'bg-gradient-to-r from-gray-500 to-gray-600 text-white';
+      case 'super_admin': return 'bg-gradient-to-r from-slate-700 to-slate-900 text-white';
+      case 'admin': return 'bg-gradient-to-r from-blue-800 to-blue-950 text-white';
+      case 'verifikator': return 'bg-gradient-to-r from-green-600 to-green-700 text-white';
+      case 'warga': return 'bg-gradient-to-r from-gray-600 to-gray-700 text-white';
       default: return 'bg-gray-200 text-gray-700';
     }
   };
@@ -130,8 +131,8 @@ const Users = () => {
   const getRoleLabel = (role) => {
     switch (role) {
       case 'super_admin': return 'Super Admin';
-      case 'admin': return 'Admin RT/RW';
-      case 'verifikator': return 'Admin RT/RW';
+      case 'admin': return 'Admin Desa';
+      case 'verifikator': return 'Verifikator RT/RW';
       case 'warga': return 'Warga';
       default: return role;
     }
@@ -153,7 +154,7 @@ const Users = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-slate-700 to-blue-900 rounded-xl flex items-center justify-center shadow-lg">
                 <UsersIcon className="w-6 h-6 text-white" />
               </div>
               Manajemen User
@@ -162,7 +163,7 @@ const Users = () => {
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
           >
             <UserPlus className="w-5 h-5" />
             <span>Tambah User</span>
@@ -171,7 +172,7 @@ const Users = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+          <div className="bg-gradient-to-br from-slate-700 to-slate-900 text-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
             <div className="flex items-center gap-2 mb-2">
               <UsersIcon className="w-5 h-5" />
               <p className="text-sm font-medium opacity-90">Total User</p>
@@ -179,7 +180,7 @@ const Users = () => {
             <p className="text-3xl font-bold">{stats.total.toLocaleString()}</p>
           </div>
 
-          <div className="bg-gradient-to-br from-pink-500 to-pink-600 text-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+          <div className="bg-gradient-to-br from-slate-600 to-slate-800 text-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
             <div className="flex items-center gap-2 mb-2">
               <Shield className="w-5 h-5" />
               <p className="text-sm font-medium opacity-90">Super Admin</p>
@@ -187,23 +188,23 @@ const Users = () => {
             <p className="text-3xl font-bold">{stats.super_admin}</p>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+          <div className="bg-gradient-to-br from-blue-800 to-blue-950 text-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
             <div className="flex items-center gap-2 mb-2">
               <UserCog className="w-5 h-5" />
-              <p className="text-sm font-medium opacity-90">Admin RT/RW</p>
+              <p className="text-sm font-medium opacity-90">Admin Desa</p>
             </div>
             <p className="text-3xl font-bold">{stats.admin}</p>
           </div>
 
-          <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+          <div className="bg-gradient-to-br from-green-600 to-green-700 text-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
             <div className="flex items-center gap-2 mb-2">
               <UserCheck className="w-5 h-5" />
-              <p className="text-sm font-medium opacity-90">Admin RT/RW</p>
+              <p className="text-sm font-medium opacity-90">Verifikator RT/RW</p>
             </div>
             <p className="text-3xl font-bold">{stats.verifikator}</p>
           </div>
 
-          <div className="bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+          <div className="bg-gradient-to-br from-gray-600 to-gray-700 text-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
             <div className="flex items-center gap-2 mb-2">
               <User className="w-5 h-5" />
               <p className="text-sm font-medium opacity-90">Warga</p>
@@ -211,7 +212,7 @@ const Users = () => {
             <p className="text-3xl font-bold">{stats.warga.toLocaleString()}</p>
           </div>
 
-          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+          <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 text-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
             <div className="flex items-center gap-2 mb-2">
               <UserCheck className="w-5 h-5" />
               <p className="text-sm font-medium opacity-90">Aktif</p>
@@ -219,7 +220,7 @@ const Users = () => {
             <p className="text-3xl font-bold">{stats.aktif.toLocaleString()}</p>
           </div>
 
-          <div className="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+          <div className="bg-gradient-to-br from-red-600 to-red-700 text-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
             <div className="flex items-center gap-2 mb-2">
               <X className="w-5 h-5" />
               <p className="text-sm font-medium opacity-90">Nonaktif</p>
@@ -239,7 +240,7 @@ const Users = () => {
                 placeholder="Cari nama, NIK, atau email..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-12 pl-12 pr-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                className="w-full h-12 pl-12 pr-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-slate-300 focus:border-slate-700 transition"
               />
             </div>
 
@@ -248,7 +249,7 @@ const Users = () => {
               onClick={() => setShowFilters(!showFilters)}
               className={`inline-flex items-center gap-2 px-6 h-12 rounded-xl font-medium transition-all ${
                 showFilters 
-                  ? 'bg-purple-600 text-white shadow-lg' 
+                  ? 'bg-slate-700 text-white shadow-lg' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -277,12 +278,12 @@ const Users = () => {
                 <select
                   value={filterRole}
                   onChange={(e) => setFilterRole(e.target.value)}
-                  className="w-full h-11 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full h-11 px-4 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-slate-300 focus:border-slate-700"
                 >
                   <option value="">Semua Role</option>
                   <option value="super_admin">Super Admin</option>
-                  <option value="admin">Admin RT/RW</option>
-                  <option value="verifikator">Admin RT/RW (Legacy)</option>
+                  <option value="admin">Admin Desa</option>
+                  <option value="verifikator">Verifikator RT/RW</option>
                   <option value="warga">Warga</option>
                 </select>
               </div>
@@ -293,7 +294,7 @@ const Users = () => {
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full h-11 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full h-11 px-4 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-slate-300 focus:border-slate-700"
                 >
                   <option value="">Semua Status</option>
                   <option value="aktif">Aktif</option>
@@ -381,6 +382,16 @@ const Users = () => {
                             >
                               <Edit className="w-4 h-4" />
                             </button>
+                            <button
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setShowResetPasswordModal(true);
+                              }}
+                              className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-lg transition"
+                              title="Reset Password"
+                            >
+                              <Lock className="w-4 h-4" />
+                            </button>
                             {user.role !== 'super_admin' && (
                               <button
                                 onClick={() => {
@@ -458,6 +469,16 @@ const Users = () => {
                         <Edit className="w-4 h-4" />
                         Edit
                       </button>
+                      <button
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setShowResetPasswordModal(true);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-yellow-600 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition"
+                      >
+                        <Lock className="w-4 h-4" />
+                        Reset
+                      </button>
                       {user.role !== 'super_admin' && (
                         <button
                           onClick={() => {
@@ -521,7 +542,7 @@ const Users = () => {
                   {!viewAll && pagination.total > currentLimit && (
                     <button
                       onClick={handleViewAll}
-                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-lg hover:from-green-600 hover:to-green-700 shadow-md hover:shadow-lg transition-all duration-300"
+                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-800 to-blue-900 text-white text-sm font-medium rounded-lg hover:from-blue-900 hover:to-blue-950 shadow-md hover:shadow-lg transition-all duration-300"
                     >
                       <Grid3x3 className="w-4 h-4" />
                       Lihat Semua
@@ -534,7 +555,7 @@ const Users = () => {
                         setViewAll(false);
                         setCurrentPage(1);
                       }}
-                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-sm font-medium rounded-lg hover:from-purple-600 hover:to-purple-700 shadow-md hover:shadow-lg transition-all duration-300"
+                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-slate-700 to-slate-800 text-white text-sm font-medium rounded-lg hover:from-slate-800 hover:to-slate-900 shadow-md hover:shadow-lg transition-all duration-300"
                     >
                       <List className="w-4 h-4" />
                       Tampilan Normal
@@ -596,8 +617,8 @@ const Users = () => {
                               onClick={() => handlePageChange(page)}
                               className={`min-w-[40px] h-10 px-3 rounded-lg font-semibold transition-all duration-200 ${
                                 isActive
-                                  ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg scale-110 ring-2 ring-purple-300'
-                                  : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600 hover:scale-105'
+                                  ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg scale-110 ring-2 ring-slate-300'
+                                  : 'text-gray-700 hover:bg-slate-50 hover:text-slate-700 hover:scale-105'
                               }`}
                             >
                               {page}
@@ -635,6 +656,72 @@ const Users = () => {
               setShowAddModal(false);
               loadUsers();
               loadStats();
+            }}
+            showToast={success}
+            showError={error}
+          />
+        )}
+
+        {/* Edit User Modal */}
+        {showEditModal && selectedUser && (
+          <EditUserModal
+            user={selectedUser}
+            onClose={() => {
+              setShowEditModal(false);
+              setSelectedUser(null);
+            }}
+            onSuccess={() => {
+              setShowEditModal(false);
+              setSelectedUser(null);
+              loadUsers();
+              loadStats();
+            }}
+            showToast={success}
+            showError={error}
+          />
+        )}
+
+        {/* Delete User Modal */}
+        {showDeleteModal && selectedUser && (
+          <DeleteUserModal
+            user={selectedUser}
+            onClose={() => {
+              setShowDeleteModal(false);
+              setSelectedUser(null);
+            }}
+            onSuccess={() => {
+              setShowDeleteModal(false);
+              setSelectedUser(null);
+              loadUsers();
+              loadStats();
+            }}
+            showToast={success}
+            showError={error}
+          />
+        )}
+
+        {/* Detail User Modal */}
+        {showDetailModal && selectedUser && (
+          <DetailUserModal
+            user={selectedUser}
+            onClose={() => {
+              setShowDetailModal(false);
+              setSelectedUser(null);
+            }}
+          />
+        )}
+
+        {/* Reset Password Modal */}
+        {showResetPasswordModal && selectedUser && (
+          <ResetPasswordModal
+            user={selectedUser}
+            onClose={() => {
+              setShowResetPasswordModal(false);
+              setSelectedUser(null);
+            }}
+            onSuccess={() => {
+              setShowResetPasswordModal(false);
+              setSelectedUser(null);
             }}
             showToast={success}
             showError={error}
@@ -714,7 +801,7 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-purple-700 text-white p-6 rounded-t-2xl z-10">
+        <div className="sticky top-0 bg-gradient-to-r from-slate-700 via-slate-800 to-blue-900 text-white p-6 rounded-t-2xl z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -722,7 +809,7 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
               </div>
               <div>
                 <h2 className="text-xl font-bold">Tambah User Baru</h2>
-                <p className="text-sm text-purple-100 mt-1">Login: NIK sebagai username, password default: password123</p>
+                <p className="text-sm text-slate-200 mt-1">Login: NIK sebagai username, password default: password123</p>
               </div>
             </div>
             <button
@@ -837,8 +924,8 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
                 required
               >
                 <option value="warga">Warga</option>
-                <option value="verifikator">Admin RT/RW</option>
-                <option value="admin">Admin RT/RW</option>
+                <option value="verifikator">Verifikator RT/RW</option>
+                <option value="admin">Admin Desa</option>
                 <option value="super_admin">Super Admin</option>
               </select>
             </div>
@@ -1148,9 +1235,500 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {loading ? 'Menyimpan...' : 'Tambah User'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Edit User Modal Component
+function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    role: user.role || 'warga',
+    status: user.status || 'aktif'
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    setLoading(true);
+    try {
+      await api.put(`/admin/users/${user.id}`, formData);
+      showToast('Role dan status user berhasil diupdate!');
+      onSuccess();
+    } catch (err) {
+      showError(err.response?.data?.message || 'Gagal update user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="bg-gradient-to-r from-slate-700 via-slate-800 to-blue-900 text-white p-6 rounded-t-2xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <Edit className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Edit User</h2>
+                <p className="text-sm text-slate-200 mt-1">Update role & status</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-white/20 rounded-lg transition"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6">
+          {/* User Info Card */}
+          <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-4 mb-6 border border-slate-200">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-slate-600">NIK:</span>
+                <span className="text-sm text-slate-900">{user.nik}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-slate-600">Nama:</span>
+                <span className="text-sm font-semibold text-slate-900">{user.nama}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-slate-600">Email:</span>
+                <span className="text-sm text-slate-900">{user.email}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Info Message */}
+          <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
+            <p className="text-sm text-blue-800">
+              <strong>Info:</strong> Untuk mengedit data lengkap warga (NIK, nama, alamat, dll), gunakan menu <strong>Data Warga</strong>.
+            </p>
+          </div>
+
+          {/* Role Field */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Role <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.role}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
+              disabled={user.role === 'super_admin'}
+            >
+              <option value="warga">Warga</option>
+              <option value="verifikator">Verifikator RT/RW</option>
+              <option value="admin">Admin Desa</option>
+              {user.role === 'super_admin' && <option value="super_admin">Super Admin</option>}
+            </select>
+            {user.role === 'super_admin' && (
+              <p className="text-xs text-red-600 mt-1">Role Super Admin tidak dapat diubah</p>
+            )}
+          </div>
+
+          {/* Status Field */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Status <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
+            >
+              <option value="aktif">Aktif</option>
+              <option value="nonaktif">Nonaktif</option>
+            </select>
+          </div>
+
+          <div className="flex gap-3 pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              disabled={loading || user.role === 'super_admin'}
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              {loading ? 'Menyimpan...' : 'Update'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Delete User Modal Component
+function DeleteUserModal({ user, onClose, onSuccess, showToast, showError }) {
+  const [loading, setLoading] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+
+  const handleDelete = async () => {
+    if (confirmText !== 'HAPUS') {
+      showError('Ketik "HAPUS" untuk konfirmasi!');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await api.delete(`/admin/users/${user.id}`);
+      showToast('User berhasil dihapus!');
+      onSuccess();
+    } catch (err) {
+      showError(err.response?.data?.message || 'Gagal menghapus user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-6 rounded-t-2xl">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">Hapus User</h2>
+              <p className="text-sm text-red-100 mt-1">Tindakan ini tidak dapat dibatalkan</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+            <p className="text-sm text-red-800 font-medium mb-2">
+              ⚠️ Anda akan menghapus user:
+            </p>
+            <div className="bg-white rounded-lg p-3 mt-2">
+              <p className="font-bold text-gray-900">{user.nama}</p>
+              <p className="text-sm text-gray-600">NIK: {user.nik}</p>
+              <p className="text-sm text-gray-600">Email: {user.email}</p>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Ketik <span className="font-bold text-red-600">HAPUS</span> untuk konfirmasi
+            </label>
+            <input
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="Ketik HAPUS"
+              className="input w-full"
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={loading || confirmText !== 'HAPUS'}
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              {loading ? 'Menghapus...' : 'Hapus User'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Detail User Modal Component
+function DetailUserModal({ user, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-gradient-to-r from-slate-700 via-slate-800 to-blue-900 text-white p-6 rounded-t-2xl z-10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <Eye className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Detail User</h2>
+                <p className="text-sm text-slate-200 mt-1">Informasi lengkap user</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-white/20 rounded-lg transition"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">NIK</label>
+              <p className="text-gray-900 font-medium mt-1">{user.nik || '-'}</p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Nama Lengkap</label>
+              <p className="text-gray-900 font-medium mt-1">{user.nama || '-'}</p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Email</label>
+              <p className="text-gray-900 font-medium mt-1">{user.email || '-'}</p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">No. Telepon</label>
+              <p className="text-gray-900 font-medium mt-1">{user.no_telepon || '-'}</p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Role</label>
+              <p className="text-gray-900 font-medium mt-1 capitalize">{user.role?.replace('_', ' ') || '-'}</p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Status</label>
+              <p className="text-gray-900 font-medium mt-1 capitalize">{user.status || '-'}</p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">RT/RW</label>
+              <p className="text-gray-900 font-medium mt-1">{user.rt && user.rw ? `${user.rt}/${user.rw}` : '-'}</p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Tempat Lahir</label>
+              <p className="text-gray-900 font-medium mt-1">{user.tempat_lahir || '-'}</p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Tanggal Lahir</label>
+              <p className="text-gray-900 font-medium mt-1">{user.tanggal_lahir || '-'}</p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Jenis Kelamin</label>
+              <p className="text-gray-900 font-medium mt-1">{user.jenis_kelamin || '-'}</p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Agama</label>
+              <p className="text-gray-900 font-medium mt-1">{user.agama || '-'}</p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Pekerjaan</label>
+              <p className="text-gray-900 font-medium mt-1">{user.pekerjaan || '-'}</p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Pendidikan</label>
+              <p className="text-gray-900 font-medium mt-1">{user.pendidikan || '-'}</p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Status Perkawinan</label>
+              <p className="text-gray-900 font-medium mt-1">{user.status_perkawinan || '-'}</p>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase">Golongan Darah</label>
+              <p className="text-gray-900 font-medium mt-1">{user.golongan_darah || '-'}</p>
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-xs font-semibold text-gray-500 uppercase">Alamat</label>
+              <p className="text-gray-900 font-medium mt-1">{user.alamat || '-'}</p>
+            </div>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <button
+              onClick={onClose}
+              className="w-full px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl font-medium hover:shadow-lg transition"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Reset Password Modal Component
+function ResetPasswordModal({ user, onClose, onSuccess, showToast, showError }) {
+  const [loading, setLoading] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+
+    // Validation
+    if (!newPassword || newPassword.length < 6) {
+      showError('Password minimal 6 karakter');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showError('Password dan konfirmasi password tidak sama');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await api.put(`/admin/users/${user.id}/reset-password`, {
+        newPassword: newPassword
+      });
+      
+      showToast(`Password untuk ${user.nama} berhasil direset!`);
+      onSuccess();
+    } catch (err) {
+      console.error('Error resetting password:', err);
+      showError(err.response?.data?.message || 'Gagal reset password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="bg-gradient-to-r from-slate-700 via-slate-800 to-blue-900 text-white p-6 rounded-t-2xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <Lock className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Reset Password</h2>
+                <p className="text-sm text-slate-200 mt-1">Reset password untuk {user.nama}</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-white/20 rounded-lg transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleResetPassword} className="p-6 space-y-6">
+          {/* User Info */}
+          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-slate-700 to-blue-900 rounded-full flex items-center justify-center text-white font-bold">
+                {user.nama?.charAt(0)?.toUpperCase()}
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900">{user.nama}</p>
+                <p className="text-sm text-gray-600">{user.nik}</p>
+                <p className="text-xs text-gray-500">{user.email}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* New Password */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              <Lock className="w-4 h-4 inline mr-1" />
+              Password Baru <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-4 py-3 pr-12 rounded-xl border-2 border-gray-200 focus:border-slate-700 focus:ring focus:ring-slate-200 focus:ring-opacity-50 transition-all"
+                placeholder="Masukkan password baru"
+                required
+                minLength={6}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Minimal 6 karakter</p>
+          </div>
+
+          {/* Confirm Password */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              <Lock className="w-4 h-4 inline mr-1" />
+              Konfirmasi Password <span className="text-red-500">*</span>
+            </label>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-slate-700 focus:ring focus:ring-slate-200 focus:ring-opacity-50 transition-all"
+              placeholder="Konfirmasi password baru"
+              required
+              minLength={6}
+            />
+            {confirmPassword && newPassword !== confirmPassword && (
+              <p className="text-xs text-red-500 mt-1">Password tidak sama</p>
+            )}
+          </div>
+
+          {/* Warning */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+            <div className="flex gap-3">
+              <svg className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-yellow-800">Perhatian!</p>
+                <p className="text-xs text-yellow-700 mt-1">
+                  Setelah password direset, user harus login menggunakan password baru ini. 
+                  Pastikan untuk memberitahu password baru kepada user yang bersangkutan.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-3 pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              disabled={loading || !newPassword || !confirmPassword || newPassword !== confirmPassword}
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              {loading ? 'Mereset...' : 'Reset Password'}
             </button>
           </div>
         </form>

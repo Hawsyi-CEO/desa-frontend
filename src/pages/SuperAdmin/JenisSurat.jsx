@@ -6,7 +6,7 @@ import ConfirmModal from '../../components/ConfirmModal';
 import { useToast } from '../../hooks/useToast';
 import { useConfirm } from '../../hooks/useConfirm';
 import api from '../../services/api';
-import { FiPlus, FiEdit2, FiTrash2, FiEye, FiFilter, FiX } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiEye, FiFilter, FiX, FiFileText, FiCheckCircle, FiXCircle, FiAlertTriangle } from 'react-icons/fi';
 
 const JenisSurat = () => {
   const navigate = useNavigate();
@@ -74,56 +74,71 @@ const JenisSurat = () => {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Jenis Surat</h1>
-              <p className="text-gray-600 mt-1">Kelola jenis-jenis surat yang tersedia</p>
+        {/* Header dengan gradient modern */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-slate-700 via-slate-800 to-blue-900 rounded-2xl shadow-xl p-8 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold mb-2 flex items-center">
+                  <svg className="w-10 h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Konfigurasi Jenis Surat
+                </h1>
+                <p className="text-slate-200 text-lg">
+                  Kelola dan atur jenis-jenis surat yang tersedia untuk warga
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/admin/jenis-surat/tambah')}
+                className="flex items-center gap-2 px-6 py-3 bg-white text-slate-800 rounded-xl hover:bg-slate-50 transition-all shadow-lg hover:shadow-xl font-bold"
+              >
+                <FiPlus className="w-5 h-5" /> Tambah Baru
+              </button>
             </div>
-            <button
-              onClick={() => navigate('/admin/jenis-surat/tambah')}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-            >
-              <FiPlus /> Tambah Jenis Surat
-            </button>
           </div>
         </div>
 
-        {/* Filter */}
-        <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        {/* Filter dengan design modern */}
+        <div className="mb-6 bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
           <div className="flex items-center gap-4">
-            <FiFilter className="text-gray-500" />
-            <div className="flex gap-2">
+            <div className="flex items-center text-slate-700">
+              <FiFilter className="w-5 h-5 mr-2" />
+              <span className="font-semibold">Filter Status:</span>
+            </div>
+            <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => setFilterStatus('all')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
                   filterStatus === 'all'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow'
                 }`}
               >
-                Semua
+                <FiFileText className="w-4 h-4" />
+                Semua ({jenisSurat.length})
               </button>
               <button
                 onClick={() => setFilterStatus('aktif')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
                   filterStatus === 'aktif'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow'
                 }`}
               >
-                Aktif
+                <FiCheckCircle className="w-4 h-4" />
+                Aktif ({jenisSurat.filter(s => s.status === 'aktif').length})
               </button>
               <button
                 onClick={() => setFilterStatus('nonaktif')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                className={`px-5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
                   filterStatus === 'nonaktif'
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow'
                 }`}
               >
-                Non-Aktif
+                <FiXCircle className="w-4 h-4" />
+                Non-Aktif ({jenisSurat.filter(s => s.status === 'nonaktif').length})
               </button>
             </div>
           </div>
@@ -131,98 +146,130 @@ const JenisSurat = () => {
 
         {/* List */}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-            <p className="mt-4 text-gray-600">Memuat data...</p>
+          <div className="text-center py-16">
+            <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-slate-700"></div>
+            <p className="mt-6 text-gray-600 font-medium text-lg">Memuat data...</p>
           </div>
         ) : filteredData.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-            <p className="text-gray-500">Tidak ada data jenis surat</p>
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-16 text-center">
+            <svg className="w-32 h-32 mx-auto text-gray-300 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="text-gray-500 text-xl font-semibold mb-2">Belum ada jenis surat</p>
+            <p className="text-gray-400 mb-6">Mulai dengan menambahkan jenis surat pertama</p>
             <button
               onClick={() => navigate('/admin/jenis-surat/tambah')}
-              className="mt-4 text-indigo-600 hover:text-indigo-700 font-medium"
+              className="px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl hover:from-slate-800 hover:to-slate-900 font-bold shadow-lg hover:shadow-xl transition-all"
             >
-              Tambah Jenis Surat Pertama
+              <FiPlus className="inline mr-2" /> Tambah Jenis Surat Pertama
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
-            {filteredData.map((item) => {
+          <div className="grid grid-cols-1 gap-6">
+            {filteredData.map((item, index) => {
               const fields = typeof item.fields === 'string' ? JSON.parse(item.fields) : item.fields || [];
               
               return (
                 <div
                   key={item.id}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                  className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 hover:shadow-2xl transition-all transform hover:-translate-y-1"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {item.nama_surat}
-                        </h3>
-                        <span className="text-sm px-2 py-1 bg-indigo-100 text-indigo-700 rounded">
-                          {item.kode_surat}
-                        </span>
-                        <span
-                          className={`text-xs px-2 py-1 rounded ${
-                            item.status === 'aktif'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}
-                        >
-                          {item.status === 'aktif' ? 'Aktif' : 'Non-Aktif'}
-                        </span>
-                        {item.require_verification && (
-                          <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
-                            Butuh Verifikasi
-                          </span>
-                        )}
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-full bg-gradient-to-br from-slate-700 to-blue-900 text-white font-bold text-lg shadow-lg">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-gray-900 mb-1">
+                            {item.nama_surat}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm px-3 py-1 bg-gradient-to-r from-slate-100 to-blue-100 text-slate-700 rounded-full font-semibold flex items-center gap-1.5">
+                              <FiFileText className="w-3.5 h-3.5" />
+                              {item.kode_surat}
+                            </span>
+                            <span
+                              className={`text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1.5 ${
+                                item.status === 'aktif'
+                                  ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700'
+                                  : 'bg-gradient-to-r from-red-100 to-rose-100 text-red-700'
+                              }`}
+                            >
+                              {item.status === 'aktif' ? (
+                                <>
+                                  <FiCheckCircle className="w-3.5 h-3.5" />
+                                  Aktif
+                                </>
+                              ) : (
+                                <>
+                                  <FiXCircle className="w-3.5 h-3.5" />
+                                  Non-Aktif
+                                </>
+                              )}
+                            </span>
+                            {item.require_verification && (
+                              <span className="text-xs px-3 py-1 bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-700 rounded-full font-bold flex items-center gap-1.5">
+                                <FiAlertTriangle className="w-3.5 h-3.5" />
+                                Butuh Verifikasi
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
 
                       {item.deskripsi && (
-                        <p className="text-sm text-gray-600 mb-3">{item.deskripsi}</p>
+                        <p className="text-sm text-gray-600 mb-4 pl-15 leading-relaxed">{item.deskripsi}</p>
                       )}
 
-                      <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <span className="font-medium">Format Nomor:</span>
-                          <code className="text-xs bg-gray-100 px-2 py-0.5 rounded">
+                      <div className="flex flex-wrap gap-6 text-sm text-gray-500 pl-15">
+                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+                          <svg className="w-4 h-4 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <span className="font-medium">{fields.length} Field</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+                          <svg className="w-4 h-4 text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                          </svg>
+                          <code className="text-xs font-mono font-semibold">
                             {item.format_nomor || 'NOMOR/KODE/BULAN/TAHUN'}
                           </code>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="font-medium">Jumlah Fields:</span>
-                          <span>{fields.length} field</span>
                         </div>
                       </div>
 
                       {item.kalimat_pembuka && (
-                        <div className="mt-3 p-3 bg-gray-50 rounded border border-gray-200">
-                          <p className="text-xs text-gray-500 mb-1">Kalimat Pembuka:</p>
-                          <p className="text-sm text-gray-700 italic">"{item.kalimat_pembuka}"</p>
+                        <div className="mt-4 p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border border-slate-200 pl-15">
+                          <p className="text-xs text-slate-700 font-bold mb-2 flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                            </svg>
+                            Kalimat Pembuka:
+                          </p>
+                          <p className="text-sm text-gray-700 italic leading-relaxed">"{item.kalimat_pembuka}"</p>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 ml-4">
+                    <div className="flex items-center gap-2 ml-6">
                       <button
                         onClick={() => handlePreview(item)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                        className="p-3 text-blue-600 hover:bg-blue-50 rounded-xl border-2 border-blue-200 hover:border-blue-300 transition-all shadow-sm hover:shadow-md"
                         title="Preview"
                       >
                         <FiEye className="w-5 h-5" />
                       </button>
                       <button
                         onClick={() => navigate(`/admin/jenis-surat/edit/${item.id}`)}
-                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"
+                        className="p-3 text-indigo-600 hover:bg-indigo-50 rounded-xl border-2 border-indigo-200 hover:border-indigo-300 transition-all shadow-sm hover:shadow-md"
                         title="Edit"
                       >
                         <FiEdit2 className="w-5 h-5" />
                       </button>
                       <button
                         onClick={() => handleDelete(item.id, item.nama_surat)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                        className="p-3 text-red-600 hover:bg-red-50 rounded-xl border-2 border-red-200 hover:border-red-300 transition-all shadow-sm hover:shadow-md"
                         title="Hapus"
                       >
                         <FiTrash2 className="w-5 h-5" />
@@ -256,6 +303,18 @@ const JenisSurat = () => {
           duration={toast.duration}
         />
       )}
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        show={confirmState.show}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        cancelText={confirmState.cancelText}
+        confirmColor={confirmState.confirmColor}
+        onConfirm={confirmState.onConfirm}
+        onCancel={confirmState.onCancel}
+      />
     </Layout>
   );
 };
@@ -536,18 +595,6 @@ const PreviewSurat = ({ jenisSurat, onClose }) => {
           </div>
         </div>
       </div>
-
-      {/* Confirm Modal */}
-      <ConfirmModal
-        show={confirmState.show}
-        title={confirmState.title}
-        message={confirmState.message}
-        confirmText={confirmState.confirmText}
-        cancelText={confirmState.cancelText}
-        confirmColor={confirmState.confirmColor}
-        onConfirm={confirmState.onConfirm}
-        onCancel={confirmState.onCancel}
-      />
     </div>
   );
 };

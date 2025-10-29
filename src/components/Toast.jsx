@@ -21,51 +21,55 @@ export default function Toast({ message, type = 'success', onClose, duration = 3
 
   const styles = {
     success: {
-      bg: 'bg-gradient-to-r from-green-500 to-emerald-600',
-      icon: 'text-white',
-      border: 'border-green-400'
+      bg: 'bg-white',
+      icon: 'text-green-600',
+      border: 'border-green-400',
+      iconBg: 'bg-green-100'
     },
     error: {
-      bg: 'bg-gradient-to-r from-red-500 to-rose-600',
-      icon: 'text-white',
-      border: 'border-red-400'
+      bg: 'bg-white',
+      icon: 'text-red-600',
+      border: 'border-red-400',
+      iconBg: 'bg-red-100'
     },
     warning: {
-      bg: 'bg-gradient-to-r from-yellow-500 to-orange-600',
-      icon: 'text-white',
-      border: 'border-yellow-400'
+      bg: 'bg-white',
+      icon: 'text-yellow-600',
+      border: 'border-yellow-400',
+      iconBg: 'bg-yellow-100'
     },
     info: {
-      bg: 'bg-gradient-to-r from-blue-500 to-indigo-600',
-      icon: 'text-white',
-      border: 'border-blue-400'
+      bg: 'bg-white',
+      icon: 'text-blue-600',
+      border: 'border-blue-400',
+      iconBg: 'bg-blue-100'
     }
   };
 
   const currentStyle = styles[type] || styles.info;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-[9999] pointer-events-none">
+    <div className="fixed inset-0 flex items-center justify-center z-[9999] pointer-events-none p-4">
       <div className="pointer-events-auto animate-toast-in">
         <div 
-          className={`${currentStyle.bg} ${currentStyle.border} border-2 rounded-2xl shadow-2xl p-6 min-w-[300px] max-w-md`}
+          className={`${currentStyle.bg} ${currentStyle.border} border-2 rounded-2xl shadow-2xl p-6 min-w-[320px] max-w-md`}
         >
           <div className="flex items-start gap-4">
-            <div className={`${currentStyle.icon} flex-shrink-0 mt-0.5`}>
+            <div className={`${currentStyle.iconBg} ${currentStyle.icon} flex-shrink-0 mt-0.5 p-2 rounded-xl`}>
               {icons[type]}
             </div>
-            <div className="flex-1 text-white">
-              <p className="font-semibold text-lg mb-1">
+            <div className="flex-1">
+              <p className="font-bold text-lg mb-1 text-gray-900">
                 {type === 'success' && 'Berhasil!'}
                 {type === 'error' && 'Gagal!'}
                 {type === 'warning' && 'Peringatan!'}
                 {type === 'info' && 'Informasi'}
               </p>
-              <p className="text-white/90 text-sm leading-relaxed">{message}</p>
+              <p className="text-gray-700 text-sm leading-relaxed">{message}</p>
             </div>
             <button
               onClick={onClose}
-              className="flex-shrink-0 text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/20"
+              className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
             >
               <X className="w-5 h-5" />
             </button>
@@ -73,9 +77,14 @@ export default function Toast({ message, type = 'success', onClose, duration = 3
           
           {/* Progress bar */}
           {duration > 0 && (
-            <div className="mt-4 h-1 bg-white/20 rounded-full overflow-hidden">
+            <div className="mt-4 h-1.5 bg-gray-200 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-white/60 rounded-full animate-progress"
+                className={`h-full rounded-full animate-progress ${
+                  type === 'success' ? 'bg-green-500' :
+                  type === 'error' ? 'bg-red-500' :
+                  type === 'warning' ? 'bg-yellow-500' :
+                  'bg-blue-500'
+                }`}
                 style={{ animationDuration: `${duration}ms` }}
               />
             </div>

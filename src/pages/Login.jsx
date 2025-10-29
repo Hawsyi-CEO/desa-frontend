@@ -46,8 +46,8 @@ const Login = () => {
       console.log('🔐 Attempting login with:', formData.email);
       const response = await login(formData.email, formData.password);
       console.log('✅ Login SUCCESS:', response);
-      console.log('👤 User data:', response.data.user);
-      console.log('🎯 User role:', response.data.user.role);
+      console.log('👤 User data:', response.data.data.user);
+      console.log('🎯 User role:', response.data.data.user.role);
       
       // Show success message
       toast.success('Login berhasil!', {
@@ -56,7 +56,7 @@ const Login = () => {
       
       // Trigger redirect setelah 200ms untuk ensure state updated
       setTimeout(() => {
-        const userRole = response.data.user.role;
+        const userRole = response.data.data.user.role;
         console.log('🔄 Triggering redirect for role:', userRole);
         
         const redirectPath = 
