@@ -8,97 +8,153 @@ const Tutorial = ({ onClose }) => {
   const tutorialSteps = [
     {
       id: 'welcome',
-      title: '👋 Mari Mulai!',
-      description: 'Ikuti highlight yang muncul pada setiap langkah.',
+      title: '👋 Selamat Datang di Sistem Persuratan Desa!',
+      description: 'Tutorial ini akan memandu Anda untuk menggunakan sistem berdasarkan peran Anda. Pilih workflow yang sesuai: Super Admin, Verifikator, Warga, atau Warga Universal.',
       position: 'center',
       highlight: null,
     },
     
+    // ========== SUPER ADMIN WORKFLOW ==========
     {
-      id: 'step-sidebar-pengaturan',
-      title: '⚙️ Klik Menu Pengaturan',
-      description: 'Klik menu "Pengaturan" di sidebar.',
-      position: 'right',
-      highlight: 'a[href="/super-admin/pengaturan"]',
+      id: 'super-admin-intro',
+      title: '👨‍💼 Panduan Super Admin',
+      description: 'Sebagai Super Admin, ikuti langkah-langkah berikut untuk mengelola sistem persuratan desa dengan efektif.',
+      position: 'center',
+      highlight: null,
     },
     {
-      id: 'step-sidebar-jenis-surat',
-      title: '📋 Langkah 2: Buka Menu Jenis Surat',
-      description: 'Sekarang kita akan membuat template surat. Klik menu "Jenis Surat" di sidebar.',
-      position: 'right',
-      highlight: 'a[href="/super-admin/jenis-surat"]',
-      action: 'Klik menu "Jenis Surat" yang ditandai',
+      id: 'super-admin-1',
+      title: '⚙️ Langkah 1: Mengisi Konfigurasi Surat',
+      description: 'Pertama, konfigurasikan sistem dengan mengisi data desa, kepala desa, dan pengaturan surat.',
+      position: 'center',
+      highlight: null,
+      action: '1. Buka menu "Pengaturan"\n2. Isi Nama Desa, Alamat, dan Kode Pos\n3. Upload Logo Desa\n4. Masukkan data Kepala Desa dan TTD\n5. Klik "Simpan Konfigurasi"',
     },
     {
-      id: 'step-tambah-jenis-surat',
-      title: '➕ Langkah 3: Tambah Jenis Surat Baru',
-      description: 'Di halaman Jenis Surat, klik tombol "Tambah Jenis Surat" untuk membuat template surat baru.',
-      position: 'bottom',
-      highlight: 'button:contains("Tambah Jenis Surat"), a:contains("Tambah Jenis Surat")',
-      action: 'Klik tombol "Tambah Jenis Surat"',
+      id: 'super-admin-2',
+      title: '📋 Langkah 2: Membuat Jenis Surat',
+      description: 'Buat template surat yang akan digunakan warga untuk mengajukan permohonan.',
+      position: 'center',
+      highlight: null,
+      action: '1. Klik menu "Jenis Surat"\n2. Klik tombol "+ Tambah Jenis Surat"\n3. Isi Nama Jenis Surat (contoh: "Surat Keterangan Domisili")\n4. Buat template dengan field yang dibutuhkan\n5. Atur format nomor surat\n6. Klik "Simpan"',
     },
     {
-      id: 'step-sidebar-semua-surat',
-      title: '📥 Langkah 4: Lihat Semua Surat',
-      description: 'Untuk mereview surat yang masuk dari warga, klik menu "Semua Surat".',
-      position: 'right',
-      highlight: 'a[href="/super-admin/surat"]',
-      action: 'Klik menu "Semua Surat" di sidebar',
+      id: 'super-admin-3',
+      title: '📥 Langkah 3: Mereview Surat Masuk',
+      description: 'Periksa surat-surat yang telah diajukan oleh warga dan diverifikasi oleh verifikator.',
+      position: 'center',
+      highlight: null,
+      action: '1. Buka menu "Semua Surat"\n2. Lihat daftar surat yang masuk\n3. Klik pada surat untuk melihat detail\n4. Periksa kelengkapan data dan lampiran\n5. Cek status verifikasi dari verifikator',
     },
     {
-      id: 'step-review-surat',
-      title: '🔍 Langkah 5: Review Detail Surat',
-      description: 'Klik pada salah satu surat untuk melihat detailnya. Periksa data pemohon dan isi surat.',
-      position: 'top',
-      highlight: '.surat-item, tr:has(td)',
-      action: 'Klik pada baris surat untuk melihat detail',
+      id: 'super-admin-4',
+      title: '✅ Langkah 4: Menyetujui/Menolak Surat',
+      description: 'Berikan keputusan akhir untuk setiap surat yang telah diverifikasi.',
+      position: 'center',
+      highlight: null,
+      action: '1. Buka detail surat\n2. Jika data lengkap, klik tombol "Setujui"\n3. Jika ada masalah, klik "Tolak" dan isi alasan penolakan\n4. Konfirmasi keputusan Anda',
     },
     {
-      id: 'step-approve-surat',
-      title: '✅ Langkah 6: Setujui atau Tolak Surat',
-      description: 'Setelah mereview, Anda bisa menyetujui atau menolak surat dengan tombol yang tersedia.',
-      position: 'top',
-      highlight: 'button:contains("Setujui"), button:contains("Tolak")',
-      action: 'Klik "Setujui" jika data valid, atau "Tolak" jika ada masalah',
+      id: 'super-admin-5',
+      title: '🖨️ Langkah 5: Mencetak Surat',
+      description: 'Cetak surat yang sudah disetujui dalam format PDF resmi.',
+      position: 'center',
+      highlight: null,
+      action: '1. Buka surat yang statusnya "Disetujui"\n2. Klik tombol "Cetak Surat"\n3. Preview surat akan muncul\n4. Klik "Download PDF" atau langsung print',
     },
     {
-      id: 'step-sidebar-users',
-      title: '� Langkah 7: Kelola User',
-      description: 'Untuk menambah verifikator atau admin, klik menu "Users".',
-      position: 'right',
-      highlight: 'a[href="/super-admin/users"]',
-      action: 'Klik menu "Users" di sidebar',
+      id: 'super-admin-6',
+      title: '👥 Langkah 6: Membuat User',
+      description: 'Tambahkan user verifikator atau admin lain untuk membantu mengelola sistem.',
+      position: 'center',
+      highlight: null,
+      action: '1. Buka menu "Users"\n2. Klik "+ Tambah User"\n3. Isi Username, Password, dan Email\n4. Pilih Role (Verifikator/Admin)\n5. Klik "Simpan"',
     },
     {
-      id: 'step-tambah-user',
-      title: '➕ Langkah 8: Tambah User Baru',
-      description: 'Klik tombol "Tambah User" untuk membuat akun verifikator atau admin baru.',
-      position: 'bottom',
-      highlight: 'button:contains("Tambah User"), a:contains("Tambah User")',
-      action: 'Klik tombol "Tambah User"',
-    },
-    {
-      id: 'step-sidebar-warga',
-      title: '📇 Langkah 9: Kelola Data Warga',
-      description: 'Untuk mengelola database warga, klik menu "Data Warga".',
-      position: 'right',
-      highlight: 'a[href="/super-admin/warga"]',
-      action: 'Klik menu "Data Warga" di sidebar',
-    },
-    {
-      id: 'step-tambah-warga',
-      title: '➕ Langkah 10: Tambah Data Warga',
-      description: 'Klik tombol "Tambah Warga" untuk menambahkan data warga baru ke database.',
-      position: 'bottom',
-      highlight: 'button:contains("Tambah Warga"), a:contains("Tambah Warga")',
-      action: 'Klik tombol "Tambah Warga"',
+      id: 'super-admin-7',
+      title: '📇 Langkah 7: Menambah Data Warga',
+      description: 'Kelola database warga desa untuk memudahkan proses pengajuan surat.',
+      position: 'center',
+      highlight: null,
+      action: '1. Buka menu "Data Warga"\n2. Klik "+ Tambah Warga"\n3. Isi NIK, Nama, Alamat, RT/RW\n4. Lengkapi data lainnya\n5. Klik "Simpan Data Warga"',
     },
     
-    // ========== COMPLETE ==========
+    // ========== VERIFIKATOR WORKFLOW ==========
+    {
+      id: 'verifikator-intro',
+      title: '🔍 Panduan Verifikator',
+      description: 'Sebagai Verifikator, Anda bertugas memverifikasi surat sebelum disetujui Super Admin. Ikuti langkah berikut.',
+      position: 'center',
+      highlight: null,
+    },
+    {
+      id: 'verifikator-1',
+      title: '📥 Langkah 1: Mereview Surat Masuk',
+      description: 'Periksa setiap surat yang masuk dari warga dengan teliti.',
+      position: 'center',
+      highlight: null,
+      action: '1. Buka menu "Surat"\n2. Filter surat dengan status "Menunggu Verifikasi"\n3. Klik surat untuk membuka detail\n4. Periksa kelengkapan data pemohon\n5. Verifikasi kesesuaian data dengan database\n6. Cek lampiran pendukung (jika ada)',
+    },
+    {
+      id: 'verifikator-2',
+      title: '✅ Langkah 2: Menyetujui/Menolak Surat',
+      description: 'Berikan verifikasi pada surat yang telah Anda periksa.',
+      position: 'center',
+      highlight: null,
+      action: '1. Setelah mereview surat\n2. Jika data valid, klik "Verifikasi"\n3. Jika ada kesalahan, klik "Tolak"\n4. Isi catatan atau alasan (jika perlu)\n5. Konfirmasi tindakan Anda\n6. Surat akan diteruskan ke Super Admin (jika diverifikasi)',
+    },
+    
+    // ========== WARGA WORKFLOW ==========
+    {
+      id: 'warga-intro',
+      title: '📝 Panduan Warga Terdaftar',
+      description: 'Jika Anda warga yang sudah terdaftar, ikuti langkah berikut untuk mengajukan surat.',
+      position: 'center',
+      highlight: null,
+    },
+    {
+      id: 'warga-1',
+      title: '📝 Langkah 1: Membuat Surat',
+      description: 'Ajukan surat sesuai kebutuhan Anda dengan mudah.',
+      position: 'center',
+      highlight: null,
+      action: '1. Login menggunakan NIK dan Password\n2. Klik tombol "Buat Surat Baru"\n3. Pilih jenis surat yang dibutuhkan\n4. Isi formulir dengan lengkap dan benar\n5. Upload lampiran jika diperlukan\n6. Klik "Ajukan Surat"',
+    },
+    {
+      id: 'warga-2',
+      title: '� 2. Melihat Tracking/History Surat',
+      description: 'Warga dapat melihat status real-time dari surat yang diajukan: Draft, Menunggu Verifikasi, Diverifikasi, Disetujui, atau Ditolak. Juga dapat melihat riwayat semua surat yang pernah diajukan.',
+      position: 'center',
+      highlight: null,
+      action: 'Lihat status surat di dashboard atau menu Surat Saya',
+    },
+    {
+      id: 'warga-universal-intro',
+      title: '🌐 Workflow Warga Universal (Tidak Terdaftar)',
+      description: 'Warga yang belum terdaftar dalam database tetap dapat mengajukan surat tanpa perlu login, dengan proses yang lebih sederhana.',
+      position: 'center',
+      highlight: null,
+    },
+    {
+      id: 'warga-universal-1',
+      title: '📝 1. Membuat Surat',
+      description: 'Warga universal dapat langsung mengisi formulir surat tanpa login. Isi semua data yang diperlukan termasuk identitas pribadi.',
+      position: 'center',
+      highlight: null,
+      action: 'Akses halaman publik untuk membuat surat',
+    },
+    {
+      id: 'warga-universal-2',
+      title: '🖨️ 2. Mencetak Surat',
+      description: 'Setelah surat dibuat, warga universal dapat langsung mencetak surat dalam format PDF untuk keperluan administrasi.',
+      position: 'center',
+      highlight: null,
+      action: 'Klik tombol Cetak setelah surat selesai dibuat',
+    },
     {
       id: 'complete',
-      title: '🎉 Tutorial Selesai!',
-      description: 'Sekarang Anda sudah tahu cara menggunakan sistem. Setiap elemen yang ditandai akan memandu Anda untuk melakukan aksi yang tepat. Klik tombol "?" kapan saja untuk membuka tutorial kembali.',
+      title: '🎉 Selamat! Tutorial Selesai',
+      description: 'Anda sudah memahami workflow sistem persuratan desa untuk semua role. Setiap peran memiliki tugas dan tanggung jawab yang berbeda untuk memastikan proses persuratan berjalan lancar. Jika butuh bantuan lagi, klik tombol "?" di pojok kanan atas.',
       position: 'center',
       highlight: null,
     },
@@ -108,48 +164,11 @@ const Tutorial = ({ onClose }) => {
 
   useEffect(() => {
     if (currentStepData.highlight) {
-      // Helper function to find element with text content
-      const findElementBySelector = (selector) => {
-        // Check if selector contains :contains()
-        const containsMatch = selector.match(/(.+):contains\("(.+)"\)/);
-        if (containsMatch) {
-          const [, baseSelector, text] = containsMatch;
-          const elements = document.querySelectorAll(baseSelector);
-          for (let el of elements) {
-            if (el.textContent.includes(text)) {
-              return el;
-            }
-          }
-          return null;
-        }
-        
-        // Try multiple selectors separated by comma
-        const selectors = selector.split(',').map(s => s.trim());
-        for (let sel of selectors) {
-          const containsMatch = sel.match(/(.+):contains\("(.+)"\)/);
-          if (containsMatch) {
-            const [, baseSelector, text] = containsMatch;
-            const elements = document.querySelectorAll(baseSelector);
-            for (let el of elements) {
-              if (el.textContent.includes(text)) {
-                return el;
-              }
-            }
-          } else {
-            const element = document.querySelector(sel);
-            if (element) return element;
-          }
-        }
-        return null;
-      };
-
-      const element = findElementBySelector(currentStepData.highlight);
+      const element = document.querySelector(currentStepData.highlight);
       if (element) {
         setHighlightElement(element);
         // Scroll to element smoothly
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else {
-        setHighlightElement(null);
       }
     } else {
       setHighlightElement(null);
@@ -302,7 +321,7 @@ const Tutorial = ({ onClose }) => {
             {/* Action Hint */}
             {currentStepData.action && (
               <div className="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded-r-lg">
-                <p className="text-sm text-blue-800 font-medium whitespace-pre-line">
+                <p className="text-sm text-blue-800 font-medium">
                   💡 {currentStepData.action}
                 </p>
               </div>

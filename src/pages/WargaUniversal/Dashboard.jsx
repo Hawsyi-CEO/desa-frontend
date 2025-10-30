@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
 import { authService } from '../../services/authService';
-import PreviewFormulirF102 from '../../components/PreviewFormulirF102';
 
 const WargaUniversalDashboard = () => {
   const navigate = useNavigate();
@@ -21,10 +20,6 @@ const WargaUniversalDashboard = () => {
   const [showSignerModal, setShowSignerModal] = useState(false);
   const [pendingSuratData, setPendingSuratData] = useState(null);
   const [configData, setConfigData] = useState(null);
-  
-  // Preview F-1.02
-  const [showF102Preview, setShowF102Preview] = useState(false);
-  const [f102Data, setF102Data] = useState(null);
 
   // Load jenis surat
   useEffect(() => {
@@ -314,17 +309,6 @@ const WargaUniversalDashboard = () => {
     
     console.log('✅ Selected signer:', signerType);
     console.log('✅ Final config for print:', finalConfig);
-    
-    // Cek apakah ini formulir F-1.02
-    const kodeSurat = pendingSuratData?.jenis_surat?.kode_surat || pendingSuratData?.kode_surat;
-    if (kodeSurat === 'F-1.02') {
-      // Untuk F-1.02, gunakan komponen khusus
-      setF102Data(pendingSuratData);
-      setShowF102Preview(true);
-      setPendingSuratData(null);
-      setConfigData(null);
-      return;
-    }
     
     // Langsung print dengan config yang sudah dipilih
     await printSurat(pendingSuratData, finalConfig);
@@ -1343,22 +1327,6 @@ const WargaUniversalDashboard = () => {
               </button>
             </div>
           </div>
-        )}
-        
-        {/* Preview Formulir F-1.02 */}
-        {showF102Preview && f102Data && (
-          <PreviewFormulirF102
-            pengajuan={f102Data}
-            onClose={() => {
-              setShowF102Preview(false);
-              setF102Data(null);
-              // Reset form
-              setSelectedJenis(null);
-              setFormData({});
-              setWargaData(null);
-              setTanggalSurat(new Date().toISOString().split('T')[0]);
-            }}
-          />
         )}
         </div>
       </div>
