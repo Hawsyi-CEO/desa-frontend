@@ -225,8 +225,8 @@ const Login = () => {
                 <p className="text-xs text-blue-700 break-all">rw01@verifikator.desa / verifikator123</p>
               </div>
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-2 sm:p-2.5">
-                <p className="text-xs font-medium text-slate-900">Warga</p>
-                <p className="text-xs text-slate-600 break-all">warga@desa.com / warga123</p>
+                <p className="text-xs font-medium text-slate-900">Mesin</p>
+                <p className="text-xs text-slate-600 break-all">0000000000000001 / admin123</p>
               </div>
             </div>
           </div>
