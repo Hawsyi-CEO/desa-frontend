@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
 import api from '../../services/api';
 import { FiUsers, FiFileText, FiCheckCircle, FiClock } from 'react-icons/fi';
+import Tutorial from '../../components/Tutorial';
+import { HelpCircle } from 'lucide-react';
 
 const SuperAdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(false);
   
   // Pagination & Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,6 +18,12 @@ const SuperAdminDashboard = () => {
 
   useEffect(() => {
     fetchDashboard();
+    
+    // Show tutorial on first visit
+    const tutorialCompleted = localStorage.getItem('tutorialCompleted');
+    if (!tutorialCompleted) {
+      setTimeout(() => setShowTutorial(true), 1000);
+    }
   }, []);
 
   // Reset pagination when filters change
@@ -88,12 +97,24 @@ const SuperAdminDashboard = () => {
 
   return (
     <Layout>
+      {/* Tutorial Modal */}
+      {showTutorial && <Tutorial onClose={() => setShowTutorial(false)} />}
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 md:mb-8">
-          <div className="bg-gradient-to-r from-slate-700 via-slate-800 to-blue-900 rounded-2xl shadow-xl p-6 md:p-8 text-white">
+          <div className="bg-gradient-to-r from-slate-700 via-slate-800 to-blue-900 rounded-2xl shadow-xl p-6 md:p-8 text-white relative">
             <h1 className="text-2xl md:text-3xl font-bold mb-2">Dashboard Super Admin</h1>
             <p className="text-sm md:text-base text-slate-200">Selamat datang kembali! Berikut ringkasan aktivitas sistem.</p>
+            
+            {/* Tutorial Button */}
+            <button
+              onClick={() => setShowTutorial(true)}
+              className="absolute top-6 right-6 flex items-center gap-2 px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-xl transition-all backdrop-blur-sm border border-white border-opacity-30"
+            >
+              <HelpCircle className="w-5 h-5" />
+              <span className="hidden sm:inline text-sm font-medium">Panduan</span>
+            </button>
           </div>
         </div>
 
