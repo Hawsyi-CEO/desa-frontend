@@ -30,6 +30,7 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
     nama_kabupaten: 'PEMERINTAH KABUPATEN BOGOR',
     nama_kecamatan: 'KECAMATAN CIAMPEA',
     nama_desa: 'DESA CIBADAK',
+    nama_desa_penandatangan: 'Cibadak', // Nama desa untuk tanggal & ttd (proper case)
     alamat_kantor: 'Kp. Cibadak Balai Desa No.5 RT.005 RW.001 Desa Cibadak Kecamatan Ciampea Kabupaten Bogor',
     kota: 'Jawa Barat',
     kode_pos: '16620',
@@ -51,7 +52,9 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
     const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
                     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     const date = doc?.tanggal_surat ? new Date(doc.tanggal_surat) : new Date();
-    return `${config?.nama_desa?.replace('DESA ', '') || 'Cibadak'}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    // Gunakan nama_desa_penandatangan untuk proper case (Cibadak), bukan nama_desa (DESA CIBADAK)
+    const namaDesa = config?.nama_desa_penandatangan || config?.nama_desa?.replace('DESA ', '').replace('Desa ', '') || 'Cibadak';
+    return `${namaDesa}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
   };
 
   const generateNomorSurat = (doc) => {
@@ -112,27 +115,27 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
     rendered = rendered.replace(/\(([^)]+)\)/g, (match, key) => {
       const normalized = normalizeKey(key);
       const value = normalizedData[normalized] || dataSurat[key];
-      return value ? `<strong>${value}</strong>` : match;
+      return value || match;
     });
     
     // Replace {{key}} format
     rendered = rendered.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
       const normalized = normalizeKey(key);
       const value = normalizedData[normalized] || dataSurat[key];
-      return value ? `<strong>${value}</strong>` : match;
+      return value || match;
     });
     
     // Replace [key] format
     rendered = rendered.replace(/\[([^\]]+)\]/g, (match, key) => {
       const normalized = normalizeKey(key);
       const value = normalizedData[normalized] || dataSurat[key];
-      return value ? `<strong>${value}</strong>` : match;
+      return value || match;
     });
     
     // Replace variables yang belum terisi dengan placeholder
-    rendered = rendered.replace(/\((\w+)\)/g, '<strong>[Data $1]</strong>');
-    rendered = rendered.replace(/\{\{(\w+)\}\}/g, '<strong>[Data $1]</strong>');
-    rendered = rendered.replace(/\[(\w+)\]/g, '<strong>[Data $1]</strong>');
+    rendered = rendered.replace(/\((\w+)\)/g, '[Data $1]');
+    rendered = rendered.replace(/\{\{(\w+)\}\}/g, '[Data $1]');
+    rendered = rendered.replace(/\[(\w+)\]/g, '[Data $1]');
     
     return rendered;
   };
@@ -205,18 +208,25 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
             style={{
               position: 'relative',
               minHeight: '95px',
-              marginBottom: '10px'
+              marginBottom: '10px',
+              display: 'flex',
+              alignItems: 'flex-start'
             }}
           >
             {/* Logo */}
-            <div style={{ position: 'absolute', left: '0', top: '0' }}>
+            <div style={{ 
+              width: '90px', 
+              flexShrink: 0,
+              paddingTop: '0'
+            }}>
               <img 
                 src="/assets/Lambang_Kabupaten_Bogor.png"
                 alt="Logo Kabupaten"
                 style={{ 
                   width: '90px',
                   height: '90px',
-                  objectFit: 'contain'
+                  objectFit: 'contain',
+                  display: 'block'
                 }}
                 onError={(e) => {
                   e.target.src = '/src/assets/Lambang_Kabupaten_Bogor.png';
@@ -225,7 +235,13 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
             </div>
             
             {/* Kop Surat */}
-            <div style={{ textAlign: 'center', paddingTop: '5px', paddingLeft: '1.5px' }}>
+            <div style={{ 
+              flex: 1, 
+              textAlign: 'center', 
+              paddingTop: '5px',
+              paddingLeft: '0',
+              paddingRight: '90px'
+            }}>
               <h2 
                 className="font-bold uppercase"
                 style={{ fontSize: '20px', lineHeight: '1.2', margin: '0', padding: '0' }}
@@ -297,7 +313,7 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
                     <div key={index} className="flex" style={{ marginBottom: '4px' }}>
                       <div style={{ width: '150px' }}>{field.label}</div>
                       <div style={{ width: '20px', textAlign: 'center' }}>:</div>
-                      <div className="flex-1 font-semibold">
+                      <div className="flex-1">
                         {value || `[${field.label}]`}
                       </div>
                     </div>

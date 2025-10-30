@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
 import { authService } from '../../services/authService';
+import PreviewFormulirF102 from '../../components/PreviewFormulirF102';
 
 const WargaUniversalDashboard = () => {
   const navigate = useNavigate();
@@ -20,6 +21,10 @@ const WargaUniversalDashboard = () => {
   const [showSignerModal, setShowSignerModal] = useState(false);
   const [pendingSuratData, setPendingSuratData] = useState(null);
   const [configData, setConfigData] = useState(null);
+  
+  // Preview F-1.02
+  const [showF102Preview, setShowF102Preview] = useState(false);
+  const [f102Data, setF102Data] = useState(null);
 
   // Load jenis surat
   useEffect(() => {
@@ -114,17 +119,32 @@ const WargaUniversalDashboard = () => {
         const wargaFieldMapping = {
           'nik': wargaData.nik,
           'nama': wargaData.nama,
+          'namalengkap': wargaData.nama,
           'nama_lengkap': wargaData.nama,
+          'nomorindukkependudukan': wargaData.nik,  // F-1.02 normalized
+          'nomor_induk_kependudukan': wargaData.nik,  // F-1.02
+          'nomorkartukeluarga': wargaData.no_kk,    // F-1.02 normalized
+          'nomor_kartu_keluarga': wargaData.no_kk,    // F-1.02
+          'nomorhandphone': wargaData.no_telepon,     // F-1.02 normalized
+          'nomor_handphone': wargaData.no_telepon,     // F-1.02
+          'alamatemail': wargaData.email || '',       // F-1.02 normalized
+          'alamat_email': wargaData.email || '',       // F-1.02
+          'tempatlahir': wargaData.tempat_lahir,
           'tempat_lahir': wargaData.tempat_lahir,
+          'tanggallahir': formattedTanggalLahir,
           'tanggal_lahir': formattedTanggalLahir,
           'ttl': formattedTanggalLahir,
+          'jeniskelamin': wargaData.jenis_kelamin,
           'jenis_kelamin': wargaData.jenis_kelamin,
           'pekerjaan': wargaData.pekerjaan,
           'agama': wargaData.agama,
+          'statusperkawinan': wargaData.status_perkawinan,
           'status_perkawinan': wargaData.status_perkawinan,
+          'statuskawin': wargaData.status_perkawinan,
           'status_kawin': wargaData.status_perkawinan,
           'kewarganegaraan': wargaData.kewarganegaraan,
           'pendidikan': wargaData.pendidikan,
+          'golongandarah': wargaData.golongan_darah,
           'golongan_darah': wargaData.golongan_darah,
           'alamat': wargaData.alamat,
           'dusun': wargaData.dusun,
@@ -182,7 +202,11 @@ const WargaUniversalDashboard = () => {
     }));
 
     // Trigger autofill ketika NIK lengkap 16 digit
-    if (fieldName.toLowerCase() === 'nik') {
+    // Match both 'nik' and 'nomor_induk_kependudukan' (for F-1.02)
+    const normalizedFieldName = fieldName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const isNikField = normalizedFieldName === 'nik' || normalizedFieldName === 'nomorindukkependudukan';
+    
+    if (isNikField) {
       // Reset warga data jika NIK berubah
       if (value.length !== 16) {
         setWargaData(null);
@@ -290,6 +314,17 @@ const WargaUniversalDashboard = () => {
     
     console.log('✅ Selected signer:', signerType);
     console.log('✅ Final config for print:', finalConfig);
+    
+    // Cek apakah ini formulir F-1.02
+    const kodeSurat = pendingSuratData?.jenis_surat?.kode_surat || pendingSuratData?.kode_surat;
+    if (kodeSurat === 'F-1.02') {
+      // Untuk F-1.02, gunakan komponen khusus
+      setF102Data(pendingSuratData);
+      setShowF102Preview(true);
+      setPendingSuratData(null);
+      setConfigData(null);
+      return;
+    }
     
     // Langsung print dengan config yang sudah dipilih
     await printSurat(pendingSuratData, finalConfig);
@@ -508,25 +543,28 @@ const WargaUniversalDashboard = () => {
             margin-bottom: 10px;
           }
           .kop-header {
-            position: relative;
+            display: flex;
+            align-items: flex-start;
             min-height: 95px;
             margin-bottom: 8px;
           }
           .logo-cell {
-            position: absolute;
-            left: 0;
-            top: 0;
             width: 90px;
+            flex-shrink: 0;
+            padding-top: 0;
           }
           .logo {
             width: 90px;
             height: 90px;
             object-fit: contain;
+            display: block;
           }
           .kop-text-cell {
+            flex: 1;
             text-align: center;
             padding-top: 5px;
-            padding-left: 1.5px;
+            padding-left: 0;
+            padding-right: 90px;
           }
           .kop-text h1 {
             font-size: 20px;
@@ -698,10 +736,21 @@ const WargaUniversalDashboard = () => {
         <label className="block text-sm font-semibold text-gray-700">
           {field.label}
           {field.required && <span className="text-red-500 ml-1">*</span>}
+          {field.group && <span className="text-xs text-gray-500 ml-2">({field.group})</span>}
         </label>
         
         <div className="relative">
-          {field.type === 'textarea' ? (
+          {field.type === 'checkbox' ? (
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={formData[field.name] === true || formData[field.name] === 'true' || formData[field.name] === 1}
+                onChange={(e) => handleFieldChange(field.name, e.target.checked)}
+                className="w-5 h-5 text-slate-600 border-2 border-gray-300 rounded focus:ring-slate-500"
+              />
+              <span className="ml-3 text-sm text-gray-700">{field.label}</span>
+            </div>
+          ) : field.type === 'textarea' ? (
             <textarea
               value={value}
               onChange={(e) => handleFieldChange(field.name, e.target.value)}
@@ -767,6 +816,134 @@ const WargaUniversalDashboard = () => {
             Data {wargaData.nama} berhasil dimuat
           </p>
         )}
+      </div>
+    );
+  };
+
+  // Render form khusus untuk F-1.02
+  const renderFormF102 = () => {
+    const fields = selectedJenis.fields || [];
+    
+    // Group fields - HANYA Kartu Keluarga yang ada input
+    const dataPemohon = fields.filter(f => ['nama_lengkap', 'nomor_induk_kependudukan', 'nomor_kartu_keluarga', 'nomor_handphone', 'alamat_email'].includes(f.name));
+    const kartuKeluarga = fields.filter(f => f.group === 'kartu_keluarga');
+    const persyaratan = fields.filter(f => f.group === 'persyaratan');
+    
+    return (
+      <div className="space-y-6">
+        {/* I. DATA PEMOHON */}
+        <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-200">
+          <h4 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <span className="bg-slate-700 text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm">I</span>
+            DATA PEMOHON
+          </h4>
+          <div className="grid grid-cols-1 gap-4">
+            {dataPemohon.map(field => {
+              const isNikField = field.name === 'nomor_induk_kependudukan';
+              const value = formData[field.name] || '';
+              const isNikLoaded = isNikField && wargaData && value === wargaData.nik;
+              
+              return (
+                <div key={field.name}>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {field.label}
+                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                  </label>
+                  <input
+                    type={field.type || 'text'}
+                    value={value}
+                    onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                    required={field.required}
+                    className={`w-full px-4 py-2.5 border-2 rounded-xl focus:ring-4 transition-all outline-none ${
+                      isNikLoaded 
+                        ? 'border-green-400 focus:border-green-500 focus:ring-green-100 bg-green-50' 
+                        : 'border-gray-200 focus:border-slate-600 focus:ring-slate-100'
+                    }`}
+                    placeholder={`Masukkan ${field.label}`}
+                    maxLength={isNikField ? 16 : undefined}
+                  />
+                  
+                  {/* Show loading indicator for NIK field */}
+                  {isNikField && loadingNik && (
+                    <p className="text-xs text-slate-600 flex items-center mt-2">
+                      <svg className="animate-spin h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Memuat data warga...
+                    </p>
+                  )}
+                  
+                  {/* Show success indicator if warga data loaded */}
+                  {isNikLoaded && (
+                    <p className="text-xs text-green-600 flex items-center mt-2 font-medium">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Data {wargaData.nama} berhasil dimuat
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* II. JENIS PERMOHONAN - HANYA KARTU KELUARGA */}
+        <div className="bg-white p-6 rounded-2xl border-2 border-slate-200">
+          <h4 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <span className="bg-slate-700 text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm">II</span>
+            JENIS PERMOHONAN - KARTU KELUARGA
+          </h4>
+          
+          <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4 mb-4">
+            <p className="text-sm text-amber-800">
+              <strong>📌 Catatan:</strong> Untuk KTP-el, KIA, dan Perubahan Data akan diisi manual saat form dicetak.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h5 className="font-bold text-sm text-slate-700 pb-2 border-b-2 border-slate-300">PILIH JENIS PERMOHONAN KARTU KELUARGA</h5>
+            {kartuKeluarga.map(field => (
+              <div key={field.name} className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id={field.name}
+                  checked={formData[field.name] === true || formData[field.name] === 'true'}
+                  onChange={(e) => handleFieldChange(field.name, e.target.checked)}
+                  className="mt-1 w-4 h-4 text-slate-600 border-2 border-gray-300 rounded focus:ring-slate-500"
+                />
+                <label htmlFor={field.name} className="text-sm text-gray-700 cursor-pointer flex-1">
+                  {field.label.replace('KK - ', '')}
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* III. PERSYARATAN YANG DILAMPIRKAN */}
+        <div className="bg-blue-50 p-6 rounded-2xl border-2 border-blue-200">
+          <h4 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <span className="bg-blue-700 text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm">III</span>
+            PERSYARATAN YANG DILAMPIRKAN
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {persyaratan.map(field => (
+              <div key={field.name} className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id={field.name}
+                  checked={formData[field.name] === true || formData[field.name] === 'true'}
+                  onChange={(e) => handleFieldChange(field.name, e.target.checked)}
+                  className="mt-1 w-4 h-4 text-blue-600 border-2 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label htmlFor={field.name} className="text-sm text-gray-700 cursor-pointer flex-1">
+                  {field.label}
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   };
@@ -1029,9 +1206,15 @@ const WargaUniversalDashboard = () => {
                 </div>
 
                 {/* Dynamic Fields */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {selectedJenis.fields && Array.isArray(selectedJenis.fields) && selectedJenis.fields.map(field => renderField(field))}
-                </div>
+                {selectedJenis.kode_surat === 'F-1.02' ? (
+                  // Form khusus untuk F-1.02
+                  renderFormF102()
+                ) : (
+                  // Form standard untuk jenis surat lainnya
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {selectedJenis.fields && Array.isArray(selectedJenis.fields) && selectedJenis.fields.map(field => renderField(field))}
+                  </div>
+                )}
 
                 {/* Action Buttons - Modern dengan Gradient */}
                 <div className="flex gap-4 mt-10 pt-8 border-t border-gray-100">
@@ -1160,6 +1343,22 @@ const WargaUniversalDashboard = () => {
               </button>
             </div>
           </div>
+        )}
+        
+        {/* Preview Formulir F-1.02 */}
+        {showF102Preview && f102Data && (
+          <PreviewFormulirF102
+            pengajuan={f102Data}
+            onClose={() => {
+              setShowF102Preview(false);
+              setF102Data(null);
+              // Reset form
+              setSelectedJenis(null);
+              setFormData({});
+              setWargaData(null);
+              setTanggalSurat(new Date().toISOString().split('T')[0]);
+            }}
+          />
         )}
         </div>
       </div>

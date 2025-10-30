@@ -375,11 +375,11 @@ const AdminSurat = () => {
         Object.keys(data).forEach(key => {
           const value = data[key] || '';
           // Replace (key) format
-          rendered = rendered.replace(new RegExp(`\\(${key}\\)`, 'g'), `<strong>${value}</strong>`);
+          rendered = rendered.replace(new RegExp(`\\(${key}\\)`, 'g'), value);
           // Replace {{key}} format
-          rendered = rendered.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), `<strong>${value}</strong>`);
+          rendered = rendered.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
           // Replace [key] format
-          rendered = rendered.replace(new RegExp(`\\[${key}\\]`, 'g'), `<strong>${value}</strong>`);
+          rendered = rendered.replace(new RegExp(`\\[${key}\\]`, 'g'), value);
         });
       }
       
@@ -395,7 +395,7 @@ const AdminSurat = () => {
           <div style="display: flex; margin-bottom: 4px;">
             <div style="width: 150px;">${field.label}</div>
             <div style="width: 20px; text-align: center;">:</div>
-            <div style="flex: 1; font-weight: 600;">${value}</div>
+            <div style="flex: 1;">${value}</div>
           </div>
         `;
       }).join('');
@@ -428,25 +428,28 @@ const AdminSurat = () => {
             margin-bottom: 10px;
           }
           .kop-header {
-            position: relative;
+            display: flex;
+            align-items: flex-start;
             min-height: 95px;
             margin-bottom: 8px;
           }
           .logo-cell {
-            position: absolute;
-            left: 0;
-            top: 0;
             width: 90px;
+            flex-shrink: 0;
+            padding-top: 0;
           }
           .logo {
             width: 90px;
             height: 90px;
             object-fit: contain;
+            display: block;
           }
           .kop-text-cell {
+            flex: 1;
             text-align: center;
             padding-top: 5px;
-            padding-left: 1.5px;
+            padding-left: 0;
+            padding-right: 90px;
           }
           .kop-text h1 {
             font-size: 20px;
