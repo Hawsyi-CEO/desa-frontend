@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
+import HistoryModal from '../../components/HistoryModal';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { FiFileText, FiClock, FiCheckCircle, FiXCircle, FiPlusCircle } from 'react-icons/fi';
+import { FiFileText, FiClock, FiCheckCircle, FiXCircle, FiPlusCircle, FiEye, FiRefreshCw } from 'react-icons/fi';
 
 const WargaDashboard = () => {
   const navigate = useNavigate();
@@ -17,6 +18,8 @@ const WargaDashboard = () => {
   const [jenisSurat, setJenisSurat] = useState([]);
   const [recentSurat, setRecentSurat] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSuratId, setSelectedSuratId] = useState(null);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -67,11 +70,25 @@ const WargaDashboard = () => {
   const getStatusText = (status) => {
     const texts = {
       'pending': 'Menunggu',
+      'menunggu_verifikasi_rt': 'Menunggu RT',
+      'menunggu_verifikasi_rw': 'Menunggu RW',
       'diproses': 'Diproses',
       'selesai': 'Selesai',
-      'ditolak': 'Ditolak'
+      'ditolak': 'Ditolak',
+      'revisi_rt': 'Revisi RT',
+      'revisi_rw': 'Revisi RW'
     };
     return texts[status] || status;
+  };
+
+  const handleViewHistory = (suratId) => {
+    setSelectedSuratId(suratId);
+    setShowHistoryModal(true);
+  };
+
+  const handleRevisiSurat = (suratId) => {
+    // Navigate ke halaman edit/revisi surat
+    navigate(`/warga/surat/revisi/${suratId}`);
   };
 
   return (
@@ -223,7 +240,7 @@ const WargaDashboard = () => {
                           key={surat.id}
                           className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
                         >
-                          <div className="flex items-start justify-between">
+                          <div className="flex items-start justify-between mb-3">
                             <div className="flex-1">
                               <h3 className="font-medium text-gray-900">{surat.jenis_surat?.nama_surat || 'Surat'}</h3>
                               <p className="text-sm text-gray-600 mt-1">
@@ -234,9 +251,30 @@ const WargaDashboard = () => {
                                 })}
                               </p>
                             </div>
-                            <span className={`text-xs px-2 py-1 rounded ${getStatusBadge(surat.status)}`}>
-                              {getStatusText(surat.status)}
+                            <span className={`text-xs px-2 py-1 rounded whitespace-nowrap ${getStatusBadge(surat.status_surat)}`}>
+                              {getStatusText(surat.status_surat)}
                             </span>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+                            <button
+                              onClick={() => handleViewHistory(surat.id)}
+                              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-indigo-200"
+                            >
+                              <FiEye className="w-4 h-4" />
+                              <span>Lihat Riwayat</span>
+                            </button>
+
+                            {(surat.status_surat === 'revisi_rt' || surat.status_surat === 'revisi_rw') && (
+                              <button
+                                onClick={() => handleRevisiSurat(surat.id)}
+                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm text-orange-600 hover:bg-orange-50 rounded-lg transition-colors border border-orange-200"
+                              >
+                                <FiRefreshCw className="w-4 h-4" />
+                                <span>Revisi Surat</span>
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -261,6 +299,13 @@ const WargaDashboard = () => {
           )}
         </div>
       </div>
+
+      {/* History Modal */}
+      <HistoryModal
+        isOpen={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        suratId={selectedSuratId}
+      />
     </Layout>
   );
 };

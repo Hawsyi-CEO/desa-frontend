@@ -6,7 +6,7 @@ import ConfirmModal from '../../components/ConfirmModal';
 import { useToast } from '../../hooks/useToast';
 import { useConfirm } from '../../hooks/useConfirm';
 import api from '../../services/api';
-import { FiChevronDown, FiChevronUp, FiSave, FiX, FiPlus, FiTrash2, FiInfo, FiCpu, FiTag, FiFileText } from 'react-icons/fi';
+import { FiChevronDown, FiChevronUp, FiSave, FiX, FiPlus, FiTrash2, FiInfo, FiCpu, FiTag, FiFileText, FiEdit2, FiMove } from 'react-icons/fi';
 
 const FormJenisSurat = () => {
   const navigate = useNavigate();
@@ -41,8 +41,12 @@ const FormJenisSurat = () => {
     label: '',
     type: 'text',
     required: true,
-    options: ''
+    options: '',
+    showInDocument: true // Default: tampil di surat
   });
+
+  const [editingFieldIndex, setEditingFieldIndex] = useState(null);
+  const [draggedIndex, setDraggedIndex] = useState(null);
 
   // Template presets
   const templatePresets = [
@@ -121,18 +125,49 @@ const FormJenisSurat = () => {
     // Auto-generate name from label if not filled
     const fieldName = newField.name || newField.label.toLowerCase().replace(/\s+/g, '_');
 
-    setFormData(prev => ({
-      ...prev,
-      fields: [...prev.fields, { ...newField, name: fieldName }]
-    }));
+    if (editingFieldIndex !== null) {
+      // Update existing field
+      setFormData(prev => ({
+        ...prev,
+        fields: prev.fields.map((field, index) => 
+          index === editingFieldIndex ? { ...newField, name: fieldName } : field
+        )
+      }));
+      setEditingFieldIndex(null);
+    } else {
+      // Add new field
+      setFormData(prev => ({
+        ...prev,
+        fields: [...prev.fields, { ...newField, name: fieldName }]
+      }));
+    }
 
     setNewField({
       name: '',
       label: '',
       type: 'text',
       required: true,
-      options: ''
+      options: '',
+      showInDocument: true
     });
+  };
+
+  const editField = (index) => {
+    const field = formData.fields[index];
+    setNewField(field);
+    setEditingFieldIndex(index);
+  };
+
+  const cancelEdit = () => {
+    setNewField({
+      name: '',
+      label: '',
+      type: 'text',
+      required: true,
+      options: '',
+      showInDocument: true
+    });
+    setEditingFieldIndex(null);
   };
 
   const removeField = (index) => {
@@ -140,6 +175,46 @@ const FormJenisSurat = () => {
       ...prev,
       fields: prev.fields.filter((_, i) => i !== index)
     }));
+  };
+
+  const moveFieldUp = (index) => {
+    if (index === 0) return;
+    setFormData(prev => {
+      const newFields = [...prev.fields];
+      [newFields[index - 1], newFields[index]] = [newFields[index], newFields[index - 1]];
+      return { ...prev, fields: newFields };
+    });
+  };
+
+  const moveFieldDown = (index) => {
+    if (index === formData.fields.length - 1) return;
+    setFormData(prev => {
+      const newFields = [...prev.fields];
+      [newFields[index], newFields[index + 1]] = [newFields[index + 1], newFields[index]];
+      return { ...prev, fields: newFields };
+    });
+  };
+
+  const handleDragStart = (index) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    setFormData(prev => {
+      const newFields = [...prev.fields];
+      const draggedItem = newFields[draggedIndex];
+      newFields.splice(draggedIndex, 1);
+      newFields.splice(index, 0, draggedItem);
+      return { ...prev, fields: newFields };
+    });
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   const insertFieldTag = (fieldName) => {
@@ -444,14 +519,25 @@ const FormJenisSurat = () => {
               <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm text-yellow-900 font-medium flex items-center gap-2">
                   <FiInfo className="w-4 h-4" />
-                  Fields bersifat opsional
+                  Perbedaan Field: Tampil di Surat vs Hanya Data Dinamis
                 </p>
-                <p className="text-xs text-yellow-700 mt-2">
-                  Anda bisa membuat surat tanpa field sama sekali dengan langsung menulis konten di Editor Template. 
-                  Fields hanya digunakan jika Anda ingin data dinamis yang diisi oleh pemohon.
-                </p>
-                <p className="text-xs text-yellow-700 mt-2 font-semibold">
-                  💡 Setelah menambahkan field, klik nama field di bagian Template Editor untuk memasukkan placeholder dengan format yang benar: <code className="bg-white px-1">(nama_field)</code>
+                <div className="mt-3 space-y-2 text-xs text-yellow-800">
+                  <div className="bg-white bg-opacity-50 p-2 rounded">
+                    <p className="font-bold text-green-700">✅ Field dengan "Tampil di Surat" (dicentang):</p>
+                    <p className="ml-4">• Akan ditampilkan sebagai form input saat warga mengajukan surat</p>
+                    <p className="ml-4">• Valuenya bisa dipakai di template dengan format: <code className="bg-white px-1">(nama_field)</code></p>
+                    <p className="ml-4 font-semibold">• Contoh: Field "Keperluan" → di surat tampil: "Keperluan: Melamar Pekerjaan"</p>
+                  </div>
+                  <div className="bg-white bg-opacity-50 p-2 rounded">
+                    <p className="font-bold text-purple-700">🔹 Field "Hanya Data Dinamis" (tidak dicentang):</p>
+                    <p className="ml-4">• Tetap ditampilkan sebagai form input saat warga mengisi</p>
+                    <p className="ml-4">• Valuenya HANYA untuk dipakai di template, TIDAK tampil sebagai "Label: Value"</p>
+                    <p className="ml-4 font-semibold">• Contoh: Field "Nama" → di surat langsung: "MAD SOLEH" (tanpa label "Nama:")</p>
+                    <p className="ml-4 font-semibold">• Berguna untuk surat yang formatnya sudah fix seperti gambar contoh</p>
+                  </div>
+                </div>
+                <p className="text-xs text-yellow-700 mt-3 font-semibold">
+                  💡 Setelah menambahkan field, klik nama field di bagian Template Editor untuk memasukkan placeholder: <code className="bg-white px-1">(nama_field)</code>
                 </p>
               </div>
             )}
@@ -460,78 +546,185 @@ const FormJenisSurat = () => {
             {formData.fields.length > 0 && (
               <div className="mb-4 space-y-2">
                 {formData.fields.map((field, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
-                    <div className="text-sm">
-                      <span className="font-medium">{field.label}</span>
-                      <span className="text-gray-500"> ({field.name}) - {field.type}</span>
-                      {field.required && <span className="text-red-500"> *</span>}
+                  <div 
+                    key={index} 
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragEnd={handleDragEnd}
+                    className={`flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200 cursor-move hover:bg-gray-100 transition-colors ${
+                      draggedIndex === index ? 'opacity-50' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 flex-1">
+                      <FiMove className="w-4 h-4 text-gray-400" />
+                      <div className="flex-1 text-sm">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium">{field.label}</span>
+                          <span className="text-gray-500">({field.name}) - {field.type}</span>
+                          {field.required && <span className="text-red-500">*</span>}
+                          {field.showInDocument === false && (
+                            <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-semibold">
+                              Hanya Data Dinamis
+                            </span>
+                          )}
+                          {field.showInDocument !== false && (
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+                              Tampil di Surat
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => removeField(index)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <FiTrash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => moveFieldUp(index)}
+                        disabled={index === 0}
+                        className={`p-1 rounded ${index === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'}`}
+                        title="Pindah ke atas"
+                      >
+                        <FiChevronUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveFieldDown(index)}
+                        disabled={index === formData.fields.length - 1}
+                        className={`p-1 rounded ${index === formData.fields.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-blue-600 hover:bg-blue-50'}`}
+                        title="Pindah ke bawah"
+                      >
+                        <FiChevronDown className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => editField(index)}
+                        className="p-1 text-green-600 hover:bg-green-50 rounded"
+                        title="Edit field"
+                      >
+                        <FiEdit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeField(index)}
+                        className="p-1 text-red-600 hover:bg-red-50 rounded"
+                        title="Hapus field"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Add New Field */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <input
-                  type="text"
-                  name="label"
-                  value={newField.label}
-                  onChange={handleFieldChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  placeholder="Label (Nama Lengkap)"
-                />
+            {/* Add/Edit Field Form */}
+            {editingFieldIndex !== null && (
+              <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-400 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-semibold text-blue-900 flex items-center gap-2">
+                    <FiEdit2 className="w-4 h-4" />
+                    Mode Edit - Mengubah field "{formData.fields[editingFieldIndex]?.label}"
+                  </p>
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="text-blue-700 hover:text-blue-900 text-sm font-medium"
+                  >
+                    Batal Edit
+                  </button>
+                </div>
               </div>
-              <div>
-                <input
-                  type="text"
-                  name="name"
-                  value={newField.name}
-                  onChange={handleFieldChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  placeholder="Name (nama)"
-                />
+            )}
+
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <input
+                    type="text"
+                    name="label"
+                    value={newField.label}
+                    onChange={handleFieldChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    placeholder="Label (Nama Lengkap)"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    name="name"
+                    value={newField.name}
+                    onChange={handleFieldChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    placeholder="Name (nama)"
+                  />
+                </div>
+                <div>
+                  <select
+                    name="type"
+                    value={newField.type}
+                    onChange={handleFieldChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  >
+                    <option value="text">Text</option>
+                    <option value="textarea">Textarea</option>
+                    <option value="number">Number</option>
+                    <option value="date">Date</option>
+                    <option value="select">Select</option>
+                  </select>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={addField}
+                    className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
+                  >
+                    {editingFieldIndex !== null ? (
+                      <>
+                        <FiSave className="w-4 h-4" /> Update Field
+                      </>
+                    ) : (
+                      <>
+                        <FiPlus className="w-4 h-4" /> Tambah Field
+                      </>
+                    )}
+                  </button>
+                  {editingFieldIndex !== null && (
+                    <button
+                      type="button"
+                      onClick={cancelEdit}
+                      className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm font-medium"
+                    >
+                      <FiX className="w-4 h-4" /> Batal
+                    </button>
+                  )}
+                </div>
               </div>
-              <div>
-                <select
-                  name="type"
-                  value={newField.type}
-                  onChange={handleFieldChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                >
-                  <option value="text">Text</option>
-                  <option value="textarea">Textarea</option>
-                  <option value="number">Number</option>
-                  <option value="date">Date</option>
-                  <option value="select">Select</option>
-                </select>
-              </div>
-              <div className="flex gap-2">
-                <label className="flex items-center gap-1">
+              
+              {/* Checkbox Options */}
+              <div className="flex items-center gap-6 pl-2">
+                <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     name="required"
                     checked={newField.required}
                     onChange={handleFieldChange}
-                    className="w-4 h-4"
+                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                   />
-                  <span className="text-xs">Wajib</span>
+                  <span className="text-sm font-medium text-gray-700">Wajib Diisi</span>
                 </label>
-                <button
-                  type="button"
-                  onClick={addField}
-                  className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm"
-                >
-                  <FiPlus className="w-4 h-4" /> Tambah
-                </button>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="showInDocument"
+                    checked={newField.showInDocument}
+                    onChange={handleFieldChange}
+                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Tampil di Surat</span>
+                  <span className="text-xs text-gray-500 italic">
+                    (jika tidak dicentang, hanya jadi data dinamis untuk template)
+                  </span>
+                </label>
               </div>
             </div>
           </div>

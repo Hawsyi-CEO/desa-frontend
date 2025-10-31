@@ -549,16 +549,19 @@ const PreviewSurat = ({ jenisSurat, onClose }) => {
                   {jenisSurat.kalimat_pembuka || `Yang bertanda tangan di bawah ini, ${config.jabatan_ttd}, dengan ini menerangkan bahwa :`}
                 </p>
 
-                {/* Data Pemohon - Only show if fields exist */}
+                {/* Data Pemohon - Only show fields with showInDocument = true */}
                 {jenisSurat.fields && jenisSurat.fields.length > 0 && (
                   <div style={{ marginLeft: '30px', marginBottom: '10px' }}>
-                    {jenisSurat.fields.map((field, index) => (
-                      <div key={index} className="flex" style={{ marginBottom: '3px' }}>
-                        <div style={{ width: '160px' }}>{field.label}</div>
-                        <div style={{ width: '25px', textAlign: 'center' }}>:</div>
-                        <div className="flex-1 font-semibold">{sampleData[field.name] || `[${field.label}]`}</div>
-                      </div>
-                    ))}
+                    {jenisSurat.fields
+                      .filter(field => field.showInDocument !== false)
+                      .map((field, index) => (
+                        <div key={index} className="flex" style={{ marginBottom: '3px' }}>
+                          <div style={{ width: '160px' }}>{field.label}</div>
+                          <div style={{ width: '25px', textAlign: 'center' }}>:</div>
+                          <div className="flex-1 font-semibold">{sampleData[field.name] || `[${field.label}]`}</div>
+                        </div>
+                      ))
+                    }
                   </div>
                 )}
 

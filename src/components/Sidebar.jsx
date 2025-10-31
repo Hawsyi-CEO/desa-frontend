@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import logoKabupaten from '../assets/Lambang_Kabupaten_Bogor.png';
 import { 
   FiHome, 
   FiFileText, 
@@ -185,14 +186,11 @@ const Sidebar = () => {
           {/* Logo & Title */}
           <div className="flex items-center gap-2">
             <img 
-              src="/assets/Lambang_Kabupaten_Bogor.png" 
+              src={logoKabupaten} 
               alt="Logo"
               className="h-8 w-8 object-contain"
-              onError={(e) => {
-                e.target.src = '/src/assets/Lambang_Kabupaten_Bogor.png';
-              }}
             />
-            <span className="font-bold text-gray-900 text-sm">Surat Digital Desa</span>
+            <span className="font-bold text-gray-900 text-sm">Surat Muliya</span>
           </div>
           
           {/* Empty space for balance */}
@@ -223,12 +221,9 @@ const Sidebar = () => {
               <div className={`flex items-center gap-3 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 hidden lg:hidden'}`}>
                 <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-md">
                   <img 
-                    src="/assets/Lambang_Kabupaten_Bogor.png" 
+                    src={logoKabupaten} 
                     alt="Logo Kabupaten Bogor"
                     className="w-9 h-9 object-contain"
-                    onError={(e) => {
-                      e.target.src = '/src/assets/Lambang_Kabupaten_Bogor.png';
-                    }}
                   />
                 </div>
                 <div>
@@ -241,12 +236,9 @@ const Sidebar = () => {
               {!isOpen && (
                 <div className="hidden lg:flex w-10 h-10 bg-white rounded-lg items-center justify-center mx-auto shadow-md">
                   <img 
-                    src="/assets/Lambang_Kabupaten_Bogor.png" 
+                    src={logoKabupaten} 
                     alt="Logo Kabupaten Bogor"
                     className="w-9 h-9 object-contain"
-                    onError={(e) => {
-                      e.target.src = '/src/assets/Lambang_Kabupaten_Bogor.png';
-                    }}
                   />
                 </div>
               )}

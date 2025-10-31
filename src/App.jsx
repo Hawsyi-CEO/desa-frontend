@@ -22,11 +22,11 @@ import VerifikatorDashboard from './pages/Verifikator/Dashboard';
 import VerifikatorSurat from './pages/Verifikator/Surat';
 import VerifikatorRiwayat from './pages/Verifikator/Riwayat';
 
-import WargaDashboard from './pages/Warga/Dashboard';
-import WargaSurat from './pages/Warga/Surat';
-import WargaHistory from './pages/Warga/History';
-import WargaProfile from './pages/Warga/Profile';
-import ChangePassword from './pages/Warga/ChangePassword';
+import WargaDashboard from './pages/Warga/DashboardMobile';
+import WargaSurat from './pages/Warga/SuratMobile';
+import WargaHistory from './pages/Warga/HistoryMobile';
+import WargaProfile from './pages/Warga/ProfileMobile';
+import ChangePassword from './pages/Warga/ChangePasswordMobile';
 
 import WargaUniversalDashboard from './pages/WargaUniversal/Dashboard';
 import WargaUniversalHistory from './pages/WargaUniversal/History';

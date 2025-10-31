@@ -303,22 +303,30 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
               {doc.jenis_surat?.kalimat_pembuka || `Yang bertanda tangan di bawah ini, ${config.jabatan_ttd}, dengan ini menerangkan bahwa :`}
             </p>
 
-            {/* Data Pemohon - Only show if fields exist */}
+            {/* Data Pemohon - Only show fields with showInDocument = true */}
             {fields && fields.length > 0 && (
               <div style={{ marginLeft: '30px', marginBottom: '12px' }}>
-                {fields.map((field, index) => {
-                  const value = getFieldValue(field.name, dataSurat);
-                  console.log(`🔍 Field "${field.label}" (${field.name}):`, value || '[KOSONG]');
-                  return (
-                    <div key={index} className="flex" style={{ marginBottom: '4px' }}>
-                      <div style={{ width: '150px' }}>{field.label}</div>
-                      <div style={{ width: '20px', textAlign: 'center' }}>:</div>
-                      <div className="flex-1">
-                        {value || `[${field.label}]`}
+                {(() => {
+                  console.log('📋 All Fields:', fields);
+                  const filteredFields = fields.filter(field => field.showInDocument !== false);
+                  console.log('✅ Filtered Fields (yang akan ditampilkan):', filteredFields);
+                  console.log('🚫 Hidden Fields (yang tidak ditampilkan):', fields.filter(field => field.showInDocument === false));
+                  return filteredFields;
+                })()
+                  .map((field, index) => {
+                    const value = getFieldValue(field.name, dataSurat);
+                    console.log(`🔍 Rendering Field "${field.label}" (${field.name}):`, value || '[KOSONG]');
+                    return (
+                      <div key={index} className="flex" style={{ marginBottom: '4px' }}>
+                        <div style={{ width: '150px' }}>{field.label}</div>
+                        <div style={{ width: '20px', textAlign: 'center' }}>:</div>
+                        <div className="flex-1">
+                          {value || `[${field.label}]`}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                }
               </div>
             )}
 

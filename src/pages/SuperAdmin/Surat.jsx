@@ -389,16 +389,19 @@ const AdminSurat = () => {
     const generateFieldsHTML = () => {
       if (!fields || fields.length === 0) return '';
       
-      return fields.map(field => {
-        const value = dataSurat[field.name] || '[Data tidak tersedia]';
-        return `
-          <div style="display: flex; margin-bottom: 4px;">
-            <div style="width: 150px;">${field.label}</div>
-            <div style="width: 20px; text-align: center;">:</div>
-            <div style="flex: 1;">${value}</div>
-          </div>
-        `;
-      }).join('');
+      // Filter: hanya tampilkan field dengan showInDocument !== false
+      return fields
+        .filter(field => field.showInDocument !== false)
+        .map(field => {
+          const value = dataSurat[field.name] || '[Data tidak tersedia]';
+          return `
+            <div style="display: flex; margin-bottom: 4px;">
+              <div style="width: 150px;">${field.label}</div>
+              <div style="width: 20px; text-align: center;">:</div>
+              <div style="flex: 1;">${value}</div>
+            </div>
+          `;
+        }).join('');
     };
 
     return `

@@ -475,17 +475,20 @@ const WargaUniversalDashboard = () => {
       console.log('📝 Generating fields HTML with data:', dataSurat);
       console.log('📋 Fields to render:', fields);
       
-      return fields.map(field => {
-        const value = dataSurat[field.name] || '[Data tidak tersedia]';
-        console.log(`  Field: ${field.name} (${field.label}) = ${value}`);
-        return `
-          <div style="display: flex; margin-bottom: 4px;">
-            <div style="width: 150px;">${field.label}</div>
-            <div style="width: 20px; text-align: center;">:</div>
-            <div style="flex: 1;">${value}</div>
-          </div>
-        `;
-      }).join('');
+      // Filter only fields with showInDocument = true
+      return fields
+        .filter(field => field.showInDocument !== false)
+        .map(field => {
+          const value = dataSurat[field.name] || '[Data tidak tersedia]';
+          console.log(`  Field: ${field.name} (${field.label}) - showInDocument: ${field.showInDocument !== false} = ${value}`);
+          return `
+            <div style="display: flex; margin-bottom: 4px;">
+              <div style="width: 150px;">${field.label}</div>
+              <div style="width: 20px; text-align: center;">:</div>
+              <div style="flex: 1;">${value}</div>
+            </div>
+          `;
+        }).join('');
     };
 
     const jenisSurat = suratData.jenis_surat || {};

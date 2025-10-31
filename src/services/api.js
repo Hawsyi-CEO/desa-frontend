@@ -2,7 +2,10 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-console.log('API URL configured:', API_URL);
+// Only log in development
+if (import.meta.env.DEV) {
+  console.log('API URL configured:', API_URL);
+}
 
 const api = axios.create({
   baseURL: API_URL,
@@ -14,7 +17,9 @@ const api = axios.create({
 // Add token to requests
 api.interceptors.request.use(
   (config) => {
-    console.log('API Request:', config.method.toUpperCase(), config.url);
+    if (import.meta.env.DEV) {
+      console.log('API Request:', config.method.toUpperCase(), config.url);
+    }
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -22,7 +27,9 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('Request interceptor error:', error);
+    if (import.meta.env.DEV) {
+      console.error('Request interceptor error:', error);
+    }
     return Promise.reject(error);
   }
 );
@@ -30,12 +37,16 @@ api.interceptors.request.use(
 // Handle response errors
 api.interceptors.response.use(
   (response) => {
-    console.log('API Response:', response.status, response.config.url);
+    if (import.meta.env.DEV) {
+      console.log('API Response:', response.status, response.config.url);
+    }
     return response;
   },
   (error) => {
-    console.error('API Error:', error.message);
-    console.error('Error details:', error.response?.status, error.response?.data);
+    if (import.meta.env.DEV) {
+      console.error('API Error:', error.message);
+      console.error('Error details:', error.response?.status, error.response?.data);
+    }
     
     if (error.response?.status === 401) {
       // Token expired or invalid

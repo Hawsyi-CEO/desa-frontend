@@ -12,8 +12,6 @@ const WargaSurat = () => {
   const [jenisSurat, setJenisSurat] = useState([]);
   const [selectedJenis, setSelectedJenis] = useState(null);
   const [formData, setFormData] = useState({});
-  const [keperluan, setKeperluan] = useState('');
-  const [lampiran, setLampiran] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingNik, setLoadingNik] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -188,10 +186,6 @@ const WargaSurat = () => {
     }
   };
 
-  const handleFileChange = (e) => {
-    setLampiran(e.target.files[0]);
-  };
-
   const handlePreview = () => {
     if (!selectedJenis) {
       warning('Pilih jenis surat terlebih dahulu');
@@ -222,7 +216,6 @@ const WargaSurat = () => {
         template_konten: selectedJenis.template_konten
       },
       data_surat: formData,
-      keperluan,
       user: user,
       status_surat: 'draft'
     });
@@ -256,35 +249,17 @@ const WargaSurat = () => {
     try {
       setLoading(true);
       
-      // Jika ada lampiran, gunakan FormData
-      if (lampiran) {
-        const submitData = new FormData();
-        submitData.append('jenis_surat_id', selectedJenis.id);
-        submitData.append('data_surat', JSON.stringify(formData));
-        submitData.append('keperluan', keperluan || '');
-        submitData.append('lampiran', lampiran);
-
-        await api.post('/warga/surat', submitData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-      } else {
-        // Jika tidak ada lampiran, kirim JSON biasa
-        await api.post('/warga/surat', {
-          jenis_surat_id: selectedJenis.id,
-          data_surat: formData,
-          keperluan: keperluan || ''
-        });
-      }
+      // Kirim data surat (tanpa keperluan dan lampiran)
+      await api.post('/warga/surat', {
+        jenis_surat_id: selectedJenis.id,
+        data_surat: formData
+      });
 
       success('Surat berhasil diajukan!');
       
       // Reset form
       setSelectedJenis(null);
       setFormData({});
-      setKeperluan('');
-      setLampiran(null);
       
     } catch (err) {
       console.error('Error submitting surat:', err);
@@ -491,40 +466,6 @@ const WargaSurat = () => {
                   </div>
                 );
               })()}
-
-              {/* Keperluan */}
-              {selectedJenis && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Keperluan
-                    </label>
-                    <textarea
-                      value={keperluan}
-                      onChange={(e) => setKeperluan(e.target.value)}
-                      className="input"
-                      rows="2"
-                      placeholder="Untuk keperluan..."
-                    />
-                  </div>
-
-                  {/* Lampiran */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Lampiran (opsional)
-                    </label>
-                    <input
-                      type="file"
-                      onChange={handleFileChange}
-                      className="input"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Format: PDF, JPG, PNG (Max 2MB)
-                    </p>
-                  </div>
-                </>
-              )}
 
               {/* Buttons */}
               {selectedJenis && (

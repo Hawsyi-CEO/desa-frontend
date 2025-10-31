@@ -63,7 +63,7 @@ const Navbar = () => {
               </div>
               <div>
                 <span className="text-xl font-bold bg-gradient-to-r from-[#00AA13] to-[#00CC16] bg-clip-text text-transparent">
-                  Surat Digital Desa
+                  Surat Muliya
                 </span>
                 <p className="text-xs text-gray-500">Kabupaten Bogor</p>
               </div>
