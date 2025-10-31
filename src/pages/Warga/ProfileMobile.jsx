@@ -21,15 +21,15 @@ const WargaProfileMobile = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const userData = JSON.parse(sessionStorage.getItem('user') || '{}');
     setUser(userData);
     setLoading(false);
   }, []);
 
   const handleLogout = () => {
     if (window.confirm('Apakah Anda yakin ingin keluar?')) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
       navigate('/login');
     }
   };
@@ -193,3 +193,4 @@ const WargaProfileMobile = () => {
 };
 
 export default WargaProfileMobile;
+

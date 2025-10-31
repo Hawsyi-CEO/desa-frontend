@@ -272,3 +272,4 @@ const WargaUniversalHistory = () => {
 };
 
 export default WargaUniversalHistory;
+

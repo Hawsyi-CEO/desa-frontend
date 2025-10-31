@@ -3,10 +3,12 @@ import Layout from '../../components/Layout';
 import PreviewSurat from '../../components/PreviewSurat';
 import Toast from '../../components/Toast';
 import ConfirmModal from '../../components/ConfirmModal';
+import ApproveModalSuperAdmin from '../../components/ApproveModalSuperAdmin';
+import RejectModalSuperAdmin from '../../components/RejectModalSuperAdmin';
 import { useToast } from '../../hooks/useToast';
 import { useConfirm } from '../../hooks/useConfirm';
 import { safeParseDataSurat, safeParseFields } from '../../utils/jsonHelpers';
-import api from '../../services/api';
+import api, { BASE_URL } from '../../services/api';
 
 const AdminSurat = () => {
   const { toast, hideToast, success, error, warning } = useToast();
@@ -18,11 +20,10 @@ const AdminSurat = () => {
   const [filterJenis, setFilterJenis] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedSurat, setSelectedSurat] = useState(null);
-  const [catatan, setCatatan] = useState('');
-  const [tanggalSurat, setTanggalSurat] = useState('');
-  const [submitting, setSubmitting] = useState(false);
   // State untuk modal pilihan penandatangan
   const [showSignerModal, setShowSignerModal] = useState(false);
   const [pendingSuratData, setPendingSuratData] = useState(null);
@@ -75,7 +76,6 @@ const AdminSurat = () => {
       setLoading(true);
       const response = await api.get(`/admin/surat/${id}`);
       setSelectedSurat(response.data.data);
-      setTanggalSurat(new Date().toISOString().split('T')[0]);
       setShowDetailModal(true);
     } catch (err) {
       console.error('Error fetching surat detail:', err);
@@ -85,73 +85,14 @@ const AdminSurat = () => {
     }
   };
 
-  const handleApprove = async () => {
-    if (!tanggalSurat) {
-      warning('Tanggal surat harus diisi');
-      return;
-    }
-
-    const confirmed = await confirm({
-      title: 'Setujui Surat',
-      message: 'Yakin ingin menyetujui surat ini? Nomor surat akan digenerate otomatis.',
-      confirmText: 'Ya, Setujui',
-      cancelText: 'Batal',
-      confirmColor: 'green'
-    });
-
-    if (!confirmed) return;
-
-    try {
-      setSubmitting(true);
-      const response = await api.put(`/admin/surat/${selectedSurat.id}/approve`, {
-        catatan,
-        tanggal_surat: tanggalSurat
-      });
-      
-      success(`Surat berhasil disetujui dengan nomor: ${response.data.data.no_surat}`);
-      setShowDetailModal(false);
-      setCatatan('');
-      fetchSurat();
-    } catch (err) {
-      console.error('Error approving surat:', err);
-      error(err.response?.data?.message || 'Gagal menyetujui surat');
-    } finally {
-      setSubmitting(false);
-    }
+  const handleOpenApproveModal = () => {
+    setShowDetailModal(false);
+    setShowApproveModal(true);
   };
 
-  const handleReject = async () => {
-    if (!catatan) {
-      warning('Catatan penolakan harus diisi');
-      return;
-    }
-
-    const confirmed = await confirm({
-      title: 'Tolak Surat',
-      message: 'Yakin ingin menolak surat ini? Pemohon akan diminta untuk mengajukan ulang.',
-      confirmText: 'Ya, Tolak',
-      cancelText: 'Batal',
-      confirmColor: 'red'
-    });
-
-    if (!confirmed) return;
-
-    try {
-      setSubmitting(true);
-      await api.put(`/admin/surat/${selectedSurat.id}/reject`, {
-        catatan
-      });
-      
-      success('Surat berhasil ditolak');
-      setShowDetailModal(false);
-      setCatatan('');
-      fetchSurat();
-    } catch (err) {
-      console.error('Error rejecting surat:', err);
-      error(err.response?.data?.message || 'Gagal menolak surat');
-    } finally {
-      setSubmitting(false);
-    }
+  const handleOpenRejectModal = () => {
+    setShowDetailModal(false);
+    setShowRejectModal(true);
   };
 
   // Handle checkbox selection
@@ -1217,109 +1158,110 @@ const AdminSurat = () => {
                     </div>
                   </div>
 
-                  {/* Form Approval */}
+                  {/* Surat Pengantar dari RT (jika ada) */}
+                  {selectedSurat.surat_pengantar_rt && (
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 border-2 border-blue-200 shadow-sm">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 h-12 w-12 rounded-full bg-blue-500 flex items-center justify-center shadow-md">
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-sm font-bold text-blue-900 mb-1">📄 Surat Pengantar dari RT</h4>
+                          <p className="text-xs text-blue-700 mb-3">
+                            Diupload: {selectedSurat.tanggal_upload_pengantar_rt ? new Date(selectedSurat.tanggal_upload_pengantar_rt).toLocaleDateString('id-ID', { 
+                              weekday: 'long', 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric' 
+                            }) : '-'}
+                          </p>
+                          <a
+                            href={`${BASE_URL}/uploads/surat-pengantar/${selectedSurat.surat_pengantar_rt}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-all shadow-sm hover:shadow-md"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <span>Lihat Surat Pengantar RT</span>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Surat Pengantar dari RW (jika ada) */}
+                  {selectedSurat.surat_pengantar_rw && (
+                    <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl p-5 border-2 border-purple-200 shadow-sm">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 h-12 w-12 rounded-full bg-purple-500 flex items-center justify-center shadow-md">
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-sm font-bold text-purple-900 mb-1">📑 Surat Pengantar dari RW</h4>
+                          <p className="text-xs text-purple-700 mb-3">
+                            Diupload: {selectedSurat.tanggal_upload_pengantar_rw ? new Date(selectedSurat.tanggal_upload_pengantar_rw).toLocaleDateString('id-ID', { 
+                              weekday: 'long', 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric' 
+                            }) : '-'}
+                          </p>
+                          <a
+                            href={`${BASE_URL}/uploads/surat-pengantar/${selectedSurat.surat_pengantar_rw}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition-all shadow-sm hover:shadow-md"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <span>Lihat Surat Pengantar RW</span>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons untuk Approval */}
                   {(selectedSurat.status_surat === 'diverifikasi' || selectedSurat.status_surat === 'menunggu_admin') && (
-                    <div className="space-y-4">
-                      <div className="flex items-center pb-3 border-b border-gray-200">
+                    <div className="border-t pt-5 mt-5">
+                      <div className="flex items-center pb-3 mb-4 border-b border-gray-200">
                         <svg className="w-5 h-5 text-slate-700 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
-                        <h4 className="font-bold text-gray-900 text-lg">Form Approval</h4>
+                        <h4 className="font-bold text-gray-900 text-lg">Verifikasi Surat</h4>
                       </div>
                       
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">
-                          <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          Tanggal Surat <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="date"
-                          value={tanggalSurat}
-                          onChange={(e) => setTanggalSurat(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-all"
-                          required
-                        />
-                      </div>
-
-                      {/* Info Auto Generate Nomor */}
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4">
-                        <div className="flex items-start">
-                          <svg className="w-6 h-6 text-green-600 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                          <div>
-                            <p className="text-sm text-green-900 font-bold mb-1">
-                              🤖 Nomor Surat Otomatis
-                            </p>
-                            <p className="text-xs text-green-700">
-                              Sistem akan generate nomor surat secara otomatis setelah approval
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">
-                          <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                          </svg>
-                          Catatan <span className="text-gray-400">(Opsional)</span>
-                        </label>
-                        <textarea
-                          value={catatan}
-                          onChange={(e) => setCatatan(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-all"
-                          rows="3"
-                          placeholder="Tambahkan catatan jika diperlukan..."
-                        />
-                      </div>
-
-                      <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                      <div className="flex gap-3">
                         <button
-                          onClick={handleReject}
-                          className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl hover:from-red-600 hover:to-rose-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 font-medium"
-                          disabled={submitting}
+                          onClick={handleOpenRejectModal}
+                          className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl"
                         >
-                          {submitting ? (
-                            <span className="flex items-center">
-                              <svg className="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              Memproses...
-                            </span>
-                          ) : (
-                            <span className="flex items-center">
-                              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                              Tolak Surat
-                            </span>
-                          )}
+                          <span className="flex items-center justify-center">
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Tolak Surat
+                          </span>
                         </button>
                         <button
-                          onClick={handleApprove}
-                          className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 font-medium"
-                          disabled={submitting}
+                          onClick={handleOpenApproveModal}
+                          className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl"
                         >
-                          {submitting ? (
-                            <span className="flex items-center">
-                              <svg className="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              Memproses...
-                            </span>
-                          ) : (
-                            <span className="flex items-center">
-                              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                              Setujui Surat
-                            </span>
-                          )}
+                          <span className="flex items-center justify-center">
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Setujui Surat
+                          </span>
                         </button>
                       </div>
                     </div>
@@ -1451,6 +1393,21 @@ const AdminSurat = () => {
           )}
 
           {/* Confirm Modal */}
+          {/* Approve Modal */}
+          <ApproveModalSuperAdmin
+            isOpen={showApproveModal}
+            onClose={() => setShowApproveModal(false)}
+            surat={selectedSurat}
+          />
+
+          {/* Reject Modal */}
+          <RejectModalSuperAdmin
+            isOpen={showRejectModal}
+            onClose={() => setShowRejectModal(false)}
+            surat={selectedSurat}
+          />
+
+          {/* Confirm Modal */}
           <ConfirmModal
             show={confirmState.show}
             title={confirmState.title}
@@ -1478,3 +1435,4 @@ const AdminSurat = () => {
 };
 
 export default AdminSurat;
+

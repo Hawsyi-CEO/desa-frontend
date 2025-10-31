@@ -12,13 +12,16 @@ import {
 } from 'react-icons/fi';
 import WargaLayout from '../../components/WargaLayout';
 import PreviewSurat from '../../components/PreviewSurat';
+import SuccessModal from '../../components/SuccessModal';
 import Toast from '../../components/Toast';
 import { useToast } from '../../hooks/useToast';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const SuratMobile = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast, hideToast, success, error, warning } = useToast();
   const [jenisSurat, setJenisSurat] = useState([]);
   const [filteredJenisSurat, setFilteredJenisSurat] = useState([]);
@@ -29,6 +32,7 @@ const SuratMobile = () => {
   const [loadingNik, setLoadingNik] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewData, setPreviewData] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [step, setStep] = useState(1); // 1: pilih surat, 2: isi form
 
   useEffect(() => {
@@ -182,10 +186,7 @@ const SuratMobile = () => {
       });
 
       if (response.data.success) {
-        success('Surat berhasil diajukan!');
-        setTimeout(() => {
-          window.location.href = '/warga/dashboard';
-        }, 1500);
+        setShowSuccessModal(true);
       }
     } catch (err) {
       console.error('Error submitting surat:', err);
@@ -281,7 +282,7 @@ const SuratMobile = () => {
               </button>
             )}
             <h1 className="text-2xl font-bold">
-              {step === 1 ? 'Pilih Jenis Surat' : selectedJenis?.nama_jenis_surat}
+              {step === 1 ? 'Pilih Jenis Surat' : selectedJenis?.nama_surat}
             </h1>
           </div>
           
@@ -416,8 +417,23 @@ const SuratMobile = () => {
         />
       )}
 
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        title="Surat Berhasil Diajukan!"
+        message="Surat Anda telah berhasil diajukan dan akan segera diproses oleh RT/RW"
+        onClose={() => {
+          setShowSuccessModal(false);
+          navigate('/warga/dashboard');
+        }}
+        onContinue={() => {
+          setShowSuccessModal(false);
+          navigate('/warga/history');
+        }}
+      />
+
       {/* Toast */}
-      {toast && toast.show && (
+      {toast && (
         <Toast
           message={toast.message}
           type={toast.type}
@@ -429,3 +445,4 @@ const SuratMobile = () => {
 };
 
 export default SuratMobile;
+

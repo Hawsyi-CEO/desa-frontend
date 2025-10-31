@@ -1,174 +1,268 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Layout from '../../components/Layout';
-import { useAuth } from '../../context/AuthContext';
+import VerifikatorLayout from '../../components/VerifikatorLayout';
 import api from '../../services/api';
+import { 
+  FiClock, 
+  FiCheckCircle, 
+  FiXCircle, 
+  FiFileText, 
+  FiUser,
+  FiArrowRight,
+  FiTrendingUp,
+  FiAlertCircle,
+  FiAward,
+  FiMapPin
+} from 'react-icons/fi';
 
 const VerifikatorDashboard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
+  const [recentSurat, setRecentSurat] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardStats();
+    const userData = JSON.parse(sessionStorage.getItem('user') || '{}');
+    setUser(userData);
+    fetchDashboardData();
   }, []);
 
-  const fetchDashboardStats = async () => {
+  const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      
+      // Fetch dashboard stats
       const response = await api.get('/verifikator/dashboard');
       setStats(response.data.data);
+      
+      // Fetch recent surat
+      const suratResponse = await api.get('/verifikator/surat-masuk');
+      if (suratResponse.data.success) {
+        setRecentSurat(suratResponse.data.data.slice(0, 3)); // Only 3 for mobile
+      }
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+      console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      'menunggu_verifikasi_rt': { color: 'bg-yellow-50 text-yellow-700 border-yellow-200', text: 'Menunggu RT' },
+      'menunggu_verifikasi_rw': { color: 'bg-blue-50 text-blue-700 border-blue-200', text: 'Menunggu RW' },
+      'disetujui_rt': { color: 'bg-green-50 text-green-700 border-green-200', text: 'Disetujui RT' },
+      'disetujui_rw': { color: 'bg-green-50 text-green-700 border-green-200', text: 'Disetujui RW' },
+      'ditolak_rt': { color: 'bg-orange-50 text-orange-700 border-orange-200', text: 'Ditolak RT' },
+      'ditolak_rw': { color: 'bg-orange-50 text-orange-700 border-orange-200', text: 'Ditolak RW' },
+      'ditolak': { color: 'bg-red-50 text-red-700 border-red-200', text: 'Ditolak' },
+      'selesai': { color: 'bg-green-50 text-green-700 border-green-200', text: 'Selesai' },
+      'pending': { color: 'bg-gray-50 text-gray-700 border-gray-200', text: 'Pending' }
+    };
+    const config = statusConfig[status] || { color: 'bg-gray-50 text-gray-700 border-gray-200', text: status };
+    return (
+      <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${config.color}`}>
+        {config.text}
+      </span>
+    );
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Hari ini';
+    if (diffDays === 1) return 'Kemarin';
+    if (diffDays < 7) return `${diffDays} hari lalu`;
+    
+    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+  };
+
   if (loading) {
     return (
-      <Layout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Memuat dashboard...</p>
+      <VerifikatorLayout>
+        <div className="p-4 space-y-4">
+          {/* Skeleton Loading */}
+          <div className="animate-pulse">
+            <div className="h-40 bg-gray-200 rounded-2xl mb-4"></div>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="h-24 bg-gray-200 rounded-xl"></div>
+              <div className="h-24 bg-gray-200 rounded-xl"></div>
+            </div>
+            <div className="h-40 bg-gray-200 rounded-2xl"></div>
           </div>
         </div>
-      </Layout>
+      </VerifikatorLayout>
     );
   }
 
-  const levelBadge = stats?.verifikator_info?.level === 'rt' 
-    ? 'RT' 
-    : stats?.verifikator_info?.level === 'rw' 
-    ? 'RW' 
-    : '';
-
+  const levelBadge = stats?.verifikator_info?.level === 'rt' ? 'RT' : 'RW';
   const rtRwInfo = stats?.verifikator_info?.level === 'rt'
     ? `RT ${stats?.verifikator_info?.rt} / RW ${stats?.verifikator_info?.rw}`
     : `RW ${stats?.verifikator_info?.rw}`;
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard Verifikator {levelBadge}</h1>
-            <p className="mt-2 text-gray-600">
-              Kelola verifikasi surat untuk {rtRwInfo}
-            </p>
+    <VerifikatorLayout>
+      <div className="bg-gradient-to-b from-slate-50 to-white min-h-screen">
+        {/* Welcome Card with Navy/Slate Gradient */}
+        <div className="bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 text-white p-6 rounded-b-3xl shadow-xl">
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <FiAward className="text-yellow-400" size={24} />
+              <span className="px-3 py-1 bg-yellow-400 text-slate-900 text-xs font-bold rounded-full">
+                VERIFIKATOR {levelBadge}
+              </span>
+            </div>
+            <p className="text-slate-300 text-sm">Selamat Datang,</p>
+            <h2 className="text-2xl font-bold mt-1">{user?.username || 'Verifikator'}</h2>
+            <div className="flex items-center gap-2 mt-2 text-slate-300 text-sm">
+              <FiMapPin size={14} />
+              <span>{rtRwInfo}</span>
+            </div>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* Menunggu Verifikasi */}
-            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Menunggu Verifikasi</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">
-                    {stats?.stats?.menunggu_verifikasi || 0}
-                  </p>
+          {/* Stats Cards in Welcome Section - Navy Theme */}
+          <div className="grid grid-cols-2 gap-3 mt-6">
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-slate-200 text-xs">Menunggu</span>
+                <FiClock className="text-yellow-400" size={18} />
+              </div>
+              <p className="text-3xl font-bold">{stats?.stats?.menunggu_verifikasi || 0}</p>
+              <p className="text-xs text-slate-300 mt-1">Perlu verifikasi</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-slate-200 text-xs">Diverifikasi</span>
+                <FiCheckCircle className="text-green-400" size={18} />
+              </div>
+              <p className="text-3xl font-bold text-green-400">{stats?.stats?.diverifikasi_hari_ini || 0}</p>
+              <p className="text-xs text-slate-300 mt-1">Hari ini</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="p-4 space-y-6 -mt-6">
+          {/* Quick Action Button */}
+          <div className="bg-white rounded-2xl shadow-lg p-5 border border-slate-100">
+            <button
+              onClick={() => navigate('/verifikator/surat')}
+              className="w-full bg-gradient-to-r from-slate-700 to-slate-900 text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 hover:shadow-xl transition-all active:scale-98 shadow-lg"
+            >
+              <FiCheckCircle size={22} />
+              Verifikasi Surat Sekarang
+              <FiArrowRight size={20} />
+            </button>
+          </div>
+
+          {/* Status Overview */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center shadow-md">
+                  <FiCheckCircle className="text-white" size={20} />
                 </div>
-                <div className="p-3 bg-yellow-100 rounded-full">
-                  <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                <div>
+                  <p className="text-2xl font-bold text-green-900">{stats?.stats?.diverifikasi_hari_ini || 0}</p>
+                  <p className="text-xs text-green-700 font-medium">Disetujui</p>
                 </div>
               </div>
-              <button
+            </div>
+
+            <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-4 border border-red-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center shadow-md">
+                  <FiXCircle className="text-white" size={20} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-red-900">{stats?.stats?.ditolak_hari_ini || 0}</p>
+                  <p className="text-xs text-red-700 font-medium">Ditolak</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="bg-white rounded-2xl shadow-lg p-5 border border-slate-100">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-900 text-lg">Aktivitas Terbaru</h3>
+              <button 
                 onClick={() => navigate('/verifikator/surat')}
-                className="mt-4 text-sm text-yellow-600 hover:text-yellow-700 font-medium"
+                className="text-slate-700 text-sm font-medium flex items-center gap-1 hover:gap-2 transition-all"
               >
-                Lihat Surat →
+                Lihat Semua
+                <FiArrowRight size={16} />
               </button>
             </div>
 
-            {/* Diverifikasi Hari Ini */}
-            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Diverifikasi Hari Ini</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">
-                    {stats?.stats?.diverifikasi_hari_ini || 0}
-                  </p>
-                </div>
-                <div className="p-3 bg-green-100 rounded-full">
-                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
+            {!recentSurat || recentSurat.length === 0 ? (
+              <div className="text-center py-8">
+                <FiAlertCircle className="mx-auto text-gray-300 mb-3" size={40} />
+                <p className="text-gray-500 text-sm">Belum ada surat yang perlu diverifikasi</p>
               </div>
-            </div>
-
-            {/* Ditolak Hari Ini */}
-            <div className="bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Ditolak Hari Ini</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">
-                    {stats?.stats?.ditolak_hari_ini || 0}
-                  </p>
-                </div>
-                <div className="p-3 bg-red-100 rounded-full">
-                  <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
+            ) : (
+              <div className="space-y-3">
+                {recentSurat.map((surat) => (
+                  <div
+                    key={surat.id}
+                    onClick={() => navigate('/verifikator/surat')}
+                    className="flex items-start gap-3 p-3 rounded-xl bg-gradient-to-r from-slate-50 to-transparent hover:from-slate-100 transition-all cursor-pointer border border-slate-100"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center flex-shrink-0">
+                      <FiFileText className="text-slate-700" size={18} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-gray-900 text-sm truncate">
+                        {surat.nama_surat || 'Surat'}
+                      </h4>
+                      <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                        <FiUser className="w-3 h-3" />
+                        {surat.nama_pemohon || 'Warga'}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {formatDate(surat.created_at)}
+                      </p>
+                      <div className="mt-2">
+                        {getStatusBadge(surat.status_surat)}
+                      </div>
+                    </div>
+                    <FiArrowRight className="text-gray-400 flex-shrink-0 mt-2" size={16} />
+                  </div>
+                ))}
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Info Card */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+          {/* Info Banner - Navy Theme */}
+          <div className="bg-gradient-to-r from-slate-100 to-slate-200 rounded-2xl p-4 border border-slate-300">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
+                <FiTrendingUp className="text-white" size={20} />
               </div>
-              <div className="ml-3 flex-1">
-                <h3 className="text-sm font-medium text-blue-800">
-                  Info Verifikator {levelBadge}
-                </h3>
-                <div className="mt-2 text-sm text-blue-700">
-                  <p>Anda adalah <strong>Verifikator {levelBadge}</strong> untuk <strong>{rtRwInfo}</strong></p>
+              <div className="flex-1">
+                <h4 className="font-bold text-slate-900 text-sm mb-1">Info Verifikator {levelBadge}</h4>
+                <div className="text-xs text-slate-700 space-y-1 leading-relaxed">
+                  <p>• Anda adalah <strong>Verifikator {levelBadge}</strong> untuk <strong>{rtRwInfo}</strong></p>
                   {stats?.verifikator_info?.level === 'rt' && (
-                    <p className="mt-1">
-                      • Anda dapat memverifikasi surat dari warga di RT {stats?.verifikator_info?.rt} saja
-                    </p>
+                    <p>• Verifikasi surat dari warga RT {stats?.verifikator_info?.rt} saja</p>
                   )}
                   {stats?.verifikator_info?.level === 'rw' && (
-                    <p className="mt-1">
-                      • Anda dapat memverifikasi surat dari semua RT di RW {stats?.verifikator_info?.rw} (setelah diverifikasi RT)
-                    </p>
+                    <p>• Verifikasi surat dari semua RT di RW {stats?.verifikator_info?.rw}</p>
                   )}
-                  <p className="mt-1">
-                    • Setelah verifikasi {levelBadge}, surat akan dilanjutkan ke tahap berikutnya
-                  </p>
+                  <p>• Setelah verifikasi, surat dilanjutkan ke tahap berikutnya</p>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Quick Action */}
-          <div className="mt-8 text-center">
-            <button
-              onClick={() => navigate('/verifikator/surat')}
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Verifikasi Surat
-            </button>
           </div>
         </div>
       </div>
-    </Layout>
+    </VerifikatorLayout>
   );
 };
 
 export default VerifikatorDashboard;
+

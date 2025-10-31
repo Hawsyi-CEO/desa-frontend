@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
@@ -65,7 +65,7 @@ const WargaUniversalDashboard = () => {
 
   // Autofill data warga berdasarkan NIK (sama seperti di Dashboard Warga)
   const fetchWargaByNik = async (nik) => {
-    console.log('📞 fetchWargaByNik called with NIK:', nik);
+    console.log('?? fetchWargaByNik called with NIK:', nik);
     
     // Validasi jenis surat harus dipilih dulu
     if (!selectedJenis) {
@@ -88,7 +88,7 @@ const WargaUniversalDashboard = () => {
       
       if (response.data.success) {
         const wargaData = response.data.data;
-        console.log('📦 Warga data received:', wargaData);
+        console.log('?? Warga data received:', wargaData);
         setWargaData(wargaData);
         
         // Format tanggal lahir dari timestamp ke YYYY-MM-DD
@@ -96,7 +96,7 @@ const WargaUniversalDashboard = () => {
         if (wargaData.tanggal_lahir) {
           const date = new Date(wargaData.tanggal_lahir);
           formattedTanggalLahir = date.toISOString().split('T')[0]; // 2017-01-06
-          console.log('📅 Formatted tanggal_lahir:', formattedTanggalLahir);
+          console.log('?? Formatted tanggal_lahir:', formattedTanggalLahir);
         }
         
         // Normalize field name (lowercase, remove spaces, underscores)
@@ -108,7 +108,7 @@ const WargaUniversalDashboard = () => {
 
         // Get template fields from selected jenis_surat
         const templateFields = selectedJenis?.fields || [];
-        console.log('📋 Template fields:', templateFields);
+        console.log('?? Template fields:', templateFields);
 
         // Master mapping of warga data (all possible fields)
         const wargaFieldMapping = {
@@ -158,17 +158,17 @@ const WargaUniversalDashboard = () => {
           // Loop through template fields only
           templateFields.forEach(field => {
             const normalizedFieldName = normalizeFieldName(field.name);
-            console.log(`🔍 Checking template field: "${field.name}" → normalized: "${normalizedFieldName}"`);
+            console.log(`?? Checking template field: "${field.name}" ? normalized: "${normalizedFieldName}"`);
             
             // Check if we have data for this field
             if (wargaFieldMapping[normalizedFieldName]) {
               newData[field.name] = wargaFieldMapping[normalizedFieldName];
-              console.log(`✅ Autofilled: ${field.name} = ${wargaFieldMapping[normalizedFieldName]}`);
+              console.log(`? Autofilled: ${field.name} = ${wargaFieldMapping[normalizedFieldName]}`);
             }
           });
           
-          console.log('✨ Final autofilled formData:', newData);
-          console.log('📊 Autofilled fields count:', Object.keys(newData).filter(k => newData[k]).length);
+          console.log('? Final autofilled formData:', newData);
+          console.log('?? Autofilled fields count:', Object.keys(newData).filter(k => newData[k]).length);
           return newData;
         });
 
@@ -189,7 +189,7 @@ const WargaUniversalDashboard = () => {
 
   // Handle field change dengan autofill trigger
   const handleFieldChange = (fieldName, value) => {
-    console.log('🔄 Field changed:', fieldName, '=', value);
+    console.log('?? Field changed:', fieldName, '=', value);
     
     setFormData(prev => ({
       ...prev,
@@ -209,7 +209,7 @@ const WargaUniversalDashboard = () => {
       
       // Trigger autofill ketika NIK lengkap 16 digit
       if (value.length === 16) {
-        console.log('🚀 Triggering autofill for NIK:', value);
+        console.log('?? Triggering autofill for NIK:', value);
         fetchWargaByNik(value);
       }
     }
@@ -239,7 +239,7 @@ const WargaUniversalDashboard = () => {
 
     try {
       setLoading(true);
-      console.log('📝 Creating surat...');
+      console.log('?? Creating surat...');
 
       const payload = {
         nik_pemohon: wargaData.nik,
@@ -254,7 +254,7 @@ const WargaUniversalDashboard = () => {
       
       if (response.data.success) {
         const suratData = response.data.data;
-        console.log('✅ Surat created:', suratData);
+        console.log('? Surat created:', suratData);
         toast.success('Surat berhasil dibuat!');
         
         // Fetch konfigurasi dulu
@@ -307,8 +307,8 @@ const WargaUniversalDashboard = () => {
     }
     // Jika 'kepala', gunakan data default dari config
     
-    console.log('✅ Selected signer:', signerType);
-    console.log('✅ Final config for print:', finalConfig);
+    console.log('? Selected signer:', signerType);
+    console.log('? Final config for print:', finalConfig);
     
     // Langsung print dengan config yang sudah dipilih
     await printSurat(pendingSuratData, finalConfig);
@@ -316,11 +316,11 @@ const WargaUniversalDashboard = () => {
 
   // Print surat using iframe (like SuperAdmin)
   const printSurat = async (suratData, config) => {
-    console.log('🖨️ Starting print process...');
-    console.log('📦 Full Surat Data from backend:', suratData);
-    console.log('📦 Data Surat (raw):', suratData.data_surat);
-    console.log('📦 Jenis Surat (raw):', suratData.jenis_surat);
-    console.log('🔧 Config for print:', config);
+    console.log('??? Starting print process...');
+    console.log('?? Full Surat Data from backend:', suratData);
+    console.log('?? Data Surat (raw):', suratData.data_surat);
+    console.log('?? Jenis Surat (raw):', suratData.jenis_surat);
+    console.log('?? Config for print:', config);
 
     // Parse data_surat - ini adalah data yang diinput user
     let dataSurat = {};
@@ -328,19 +328,19 @@ const WargaUniversalDashboard = () => {
       if (suratData.data_surat) {
         if (typeof suratData.data_surat === 'string') {
           dataSurat = JSON.parse(suratData.data_surat);
-          console.log('📋 Parsed data_surat from string:', dataSurat);
+          console.log('?? Parsed data_surat from string:', dataSurat);
         } else {
           dataSurat = suratData.data_surat;
-          console.log('📋 Using data_surat as object:', dataSurat);
+          console.log('?? Using data_surat as object:', dataSurat);
         }
       }
     } catch (err) {
-      console.error('❌ Error parsing data_surat:', err);
+      console.error('? Error parsing data_surat:', err);
       dataSurat = {};
     }
     
-    console.log('✅ Final dataSurat to use:', dataSurat);
-    console.log('📊 dataSurat keys:', Object.keys(dataSurat));
+    console.log('? Final dataSurat to use:', dataSurat);
+    console.log('?? dataSurat keys:', Object.keys(dataSurat));
 
     // Parse fields from jenis_surat OR from backend response
     let fields = [];
@@ -351,19 +351,19 @@ const WargaUniversalDashboard = () => {
       if (fieldsSource) {
         if (typeof fieldsSource === 'string') {
           fields = JSON.parse(fieldsSource);
-          console.log('📝 Parsed fields from string:', fields);
+          console.log('?? Parsed fields from string:', fields);
         } else {
           fields = fieldsSource;
-          console.log('📝 Using fields as array:', fields);
+          console.log('?? Using fields as array:', fields);
         }
       }
     } catch (err) {
-      console.error('❌ Error parsing fields:', err);
+      console.error('? Error parsing fields:', err);
       fields = [];
     }
     
-    console.log('✅ Final fields to use:', fields);
-    console.log('📊 Fields count:', fields.length);
+    console.log('? Final fields to use:', fields);
+    console.log('?? Fields count:', fields.length);
 
     // Generate HTML untuk print
     const printContent = generatePrintHTML(suratData, dataSurat, fields, config);
@@ -397,7 +397,7 @@ const WargaUniversalDashboard = () => {
         setWargaData(null);
         setTanggalSurat(new Date().toISOString().split('T')[0]);
         toast.info('Surat berhasil dicetak! Form direset untuk surat baru.');
-        console.log('🔄 Form reset');
+        console.log('?? Form reset');
       }, 100);
     }, 250);
   };
@@ -468,12 +468,12 @@ const WargaUniversalDashboard = () => {
 
     const generateFieldsHTML = () => {
       if (!fields || fields.length === 0) {
-        console.log('⚠️ No fields to generate');
+        console.log('?? No fields to generate');
         return '';
       }
       
-      console.log('📝 Generating fields HTML with data:', dataSurat);
-      console.log('📋 Fields to render:', fields);
+      console.log('?? Generating fields HTML with data:', dataSurat);
+      console.log('?? Fields to render:', fields);
       
       // Filter only fields with showInDocument = true
       return fields
@@ -497,7 +497,7 @@ const WargaUniversalDashboard = () => {
     const templateKonten = suratData.template_konten || jenisSurat.template_konten || '';
     const nomorSurat = suratData.no_surat || suratData.nomor_surat || '';
     
-    console.log('📄 Print variables:');
+    console.log('?? Print variables:');
     console.log('  - namaSurat:', namaSurat);
     console.log('  - nomorSurat:', nomorSurat);
     console.log('  - kalimatPembuka:', kalimatPembuka);
@@ -885,7 +885,7 @@ const WargaUniversalDashboard = () => {
           
           <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4 mb-4">
             <p className="text-sm text-amber-800">
-              <strong>📌 Catatan:</strong> Untuk KTP-el, KIA, dan Perubahan Data akan diisi manual saat form dicetak.
+              <strong>?? Catatan:</strong> Untuk KTP-el, KIA, dan Perubahan Data akan diisi manual saat form dicetak.
             </p>
           </div>
 
@@ -973,7 +973,7 @@ const WargaUniversalDashboard = () => {
                   Mesin Pelayanan Surat Digital
                 </span>
               </h1>
-              <p className="text-lg text-slate-600 font-medium">Layanan Cepat • Mudah • Terpercaya</p>
+              <p className="text-lg text-slate-600 font-medium">Layanan Cepat � Mudah � Terpercaya</p>
               <div className="flex items-center justify-center gap-6 mt-4 text-sm text-slate-500">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>

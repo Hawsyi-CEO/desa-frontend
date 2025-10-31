@@ -156,7 +156,7 @@ const WargaHistoryMobile = () => {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <h3 className="font-bold text-gray-900 text-base mb-2 leading-tight">
-                          {surat.nama_jenis_surat}
+                          {surat.nama_surat}
                         </h3>
                         <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
                           <FiClock size={12} />
@@ -236,3 +236,4 @@ const WargaHistoryMobile = () => {
 };
 
 export default WargaHistoryMobile;
+

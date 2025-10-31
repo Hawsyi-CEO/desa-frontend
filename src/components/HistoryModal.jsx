@@ -258,3 +258,4 @@ const HistoryModal = ({ isOpen, onClose, suratId }) => {
 };
 
 export default HistoryModal;
+

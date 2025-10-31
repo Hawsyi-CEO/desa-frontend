@@ -1182,3 +1182,4 @@ Demikian surat keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestin
 };
 
 export default JenisSurat;
+

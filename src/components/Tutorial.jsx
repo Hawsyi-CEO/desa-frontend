@@ -175,7 +175,7 @@ const Tutorial = ({ onClose }) => {
   };
 
   const handleComplete = () => {
-    localStorage.setItem('tutorialCompleted', 'true');
+    sessionStorage.setItem('tutorialCompleted', 'true');
     onClose();
   };
 
@@ -421,3 +421,4 @@ const Tutorial = ({ onClose }) => {
 };
 
 export default Tutorial;
+

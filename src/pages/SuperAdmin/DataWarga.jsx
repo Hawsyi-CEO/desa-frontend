@@ -35,8 +35,8 @@ export default function DataWarga() {
 
   // Debug: Check user and token
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const token = sessionStorage.getItem('token');
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
     console.log('DataWarga - Token exists:', !!token);
     console.log('DataWarga - User:', user);
     console.log('DataWarga - User Role:', user.role);
@@ -1657,3 +1657,4 @@ function DeleteModal({ warga, onClose, onSuccess, showToast, showError }) {
     </div>
   );
 }
+

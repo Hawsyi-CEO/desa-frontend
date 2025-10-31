@@ -806,3 +806,4 @@ const PreviewKonfigurasi = ({ config, onClose }) => {
 };
 
 export default KonfigurasiSurat;
+

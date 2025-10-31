@@ -10,7 +10,7 @@ const WargaLayout = ({ children }) => {
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const userData = JSON.parse(sessionStorage.getItem('user') || '{}');
     setUser(userData);
   }, []);
 
@@ -22,8 +22,8 @@ const WargaLayout = ({ children }) => {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     navigate('/login');
   };
 
@@ -140,3 +140,4 @@ const WargaLayout = ({ children }) => {
 };
 
 export default WargaLayout;
+

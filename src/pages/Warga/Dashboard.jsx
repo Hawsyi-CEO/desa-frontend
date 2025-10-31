@@ -2,9 +2,20 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import HistoryModal from '../../components/HistoryModal';
+import LottieIcon from '../../components/LottieIcon';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { FiFileText, FiClock, FiCheckCircle, FiXCircle, FiPlusCircle, FiEye, FiRefreshCw } from 'react-icons/fi';
+import { FiPlusCircle, FiEye, FiRefreshCw } from 'react-icons/fi';
+
+// Import Premium Lottie Animations
+import { 
+  bellNotification, 
+  loadingSpinner, 
+  successCheck, 
+  clockTimer, 
+  fileDocument, 
+  errorCross 
+} from '../../assets/lottie/premium-animations';
 
 const WargaDashboard = () => {
   const navigate = useNavigate();
@@ -20,9 +31,13 @@ const WargaDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedSuratId, setSelectedSuratId] = useState(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
+    fetchNotifications();
   }, []);
 
   const fetchDashboardData = async () => {
@@ -54,6 +69,32 @@ const WargaDashboard = () => {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await api.get('/warga/notifications');
+      if (response.data.success) {
+        setNotifications(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchDashboardData(), fetchNotifications()]);
+  };
+
+  const markNotificationAsRead = async (notifId) => {
+    try {
+      await api.put(`/warga/notifications/${notifId}/read`);
+      setNotifications(prev => prev.filter(n => n.id !== notifId));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
     }
   };
 
@@ -96,9 +137,98 @@ const WargaDashboard = () => {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard Warga</h1>
-            <p className="text-gray-600 mt-2">Selamat datang, {user?.username}!</p>
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Dashboard Warga</h1>
+              <p className="text-gray-600 mt-2">Selamat datang, {user?.username}!</p>
+            </div>
+            
+            {/* Notification & Refresh */}
+            <div className="flex items-center gap-3">
+              {/* Notification Bell */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-2 hover:bg-indigo-50 rounded-lg transition-colors"
+                >
+                  <LottieIcon
+                    animationData={bellNotification}
+                    className="w-6 h-6"
+                    loop={notifications.length > 0}
+                    speed={notifications.length > 0 ? 1 : 0.3}
+                  />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse font-bold">
+                      {notifications.length}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notification Dropdown */}
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                    <div className="p-3 border-b border-gray-200">
+                      <h3 className="font-semibold text-gray-900">Notifikasi</h3>
+                    </div>
+                    {notifications.length === 0 ? (
+                      <div className="p-6 text-center text-gray-500 text-sm">
+                        Tidak ada notifikasi
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-gray-100">
+                        {notifications.map(notif => (
+                          <div key={notif.id} className="p-4 hover:bg-gray-50">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1">
+                                <div className={`inline-block px-2 py-1 rounded text-xs mb-2 ${
+                                  notif.type === 'approved' ? 'bg-green-100 text-green-800' :
+                                  notif.type === 'rejected' ? 'bg-red-100 text-red-800' :
+                                  'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {notif.type === 'approved' ? '✅ Disetujui' :
+                                   notif.type === 'rejected' ? '❌ Ditolak' :
+                                   '📋 Info'}
+                                </div>
+                                <p className="text-sm text-gray-900 font-medium">{notif.title}</p>
+                                <p className="text-xs text-gray-600 mt-1">{notif.message}</p>
+                                <p className="text-xs text-gray-400 mt-2">
+                                  {new Date(notif.created_at).toLocaleString('id-ID')}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => markNotificationAsRead(notif.id)}
+                                className="text-gray-400 hover:text-gray-600"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Refresh Button */}
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {refreshing ? (
+                  <LottieIcon
+                    animationData={loadingSpinner}
+                    className="w-5 h-5"
+                    loop={true}
+                    speed={1.5}
+                  />
+                ) : (
+                  <FiRefreshCw className="w-5 h-5" />
+                )}
+                <span className="hidden sm:inline">{refreshing ? 'Memuat...' : 'Refresh'}</span>
+              </button>
+            </div>
           </div>
 
           {loading ? (
@@ -110,50 +240,70 @@ const WargaDashboard = () => {
             <>
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Total Pengajuan</p>
                       <p className="text-3xl font-bold text-gray-900 mt-2">{stats.total}</p>
                     </div>
                     <div className="p-3 bg-indigo-100 rounded-lg">
-                      <FiFileText className="w-8 h-8 text-indigo-600" />
+                      <LottieIcon
+                        animationData={fileDocument}
+                        className="w-10 h-10"
+                        loop={true}
+                        speed={0.8}
+                      />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Menunggu</p>
                       <p className="text-3xl font-bold text-yellow-600 mt-2">{stats.pending}</p>
                     </div>
                     <div className="p-3 bg-yellow-100 rounded-lg">
-                      <FiClock className="w-8 h-8 text-yellow-600" />
+                      <LottieIcon
+                        animationData={clockTimer}
+                        className="w-10 h-10"
+                        loop={true}
+                        speed={1}
+                      />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Disetujui</p>
                       <p className="text-3xl font-bold text-green-600 mt-2">{stats.approved}</p>
                     </div>
                     <div className="p-3 bg-green-100 rounded-lg">
-                      <FiCheckCircle className="w-8 h-8 text-green-600" />
+                      <LottieIcon
+                        animationData={successCheck}
+                        className="w-10 h-10"
+                        loop={true}
+                        speed={0.8}
+                      />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Ditolak</p>
                       <p className="text-3xl font-bold text-red-600 mt-2">{stats.rejected}</p>
                     </div>
                     <div className="p-3 bg-red-100 rounded-lg">
-                      <FiXCircle className="w-8 h-8 text-red-600" />
+                      <LottieIcon
+                        animationData={errorCross}
+                        className="w-10 h-10"
+                        loop={false}
+                        speed={1}
+                      />
                     </div>
                   </div>
                 </div>
@@ -311,3 +461,4 @@ const WargaDashboard = () => {
 };
 
 export default WargaDashboard;
+

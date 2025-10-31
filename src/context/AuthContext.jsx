@@ -17,22 +17,44 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if user is logged in
-    const token = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
+    const token = sessionStorage.getItem('token');
+    const savedUser = sessionStorage.getItem('user');
+    
+    console.log('🔍 AuthContext - Checking stored credentials');
+    console.log('Token exists:', !!token);
+    console.log('User exists:', !!savedUser);
     
     if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        console.log('✅ User loaded from sessionStorage:', parsedUser.email, '- Role:', parsedUser.role);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error('❌ Failed to parse saved user, clearing sessionStorage');
+        sessionStorage.clear();
+        setUser(null);
+      }
+    } else {
+      console.log('⚠️ No valid credentials found');
+      setUser(null);
     }
     setLoading(false);
   }, []);
 
   const login = async (email, password) => {
     try {
+      console.log('🔐 AuthContext - Attempting login for:', email);
       const response = await authService.login(email, password);
-      const userData = response.data.data.user; // Fix: response.data.data.user
+      const userData = response.data.data.user;
+      
+      console.log('✅ Login successful - User:', userData.email, '- Role:', userData.role);
       setUser(userData);
       return response;
     } catch (error) {
+      console.error('❌ Login failed:', error.response?.data?.message || error.message);
+      // Clear any stale data
+      sessionStorage.clear();
+      setUser(null);
       // Re-throw error agar bisa di-catch di Login.jsx
       throw error;
     }
@@ -43,13 +65,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    console.log('🚪 AuthContext - Logging out user:', user?.email);
     authService.logout();
     setUser(null);
+    
+    // Force reload untuk clear semua state
+    window.location.href = '/login';
   };
 
   const updateUser = (userData) => {
     setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+    sessionStorage.setItem('user', JSON.stringify(userData));
   };
 
   const value = {
@@ -71,3 +97,4 @@ export const AuthProvider = ({ children }) => {
 };
 
 export default AuthContext;
+

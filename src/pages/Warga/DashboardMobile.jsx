@@ -27,7 +27,7 @@ const WargaDashboardMobile = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const userData = JSON.parse(sessionStorage.getItem('user') || '{}');
     setUser(userData);
     fetchDashboardData();
   }, []);
@@ -248,7 +248,7 @@ const WargaDashboardMobile = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-gray-900 text-sm truncate">
-                        {surat.nama_jenis_surat}
+                        {surat.nama_surat}
                       </h4>
                       <p className="text-xs text-gray-500 mt-1">
                         {formatDate(surat.created_at)}
@@ -285,3 +285,4 @@ const WargaDashboardMobile = () => {
 };
 
 export default WargaDashboardMobile;
+

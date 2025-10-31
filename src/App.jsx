@@ -19,14 +19,16 @@ import Users from './pages/SuperAdmin/Users';
 import DataWarga from './pages/SuperAdmin/DataWarga';
 
 import VerifikatorDashboard from './pages/Verifikator/Dashboard';
-import VerifikatorSurat from './pages/Verifikator/Surat';
-import VerifikatorRiwayat from './pages/Verifikator/Riwayat';
+import VerifikatorSurat from './pages/Verifikator/SuratMasuk';
+import VerifikatorRiwayat from './pages/Verifikator/RiwayatMobile';
+import VerifikatorChangePassword from './pages/Verifikator/ChangePasswordMobile';
 
 import WargaDashboard from './pages/Warga/DashboardMobile';
 import WargaSurat from './pages/Warga/SuratMobile';
 import WargaHistory from './pages/Warga/HistoryMobile';
 import WargaProfile from './pages/Warga/ProfileMobile';
 import ChangePassword from './pages/Warga/ChangePasswordMobile';
+import RevisiSurat from './pages/Warga/RevisiSuratMobile';
 
 import WargaUniversalDashboard from './pages/WargaUniversal/Dashboard';
 import WargaUniversalHistory from './pages/WargaUniversal/History';
@@ -133,6 +135,14 @@ function App() {
             }
           />
           <Route
+            path="/verifikator/change-password"
+            element={
+              <PrivateRoute roles={['admin', 'verifikator']}>
+                <VerifikatorChangePassword />
+              </PrivateRoute>
+            }
+          />
+          <Route
             path="/verifikator/data-warga"
             element={
               <PrivateRoute roles={['admin']}>
@@ -155,6 +165,14 @@ function App() {
             element={
               <PrivateRoute roles={['warga']}>
                 <WargaSurat />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/warga/surat/revisi/:id"
+            element={
+              <PrivateRoute roles={['warga']}>
+                <RevisiSurat />
               </PrivateRoute>
             }
           />
@@ -222,3 +240,4 @@ function App() {
 }
 
 export default App;
+

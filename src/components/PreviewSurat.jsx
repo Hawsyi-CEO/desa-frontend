@@ -173,33 +173,32 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 no-print">
-      <div className="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white mb-10 print:p-0 print:border-0 print:shadow-none print:max-w-none print:m-0">
+      <div className="relative top-0 md:top-10 mx-auto p-2 md:p-5 border-0 md:border w-full max-w-full md:max-w-4xl shadow-none md:shadow-lg rounded-none md:rounded-md bg-white mb-0 md:mb-10 min-h-screen md:min-h-0 print:p-0 print:border-0 print:shadow-none print:max-w-none print:m-0">
         {/* Tombol Aksi */}
-        <div className="flex justify-between items-center mb-4 print:hidden">
-          <h3 className="text-lg font-bold text-gray-900">Preview Surat</h3>
-          <div className="space-x-2">
+        <div className="sticky top-0 z-10 bg-white flex justify-between items-center mb-4 p-3 md:p-0 border-b md:border-b-0 shadow-sm md:shadow-none print:hidden">
+          <h3 className="text-base md:text-lg font-bold text-gray-900">Preview Surat</h3>
+          <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="btn btn-secondary text-sm flex items-center gap-2"
+              className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm flex items-center gap-2 transition-colors"
             >
               <FiX className="w-4 h-4" />
-              Tutup
+              <span className="hidden sm:inline">Tutup</span>
             </button>
           </div>
         </div>
 
-        {/* Preview Surat - Format Resmi A4 */}
+        {/* Preview Surat - Responsive A4 Format */}
         <div 
           id="surat-preview" 
-          className="bg-white border mx-auto print:border-0"
+          className="bg-white mx-auto print:border-0"
           style={{
             borderColor: '#ccc',
-            borderWidth: '1px',
             fontFamily: 'Arial, sans-serif',
-            width: '210mm',
-            minHeight: '297mm',
+            // Mobile: full width dengan padding kecil, Desktop: A4 size
+            width: '100%',
             maxWidth: '210mm',
-            padding: '15mm 20mm',
+            padding: '10mm 8mm', // Lebih kecil untuk mobile
             boxSizing: 'border-box'
           }}
         >
@@ -207,15 +206,16 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
           <div 
             style={{
               position: 'relative',
-              minHeight: '95px',
-              marginBottom: '10px',
+              minHeight: '70px',
+              marginBottom: '8px',
               display: 'flex',
-              alignItems: 'flex-start'
+              alignItems: 'flex-start',
+              flexDirection: 'row'
             }}
           >
-            {/* Logo */}
+            {/* Logo - Smaller on mobile */}
             <div style={{ 
-              width: '90px', 
+              width: 'clamp(50px, 15vw, 90px)', // Responsive: 50px min, 90px max
               flexShrink: 0,
               paddingTop: '0'
             }}>
@@ -223,8 +223,9 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
                 src="/assets/Lambang_Kabupaten_Bogor.png"
                 alt="Logo Kabupaten"
                 style={{ 
-                  width: '90px',
-                  height: '90px',
+                  width: '100%',
+                  height: 'auto',
+                  aspectRatio: '1',
                   objectFit: 'contain',
                   display: 'block'
                 }}
@@ -234,78 +235,115 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
               />
             </div>
             
-            {/* Kop Surat */}
+            {/* Kop Surat - Responsive text */}
             <div style={{ 
               flex: 1, 
               textAlign: 'center', 
-              paddingTop: '5px',
-              paddingLeft: '0',
-              paddingRight: '90px'
+              paddingTop: '2px',
+              paddingLeft: '8px',
+              paddingRight: 'clamp(50px, 15vw, 90px)' // Match logo width
             }}>
               <h2 
                 className="font-bold uppercase"
-                style={{ fontSize: '20px', lineHeight: '1.2', margin: '0', padding: '0' }}
+                style={{ 
+                  fontSize: 'clamp(12px, 3.5vw, 20px)', // Responsive font
+                  lineHeight: '1.2', 
+                  margin: '0', 
+                  padding: '0' 
+                }}
               >
                 {config.nama_kabupaten}
               </h2>
               <h3 
                 className="font-bold uppercase"
-                style={{ fontSize: '18px', lineHeight: '1.2', margin: '2px 0', padding: '0' }}
+                style={{ 
+                  fontSize: 'clamp(11px, 3vw, 18px)', 
+                  lineHeight: '1.2', 
+                  margin: '2px 0', 
+                  padding: '0' 
+                }}
               >
                 {config.nama_kecamatan}
               </h3>
               <h3 
                 className="font-bold uppercase"
-                style={{ fontSize: '20px', lineHeight: '1.2', margin: '2px 0 4px 0', padding: '0' }}
+                style={{ 
+                  fontSize: 'clamp(12px, 3.5vw, 20px)', 
+                  lineHeight: '1.2', 
+                  margin: '2px 0 4px 0', 
+                  padding: '0' 
+                }}
               >
                 {config.nama_desa}
               </h3>
               <p 
-                style={{ fontSize: '11px', lineHeight: '1.3', margin: '0', padding: '0' }}
+                style={{ 
+                  fontSize: 'clamp(8px, 2vw, 11px)', 
+                  lineHeight: '1.3', 
+                  margin: '0', 
+                  padding: '0' 
+                }}
               >
                 {config.alamat_kantor}
               </p>
               {config.telepon && (
-                <p style={{ fontSize: '11px', lineHeight: '1.3', margin: '0', padding: '0' }}>
+                <p style={{ 
+                  fontSize: 'clamp(8px, 2vw, 11px)', 
+                  lineHeight: '1.3', 
+                  margin: '0', 
+                  padding: '0' 
+                }}>
                   Telp: {config.telepon}{config.email ? ` Email: ${config.email}` : ''}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Garis Kop */}
-          <hr style={{ border: 'none', borderTop: '4px solid #000', margin: '0 0 16px 0' }} />
+          {/* Garis Kop - Thinner on mobile */}
+          <hr style={{ 
+            border: 'none', 
+            borderTop: 'clamp(2px, 0.5vw, 4px) solid #000', 
+            margin: '0 0 12px 0' 
+          }} />
 
-          {/* Judul Surat */}
-          <div className="text-center" style={{ marginBottom: '14px', marginTop: '16px' }}>
+          {/* Judul Surat - Responsive */}
+          <div className="text-center" style={{ marginBottom: '12px', marginTop: '12px' }}>
             <h4 
               className="font-bold uppercase underline"
-              style={{ fontSize: '16px', marginBottom: '7px' }}
+              style={{ 
+                fontSize: 'clamp(13px, 3.5vw, 16px)', 
+                marginBottom: '6px' 
+              }}
             >
               {doc.jenis_surat?.nama_surat || 'SURAT KETERANGAN'}
             </h4>
             <p 
               className="font-semibold"
-              style={{ fontSize: '14px' }}
+              style={{ 
+                fontSize: 'clamp(11px, 3vw, 14px)' 
+              }}
             >
               Nomor : {generateNomorSurat(doc)}
             </p>
           </div>
 
-          {/* Isi Surat */}
+          {/* Isi Surat - Responsive */}
           <div 
             style={{ 
-              fontSize: '14px',
+              fontSize: 'clamp(11px, 3vw, 14px)',
               lineHeight: '1.7'
             }}
           >
-            <p className="text-justify" style={{ marginBottom: '12px' }}>
+            <p className="text-justify" style={{ marginBottom: '10px' }}>
               {doc.jenis_surat?.kalimat_pembuka || `Yang bertanda tangan di bawah ini, ${config.jabatan_ttd}, dengan ini menerangkan bahwa :`}
             </p>
 
-            {/* Data Pemohon - Only show fields with showInDocument = true */}
+            {/* Data Pemohon - Responsive layout */}
             {fields && fields.length > 0 && (
-              <div style={{ marginLeft: '30px', marginBottom: '12px' }}>
+              <div style={{ 
+                marginLeft: 'clamp(15px, 4vw, 30px)', 
+                marginBottom: '10px' 
+              }}>
                 {(() => {
                   console.log('📋 All Fields:', fields);
                   const filteredFields = fields.filter(field => field.showInDocument !== false);
@@ -317,10 +355,21 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
                     const value = getFieldValue(field.name, dataSurat);
                     console.log(`🔍 Rendering Field "${field.label}" (${field.name}):`, value || '[KOSONG]');
                     return (
-                      <div key={index} className="flex" style={{ marginBottom: '4px' }}>
-                        <div style={{ width: '150px' }}>{field.label}</div>
-                        <div style={{ width: '20px', textAlign: 'center' }}>:</div>
-                        <div className="flex-1">
+                      <div key={index} className="flex flex-wrap" style={{ marginBottom: '3px' }}>
+                        <div style={{ 
+                          width: 'clamp(100px, 30vw, 150px)',
+                          minWidth: '100px' 
+                        }}>
+                          {field.label}
+                        </div>
+                        <div style={{ 
+                          width: 'clamp(15px, 3vw, 20px)', 
+                          textAlign: 'center',
+                          minWidth: '15px'
+                        }}>
+                          :
+                        </div>
+                        <div className="flex-1" style={{ minWidth: '120px' }}>
                           {value || `[${field.label}]`}
                         </div>
                       </div>
@@ -330,21 +379,21 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
               </div>
             )}
 
-            {/* Template Konten */}
+            {/* Template Konten - Responsive */}
             <div 
               className="text-justify"
               style={{ 
                 whiteSpace: 'pre-line',
-                marginTop: '12px'
+                marginTop: '10px'
               }}
               dangerouslySetInnerHTML={{ 
                 __html: renderTemplate(doc.jenis_surat?.template_konten || '', dataSurat) 
               }}
             />
 
-            {/* Keperluan */}
+            {/* Keperluan - Responsive */}
             {doc.keperluan && (
-              <p className="text-justify" style={{ marginTop: '12px' }}>
+              <p className="text-justify" style={{ marginTop: '10px' }}>
                 Demikian surat keterangan ini dibuat untuk dipergunakan sebagai {doc.keperluan}.
               </p>
             )}
@@ -368,36 +417,48 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
             </div>
           )}
 
-          {/* Tanda Tangan */}
-          <div style={{ marginTop: '35px' }} className="flex justify-end">
-            <div className="text-center" style={{ width: '220px' }}>
-              <p style={{ fontSize: '14px', marginBottom: '50px' }}>
+          {/* Tanda Tangan - Responsive */}
+          <div style={{ marginTop: 'clamp(20px, 5vw, 35px)' }} className="flex justify-end">
+            <div className="text-center" style={{ width: 'clamp(150px, 40vw, 220px)' }}>
+              <p style={{ 
+                fontSize: 'clamp(11px, 3vw, 14px)', 
+                marginBottom: 'clamp(30px, 8vw, 50px)' 
+              }}>
                 {getCurrentDate(doc)}
               </p>
-              <p style={{ fontSize: '14px', marginBottom: '8px' }}>
+              <p style={{ 
+                fontSize: 'clamp(11px, 3vw, 14px)', 
+                marginBottom: '6px' 
+              }}>
                 {config.jabatan_ttd}
               </p>
               
               <p 
-                style={{ fontSize: '14px', marginTop: '70px' }}
+                style={{ 
+                  fontSize: 'clamp(11px, 3vw, 14px)', 
+                  marginTop: 'clamp(40px, 10vw, 70px)' 
+                }}
                 className="font-bold"
               >
                 {config.nama_ttd}
               </p>
               {config.nip_ttd && (
-                <p style={{ fontSize: '11px', marginTop: '4px' }}>
+                <p style={{ 
+                  fontSize: 'clamp(9px, 2.5vw, 11px)', 
+                  marginTop: '4px' 
+                }}>
                   NIP. {config.nip_ttd}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Footer */}
+          {/* Footer - Responsive */}
           {config.footer_text && (
             <div 
-              className="mt-8 pt-4 text-center"
+              className="mt-6 pt-3 text-center"
               style={{ 
-                fontSize: '10px',
+                fontSize: 'clamp(8px, 2vw, 10px)',
                 borderTop: '1px solid #000'
               }}
             >
@@ -407,12 +468,38 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
         </div>
       </div>
 
-      {/* Print Styles */}
+      {/* Responsive & Print Styles */}
       <style>{`
+        /* Mobile Responsive Adjustments */
+        @media (max-width: 768px) {
+          #surat-preview {
+            font-size: 11px !important;
+            padding: 8mm 6mm !important;
+          }
+          
+          /* Prevent horizontal scroll */
+          #surat-preview * {
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+          }
+          
+          /* Better spacing on mobile */
+          #surat-preview p {
+            margin-bottom: 8px !important;
+          }
+          
+          /* Responsive table/field layout */
+          #surat-preview .flex {
+            display: flex !important;
+            flex-wrap: wrap;
+          }
+        }
+        
         @media print {
           @page {
             size: A4 portrait;
-            margin: 0;
+            margin: 15mm 20mm;
           }
           
           /* Hide everything except this modal */
@@ -446,6 +533,31 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
             display: none !important;
           }
           
+          /* Reset all responsive clamp() to fixed sizes for print */
+          #surat-preview {
+            font-size: 14px !important;
+            padding: 15mm 20mm !important;
+            width: 210mm !important;
+            max-width: 210mm !important;
+          }
+          
+          /* Reset header sizes */
+          #surat-preview h2 {
+            font-size: 20px !important;
+          }
+          
+          #surat-preview h3 {
+            font-size: 18px !important;
+          }
+          
+          #surat-preview h4 {
+            font-size: 16px !important;
+          }
+          
+          #surat-preview p {
+            font-size: 14px !important;
+          }
+          
           /* Only show surat */
           #surat-preview {
             border: none !important;
@@ -461,3 +573,4 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
 };
 
 export default PreviewSurat;
+
