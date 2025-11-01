@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
 import { authService } from '../../services/authService';
-import { FiDownload, FiFileText, FiGrid, FiList, FiSearch, FiFile, FiHome, FiPrinter, FiEdit3 } from 'react-icons/fi';
+import { FiDownload, FiFileText, FiGrid, FiList, FiSearch, FiFile, FiHome, FiPrinter, FiEdit3, FiClipboard, FiUsers, FiActivity, FiBriefcase, FiCheckCircle } from 'react-icons/fi';
 import FillFormulirModal from '../../components/FillFormulirModal';
 
 const FormulirCetakWargaUniversal = () => {
@@ -17,11 +17,11 @@ const FormulirCetakWargaUniversal = () => {
   const [selectedFormulir, setSelectedFormulir] = useState(null);
 
   const kategoriOptions = [
-    { value: '', label: 'Semua Kategori', icon: '📋', color: 'gray' },
-    { value: 'kependudukan', label: 'Kependudukan', icon: '👥', color: 'blue' },
-    { value: 'kesehatan', label: 'Kesehatan', icon: '🏥', color: 'green' },
-    { value: 'usaha', label: 'Usaha', icon: '💼', color: 'purple' },
-    { value: 'umum', label: 'Umum', icon: '📄', color: 'yellow' }
+    { value: '', label: 'Semua Kategori', icon: FiClipboard, color: 'gray' },
+    { value: 'kependudukan', label: 'Kependudukan', icon: FiUsers, color: 'blue' },
+    { value: 'kesehatan', label: 'Kesehatan', icon: FiActivity, color: 'green' },
+    { value: 'usaha', label: 'Usaha', icon: FiBriefcase, color: 'purple' },
+    { value: 'umum', label: 'Umum', icon: FiFileText, color: 'yellow' }
   ];
 
   useEffect(() => {
@@ -115,9 +115,9 @@ const FormulirCetakWargaUniversal = () => {
   };
 
   const getFileIcon = (fileType) => {
-    if (fileType === 'pdf') return '📄';
-    if (fileType === 'doc' || fileType === 'docx') return '📝';
-    return '📁';
+    if (fileType === 'pdf') return FiFileText;
+    if (fileType === 'doc' || fileType === 'docx') return FiEdit3;
+    return FiFile;
   };
 
   const formatFileSize = (bytes) => {
@@ -240,20 +240,23 @@ const FormulirCetakWargaUniversal = () => {
 
             {/* Category Tabs */}
             <div className="flex flex-wrap gap-2 mt-4">
-              {kategoriOptions.map(kat => (
-                <button
-                  key={kat.value}
-                  onClick={() => setFilterKategori(kat.value)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    filterKategori === kat.value
-                      ? 'bg-blue-600 text-white shadow-lg scale-105'
-                      : 'bg-white/70 text-gray-700 hover:bg-white hover:shadow'
-                  }`}
-                >
-                  <span className="mr-2">{kat.icon}</span>
-                  {kat.label}
-                </button>
-              ))}
+              {kategoriOptions.map(kat => {
+                const IconComponent = kat.icon;
+                return (
+                  <button
+                    key={kat.value}
+                    onClick={() => setFilterKategori(kat.value)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                      filterKategori === kat.value
+                        ? 'bg-blue-600 text-white shadow-lg scale-105'
+                        : 'bg-white/70 text-gray-700 hover:bg-white hover:shadow'
+                    }`}
+                  >
+                    <IconComponent size={18} className={filterKategori === kat.value ? 'animate-pulse' : ''} />
+                    {kat.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -272,23 +275,27 @@ const FormulirCetakWargaUniversal = () => {
           ) : viewMode === 'grid' ? (
             /* Grid View */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredFormulir.map((formulir) => (
-                <div
-                  key={formulir.id}
-                  className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1"
-                >
-                  {/* Card Header */}
-                  <div className={`bg-gradient-to-r from-${getCategoryColor(formulir.kategori)}-500 to-${getCategoryColor(formulir.kategori)}-600 p-6 text-white`}>
-                    <div className="flex items-start justify-between mb-3">
-                      <span className="text-5xl">{getFileIcon(formulir.file_type)}</span>
-                      <span className="text-xs bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full uppercase font-medium">
-                        {formulir.file_type}
-                      </span>
+              {filteredFormulir.map((formulir) => {
+                const FileIcon = getFileIcon(formulir.file_type);
+                return (
+                  <div
+                    key={formulir.id}
+                    className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group hover:-translate-y-1"
+                  >
+                    {/* Card Header */}
+                    <div className={`bg-gradient-to-r from-${getCategoryColor(formulir.kategori)}-500 to-${getCategoryColor(formulir.kategori)}-600 p-6 text-white`}>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                          <FileIcon className="w-8 h-8 animate-pulse" />
+                        </div>
+                        <span className="text-xs bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full uppercase font-medium">
+                          {formulir.file_type}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-bold line-clamp-2">
+                        {formulir.nama_formulir}
+                      </h3>
                     </div>
-                    <h3 className="text-lg font-bold line-clamp-2">
-                      {formulir.nama_formulir}
-                    </h3>
-                  </div>
 
                   {/* Card Body */}
                   <div className="p-6">
@@ -331,25 +338,28 @@ const FormulirCetakWargaUniversal = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             /* List View */
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg overflow-hidden">
               <div className="divide-y divide-gray-100">
-                {filteredFormulir.map((formulir) => (
-                  <div
-                    key={formulir.id}
-                    className="p-6 hover:bg-gray-50 transition-colors group"
-                  >
-                    <div className="flex items-center gap-6">
-                      {/* Icon */}
-                      <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-3xl">
-                        {getFileIcon(formulir.file_type)}
-                      </div>
+                {filteredFormulir.map((formulir) => {
+                  const FileIcon = getFileIcon(formulir.file_type);
+                  return (
+                    <div
+                      key={formulir.id}
+                      className="p-6 hover:bg-gray-50 transition-colors group"
+                    >
+                      <div className="flex items-center gap-6">
+                        {/* Icon */}
+                        <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white">
+                          <FileIcon className="w-8 h-8 group-hover:scale-110 transition-transform" />
+                        </div>
 
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-bold text-gray-900 mb-1">
                           {formulir.nama_formulir}
                         </h3>
@@ -368,8 +378,9 @@ const FormulirCetakWargaUniversal = () => {
                             {formulir.file_type}
                           </span>
                           {formulir.is_fillable && (
-                            <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">
-                              ✓ Bisa Diisi
+                            <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">
+                              <FiCheckCircle size={12} />
+                              Bisa Diisi
                             </span>
                           )}
                         </div>
@@ -399,7 +410,8 @@ const FormulirCetakWargaUniversal = () => {
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
