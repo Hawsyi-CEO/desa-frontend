@@ -43,7 +43,19 @@ export const authService = {
     console.log('🚪 Logout - sessionStorage cleared');
   },
 
-  // Get current user
+  // Get current user from sessionStorage
+  getCurrentUser: () => {
+    const userStr = sessionStorage.getItem('user');
+    if (!userStr) return null;
+    try {
+      return JSON.parse(userStr);
+    } catch (error) {
+      console.error('Error parsing user from sessionStorage:', error);
+      return null;
+    }
+  },
+
+  // Get current user from API
   getMe: async () => {
     const response = await api.get('/auth/me');
     return response.data;

@@ -3,6 +3,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
+import InstallPWA from './components/InstallPWA';
 
 // Pages
 import Login from './pages/Login';
@@ -17,6 +18,7 @@ import KonfigurasiSurat from './pages/SuperAdmin/KonfigurasiSurat';
 import AdminSurat from './pages/SuperAdmin/Surat';
 import Users from './pages/SuperAdmin/Users';
 import DataWarga from './pages/SuperAdmin/DataWarga';
+import FormulirCetak from './pages/SuperAdmin/FormulirCetak';
 
 import VerifikatorDashboard from './pages/Verifikator/Dashboard';
 import VerifikatorSurat from './pages/Verifikator/SuratMasuk';
@@ -32,6 +34,7 @@ import RevisiSurat from './pages/Warga/RevisiSuratMobile';
 
 import WargaUniversalDashboard from './pages/WargaUniversal/Dashboard';
 import WargaUniversalHistory from './pages/WargaUniversal/History';
+import WargaUniversalFormulir from './pages/WargaUniversal/FormulirCetak';
 
 function App() {
   return (
@@ -105,6 +108,14 @@ function App() {
             element={
               <PrivateRoute roles={['super_admin']}>
                 <DataWarga />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/formulir-cetak"
+            element={
+              <PrivateRoute roles={['super_admin']}>
+                <FormulirCetak />
               </PrivateRoute>
             }
           />
@@ -218,6 +229,14 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route
+            path="/warga-universal/formulir"
+            element={
+              <PrivateRoute roles={['warga_universal']}>
+                <WargaUniversalFormulir />
+              </PrivateRoute>
+            }
+          />
 
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/login" replace />} />
@@ -235,6 +254,9 @@ function App() {
         draggable
         pauseOnHover
       />
+      
+      {/* PWA Install Button */}
+      <InstallPWA />
     </AuthProvider>
   );
 }

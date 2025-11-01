@@ -86,6 +86,12 @@ const Sidebar = () => {
           ]
         },
         { 
+          category: 'Formulir & Dokumen',
+          items: [
+            { path: '/admin/formulir-cetak', icon: FiFileText, label: 'Formulir Cetak' },
+          ]
+        },
+        { 
           category: 'Pengaturan',
           items: [
             { path: '/admin/konfigurasi', icon: FiSettings, label: 'Konfigurasi Surat' },

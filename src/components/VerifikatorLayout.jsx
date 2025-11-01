@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import logoBogor from '../assets/Lambang_Kabupaten_Bogor.png';
 import axios from 'axios';
 import LogoutConfirmModal from './LogoutConfirmModal';
+import FullscreenButton from './FullscreenButton';
 
 const VerifikatorLayout = ({ children }) => {
   const navigate = useNavigate();
@@ -90,6 +91,7 @@ const VerifikatorLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white pb-20">
+      <FullscreenButton />
       {/* Top App Bar - Navy/Slate Theme */}
       <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 text-white shadow-lg z-40">
         <div className="px-4 py-3">

@@ -973,7 +973,7 @@ const WargaUniversalDashboard = () => {
                   Mesin Pelayanan Surat Digital
                 </span>
               </h1>
-              <p className="text-lg text-slate-600 font-medium">Layanan Cepat • Mudah • Terpercaya</p>
+              <p className="text-lg text-slate-600 font-medium">Layanan Cepat ï¿½ Mudah ï¿½ Terpercaya</p>
               <div className="flex items-center justify-center gap-6 mt-4 text-sm text-slate-500">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
@@ -992,6 +992,58 @@ const WargaUniversalDashboard = () => {
                   <span>Cetak Langsung</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Quick Actions - Navigasi Cepat */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {/* Card 1: Formulir Cetak */}
+            <button
+              onClick={() => navigate('/warga-universal/formulir')}
+              className="group bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 text-left"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <svg className="w-6 h-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Formulir Siap Cetak</h3>
+              <p className="text-blue-100 text-sm">Download formulir untuk berbagai keperluan administrasi</p>
+            </button>
+
+            {/* Card 2: Riwayat Surat */}
+            <button
+              onClick={() => navigate('/warga-universal/history')}
+              className="group bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 text-left"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <svg className="w-6 h-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Riwayat Surat</h3>
+              <p className="text-purple-100 text-sm">Lihat semua surat yang sudah dibuat</p>
+            </button>
+
+            {/* Card 3: Info */}
+            <div className="bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl p-6 shadow-lg border-2 border-slate-300">
+              <div className="w-14 h-14 bg-slate-700 rounded-xl flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2">Panduan</h3>
+              <p className="text-slate-600 text-sm">Surat langsung disetujui tanpa proses verifikasi</p>
             </div>
           </div>
 

@@ -1,4 +1,5 @@
 import Sidebar from './Sidebar';
+import FullscreenButton from './FullscreenButton';
 import { useEffect, useState } from 'react';
 
 const Layout = ({ children }) => {
@@ -46,6 +47,7 @@ const Layout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <FullscreenButton />
       <Sidebar />
       <main 
         className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}
