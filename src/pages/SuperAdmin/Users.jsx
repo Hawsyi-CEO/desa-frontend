@@ -748,34 +748,17 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
   const [formData, setFormData] = useState({
     nik: '',
     nama: '',
-    email: '',
     password: '',
     role: 'warga',
-    status: 'aktif',
-    no_telepon: '',
-    alamat: '',
-    rt: '',
-    rw: '',
-    dusun: '',
-    tempat_lahir: '',
-    tanggal_lahir: '',
-    jenis_kelamin: '',
-    agama: '',
-    pekerjaan: '',
-    pendidikan: '',
-    status_perkawinan: '',
-    golongan_darah: '',
-    no_kk: '',
-    nama_kepala_keluarga: '',
-    hubungan_keluarga: ''
+    status: 'aktif'
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
-    if (!formData.nik || !formData.nama || !formData.email || !formData.role) {
-      showError('NIK, Nama, Email, dan Role wajib diisi!');
+    // Validation - hanya NIK dan Nama yang wajib
+    if (!formData.nik || !formData.nama || !formData.role) {
+      showError('NIK, Nama, dan Role wajib diisi!');
       return;
     }
 
@@ -839,6 +822,10 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
                     <span className="w-1.5 h-1.5 bg-purple-600 rounded-full"></span>
                     <strong>Password Default:</strong> password123 (user dapat mengubahnya setelah login)
                   </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-purple-600 rounded-full"></span>
+                    <strong>Data Lengkap:</strong> Tambahkan di menu Data Warga
+                  </li>
                 </ul>
               </div>
             </div>
@@ -860,7 +847,7 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
                 className="input w-full"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">NIK ini akan digunakan sebagai username</p>
+              <p className="text-xs text-gray-500 mt-1">NIK akan digunakan sebagai username login</p>
             </div>
 
             {/* Nama */}
@@ -874,22 +861,6 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
                 value={formData.nama}
                 onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
                 placeholder="Nama lengkap"
-                className="input w-full"
-                required
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Mail className="w-4 h-4 text-purple-600" />
-                Email <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="email@example.com"
                 className="input w-full"
                 required
               />
@@ -930,10 +901,10 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
               </select>
             </div>
 
-            {/* Status */}
-            <div>
+            {/* Status - Full Width */}
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
+                Status Akun
               </label>
               <select
                 value={formData.status}
@@ -944,284 +915,13 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
                 <option value="nonaktif">Nonaktif</option>
               </select>
             </div>
+          </div>
 
-            {/* No Telepon */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Phone className="w-4 h-4 text-purple-600" />
-                No. Telepon
-              </label>
-              <input
-                type="tel"
-                value={formData.no_telepon}
-                onChange={(e) => setFormData({ ...formData, no_telepon: e.target.value })}
-                placeholder="08xxxxxxxxxx"
-                className="input w-full"
-              />
-            </div>
-
-            {/* RT */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Home className="w-4 h-4 text-purple-600" />
-                RT
-              </label>
-              <input
-                type="text"
-                value={formData.rt}
-                onChange={(e) => setFormData({ ...formData, rt: e.target.value })}
-                placeholder="001"
-                className="input w-full"
-              />
-            </div>
-
-            {/* RW */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Home className="w-4 h-4 text-purple-600" />
-                RW
-              </label>
-              <input
-                type="text"
-                value={formData.rw}
-                onChange={(e) => setFormData({ ...formData, rw: e.target.value })}
-                placeholder="001"
-                className="input w-full"
-              />
-            </div>
-
-            {/* Dusun */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Dusun
-              </label>
-              <input
-                type="text"
-                value={formData.dusun}
-                onChange={(e) => setFormData({ ...formData, dusun: e.target.value })}
-                placeholder="Nama dusun"
-                className="input w-full"
-              />
-            </div>
-
-            {/* Tempat Lahir */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-purple-600" />
-                Tempat Lahir
-              </label>
-              <input
-                type="text"
-                value={formData.tempat_lahir}
-                onChange={(e) => setFormData({ ...formData, tempat_lahir: e.target.value })}
-                placeholder="Kota kelahiran"
-                className="input w-full"
-              />
-            </div>
-
-            {/* Tanggal Lahir */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-purple-600" />
-                Tanggal Lahir
-              </label>
-              <input
-                type="date"
-                value={formData.tanggal_lahir}
-                onChange={(e) => setFormData({ ...formData, tanggal_lahir: e.target.value })}
-                className="input w-full"
-              />
-            </div>
-
-            {/* Jenis Kelamin */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Jenis Kelamin
-              </label>
-              <select
-                value={formData.jenis_kelamin}
-                onChange={(e) => setFormData({ ...formData, jenis_kelamin: e.target.value })}
-                className="input w-full"
-              >
-                <option value="">Pilih Jenis Kelamin</option>
-                <option value="Laki-laki">Laki-laki</option>
-                <option value="Perempuan">Perempuan</option>
-              </select>
-            </div>
-
-            {/* Agama */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Heart className="w-4 h-4 text-purple-600" />
-                Agama
-              </label>
-              <select
-                value={formData.agama}
-                onChange={(e) => setFormData({ ...formData, agama: e.target.value })}
-                className="input w-full"
-              >
-                <option value="">Pilih Agama</option>
-                <option value="Islam">Islam</option>
-                <option value="Kristen">Kristen</option>
-                <option value="Katolik">Katolik</option>
-                <option value="Hindu">Hindu</option>
-                <option value="Buddha">Buddha</option>
-                <option value="Konghucu">Konghucu</option>
-              </select>
-            </div>
-
-            {/* Pendidikan */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <GraduationCap className="w-4 h-4 text-purple-600" />
-                Pendidikan
-              </label>
-              <select
-                value={formData.pendidikan}
-                onChange={(e) => setFormData({ ...formData, pendidikan: e.target.value })}
-                className="input w-full"
-              >
-                <option value="">Pilih Pendidikan</option>
-                <option value="Tidak Sekolah">Tidak Sekolah</option>
-                <option value="SD">SD</option>
-                <option value="SMP">SMP</option>
-                <option value="SMA/SMK">SMA/SMK</option>
-                <option value="D3">D3</option>
-                <option value="S1">S1</option>
-                <option value="S2">S2</option>
-                <option value="S3">S3</option>
-              </select>
-            </div>
-
-            {/* Pekerjaan */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Briefcase className="w-4 h-4 text-purple-600" />
-                Pekerjaan
-              </label>
-              <select
-                value={formData.pekerjaan}
-                onChange={(e) => setFormData({ ...formData, pekerjaan: e.target.value })}
-                className="input w-full"
-              >
-                <option value="">Pilih Pekerjaan</option>
-                <option value="Belum/Tidak Bekerja">Belum/Tidak Bekerja</option>
-                <option value="Pelajar/Mahasiswa">Pelajar/Mahasiswa</option>
-                <option value="PNS">PNS</option>
-                <option value="TNI/Polri">TNI/Polri</option>
-                <option value="Karyawan Swasta">Karyawan Swasta</option>
-                <option value="Wiraswasta">Wiraswasta</option>
-                <option value="Petani">Petani</option>
-                <option value="Pedagang">Pedagang</option>
-                <option value="Guru">Guru</option>
-                <option value="Dokter">Dokter</option>
-                <option value="Perawat">Perawat</option>
-                <option value="IT Consultant">IT Consultant</option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
-            </div>
-
-            {/* Status Perkawinan */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status Perkawinan
-              </label>
-              <select
-                value={formData.status_perkawinan}
-                onChange={(e) => setFormData({ ...formData, status_perkawinan: e.target.value })}
-                className="input w-full"
-              >
-                <option value="">Pilih Status</option>
-                <option value="Belum Kawin">Belum Kawin</option>
-                <option value="Kawin">Kawin</option>
-                <option value="Cerai Hidup">Cerai Hidup</option>
-                <option value="Cerai Mati">Cerai Mati</option>
-              </select>
-            </div>
-
-            {/* Golongan Darah */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <Droplet className="w-4 h-4 text-purple-600" />
-                Golongan Darah
-              </label>
-              <select
-                value={formData.golongan_darah}
-                onChange={(e) => setFormData({ ...formData, golongan_darah: e.target.value })}
-                className="input w-full"
-              >
-                <option value="">Pilih Golongan Darah</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="AB">AB</option>
-                <option value="O">O</option>
-              </select>
-            </div>
-
-            {/* No KK */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nomor KK
-              </label>
-              <input
-                type="text"
-                value={formData.no_kk}
-                onChange={(e) => setFormData({ ...formData, no_kk: e.target.value })}
-                placeholder="16 digit nomor KK"
-                maxLength={16}
-                className="input w-full"
-              />
-            </div>
-
-            {/* Nama Kepala Keluarga */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nama Kepala Keluarga
-              </label>
-              <input
-                type="text"
-                value={formData.nama_kepala_keluarga}
-                onChange={(e) => setFormData({ ...formData, nama_kepala_keluarga: e.target.value })}
-                placeholder="Nama kepala keluarga"
-                className="input w-full"
-              />
-            </div>
-
-            {/* Hubungan Keluarga */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Hubungan Keluarga
-              </label>
-              <select
-                value={formData.hubungan_keluarga}
-                onChange={(e) => setFormData({ ...formData, hubungan_keluarga: e.target.value })}
-                className="input w-full"
-              >
-                <option value="">Pilih Hubungan</option>
-                <option value="Kepala Keluarga">Kepala Keluarga</option>
-                <option value="Istri">Istri</option>
-                <option value="Anak">Anak</option>
-                <option value="Orang Tua">Orang Tua</option>
-                <option value="Cucu">Cucu</option>
-                <option value="Menantu">Menantu</option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
-            </div>
-
-            {/* Alamat - Full Width */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-purple-600" />
-                Alamat Lengkap
-              </label>
-              <textarea
-                value={formData.alamat}
-                onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
-                placeholder="Alamat lengkap"
-                rows={3}
-                className="input w-full"
-              />
-            </div>
+          {/* Info Note */}
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>💡 Catatan:</strong> Data detail seperti alamat, pekerjaan, RT/RW, dll akan diambil dari menu <strong>Data Warga</strong> saat pengajuan surat. Pastikan data warga sudah lengkap di menu tersebut.
+            </p>
           </div>
 
           <div className="flex gap-3 pt-6 mt-6 border-t border-gray-200">
