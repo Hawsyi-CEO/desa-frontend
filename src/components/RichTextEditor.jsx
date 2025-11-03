@@ -54,12 +54,11 @@ const RichTextEditor = ({ value, onChange, placeholder, availableFields = [] }) 
 
   return (
     <Editor
-      tinymceScriptSrc={import.meta.env.BASE_URL + 'tinymce/tinymce.min.js'}
+      tinymceScriptSrc="/tinymce/tinymce.min.js"
       onInit={(evt, editor) => setupEditor(editor)}
       value={value}
       onEditorChange={onChange}
       init={{
-        license_key: 'gpl',
         height: 500,
         menubar: false,
         plugins: [
@@ -77,24 +76,45 @@ const RichTextEditor = ({ value, onChange, placeholder, availableFields = [] }) 
           body { 
             font-family: Arial, sans-serif; 
             font-size: 12pt; 
-            line-height: 1.6;
+            line-height: 1.4;
+            margin: 0;
+            padding: 10px;
+          }
+          p {
+            margin: 0 0 3px 0;
+            line-height: 1.4;
           }
           table {
             width: 100%;
             border-collapse: collapse;
-            margin: 15px 0;
+            margin: 6px 0;
           }
           th, td {
             border: 1px solid #000;
-            padding: 8px;
+            padding: 4px;
             text-align: left;
+            line-height: 1.2;
           }
           th {
             background-color: #f0f0f0;
             font-weight: bold;
           }
+          h1, h2, h3, h4, h5, h6 {
+            margin: 6px 0 2px 0;
+            line-height: 1.1;
+          }
+          ul, ol {
+            margin: 2px 0;
+            padding-left: 20px;
+          }
+          li {
+            margin: 1px 0;
+            line-height: 1.15;
+          }
         `,
         placeholder: placeholder || 'Ketik konten surat di sini...',
+        // Kontrol format paragraf
+        block_formats: 'Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3',
         // Konfigurasi table default
         table_default_attributes: {
           border: '1'

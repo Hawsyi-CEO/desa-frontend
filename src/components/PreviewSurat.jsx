@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { FiPrinter, FiX } from 'react-icons/fi';
+import { FiX } from 'react-icons/fi';
 import { safeParseDataSurat, safeParseFields } from '../utils/jsonHelpers';
 
 const PreviewSurat = ({ pengajuan, surat, onClose }) => {
@@ -172,12 +172,12 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
   console.log('🔍 PreviewSurat - Jenis Surat:', doc.jenis_surat);
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 no-print">
-      <div className="relative top-0 md:top-10 mx-auto p-2 md:p-5 border-0 md:border w-full max-w-full md:max-w-4xl shadow-none md:shadow-lg rounded-none md:rounded-md bg-white mb-0 md:mb-10 min-h-screen md:min-h-0 print:p-0 print:border-0 print:shadow-none print:max-w-none print:m-0">
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-0 md:top-10 mx-auto p-2 md:p-5 border-0 md:border w-full max-w-full md:max-w-4xl shadow-none md:shadow-lg rounded-none md:rounded-md bg-white mb-0 md:mb-10 min-h-screen md:min-h-0">
         {/* Tombol Aksi */}
-        <div className="sticky top-0 z-10 bg-white flex justify-between items-center mb-4 p-3 md:p-0 border-b md:border-b-0 shadow-sm md:shadow-none print:hidden">
+        <div className="sticky top-0 z-10 bg-white flex justify-between items-center mb-4 p-3 md:p-0 border-b md:border-b-0 shadow-sm md:shadow-none">
           <h3 className="text-base md:text-lg font-bold text-gray-900">Preview Surat</h3>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <button
               onClick={onClose}
               className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm flex items-center gap-2 transition-colors"
@@ -191,7 +191,7 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
         {/* Preview Surat - Responsive A4 Format */}
         <div 
           id="surat-preview" 
-          className="bg-white mx-auto print:border-0"
+          className="bg-white mx-auto"
           style={{
             borderColor: '#ccc',
             fontFamily: 'Arial, sans-serif',
@@ -499,13 +499,46 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
         
         /* Compact spacing for paragraphs */
         #surat-preview p {
-          margin-bottom: 4px;
+          margin-bottom: 2px;
+          line-height: 1.15;
         }
         
         /* Reduce space in content area */
         #surat-preview > div > p {
           margin-top: 0;
-          margin-bottom: 4px;
+          margin-bottom: 2px;
+          line-height: 1.15;
+        }
+        
+        /* Compact spacing untuk konten dari RichTextEditor */
+        #surat-preview .text-justify p {
+          margin: 0 0 2px 0 !important;
+          line-height: 1.15 !important;
+        }
+        
+        #surat-preview .text-justify h1,
+        #surat-preview .text-justify h2,
+        #surat-preview .text-justify h3,
+        #surat-preview .text-justify h4,
+        #surat-preview .text-justify h5,
+        #surat-preview .text-justify h6 {
+          margin: 6px 0 2px 0 !important;
+          line-height: 1.1 !important;
+        }
+        
+        #surat-preview .text-justify ul,
+        #surat-preview .text-justify ol {
+          margin: 2px 0 !important;
+          padding-left: 20px;
+        }
+        
+        #surat-preview .text-justify li {
+          margin: 1px 0 !important;
+          line-height: 1.15 !important;
+        }
+        
+        #surat-preview .text-justify table {
+          margin: 6px 0 !important;
         }
         
         /* Mobile Responsive Adjustments */
@@ -543,120 +576,6 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
           #surat-preview .flex {
             display: flex !important;
             flex-wrap: wrap;
-          }
-        }
-        
-        @media print {
-          @page {
-            size: A4 portrait;
-            margin: 15mm 20mm;
-          }
-          
-          /* Hide everything except this modal */
-          body > div:not(:has(#surat-preview)) {
-            display: none !important;
-          }
-          
-          /* Hide sidebar */
-          aside {
-            display: none !important;
-          }
-          
-          /* Make modal full page */
-          body, html {
-            width: 210mm;
-            height: 297mm;
-            margin: 0;
-            padding: 0;
-            overflow: visible;
-          }
-          
-          /* Reset modal container */
-          .fixed.inset-0 {
-            position: static !important;
-            background: white !important;
-            z-index: auto !important;
-          }
-          
-          /* Hide buttons and header */
-          .print\\:hidden {
-            display: none !important;
-          }
-          
-          /* Reset all responsive clamp() to fixed sizes for print */
-          #surat-preview {
-            font-size: 13px !important;
-            padding: 12mm 18mm !important;
-            width: 210mm !important;
-            max-width: 210mm !important;
-            line-height: 1.35 !important;
-          }
-          
-          /* Reset header sizes */
-          #surat-preview h2 {
-            font-size: 17px !important;
-            margin: 0 !important;
-            line-height: 1.15 !important;
-          }
-          
-          #surat-preview h3 {
-            font-size: 15px !important;
-            margin: 1px 0 !important;
-            line-height: 1.15 !important;
-          }
-          
-          #surat-preview h4 {
-            font-size: 14px !important;
-            margin-bottom: 3px !important;
-          }
-          
-          #surat-preview p {
-            font-size: 13px !important;
-            margin-bottom: 4px !important;
-            line-height: 1.35 !important;
-          }
-          
-          #surat-preview hr {
-            margin: 4px 0 !important;
-            border-top-width: 2px !important;
-          }
-          
-          /* Reduce spacing in data fields */
-          #surat-preview .flex {
-            margin-bottom: 1px !important;
-          }
-          
-          /* Table styles for print */
-          #surat-preview table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-            margin: 5px 0 !important;
-            page-break-inside: avoid !important;
-          }
-          
-          #surat-preview th,
-          #surat-preview td {
-            border: 1px solid #000 !important;
-            padding: 4px !important;
-            text-align: left !important;
-            font-size: 12px !important;
-            line-height: 1.25 !important;
-          }
-          
-          #surat-preview th {
-            background-color: #f0f0f0 !important;
-            font-weight: bold !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          
-          /* Only show surat */
-          #surat-preview {
-            border: none !important;
-            margin: 0 !important;
-            padding: 10mm 20mm !important;
-            width: 210mm !important;
-            min-height: 297mm !important;
           }
         }
       `}</style>

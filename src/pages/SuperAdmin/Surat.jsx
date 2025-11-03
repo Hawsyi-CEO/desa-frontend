@@ -449,20 +449,25 @@ const AdminSurat = () => {
           }
           .isi-surat {
             font-size: 14px;
-            line-height: 1.7;
+            line-height: 1.4;
           }
           .isi-surat p {
             text-align: justify;
-            margin-bottom: 12px;
+            margin-bottom: 5px;
           }
           .data-pemohon {
             margin-left: 30px;
-            margin-bottom: 12px;
+            margin-bottom: 6px;
           }
           .template-konten {
             text-align: justify;
             white-space: pre-line;
-            margin-top: 12px;
+            margin-top: 8px;
+            line-height: 1.4;
+          }
+          .template-konten p {
+            margin-bottom: 3px !important;
+            line-height: 1.4 !important;
           }
           .ttd-container {
             margin-top: 35px;
