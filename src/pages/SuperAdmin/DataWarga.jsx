@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, Eye, Edit, Users, Home, ChevronLeft, ChevronRight, UserCheck, Filter as FilterIcon, RotateCcw, List, Grid3x3, UserPlus, Trash2, X, Calendar, MapPin, Briefcase, Phone, Mail, Lock, User, Hash, Heart, GraduationCap, Droplet, Download } from 'lucide-react';
+import { Search, Eye, Edit, Users, Home, ChevronLeft, ChevronRight, UserCheck, Filter as FilterIcon, RotateCcw, List, Grid3x3, UserPlus, Trash2, X, Calendar, MapPin, Briefcase, Phone, Mail, Lock, User, Hash, Heart, GraduationCap, Droplet, Download, CheckCircle2 } from 'lucide-react';
+import Select from 'react-select';
 import api from '../../services/api';
 import Layout from '../../components/Layout';
 import Toast from '../../components/Toast';
@@ -372,21 +373,25 @@ export default function DataWarga() {
                     className="input w-full h-11 rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Semua Pekerjaan</option>
-                    <option value="PNS">PNS</option>
-                    <option value="TNI/Polri">TNI/Polri</option>
-                    <option value="Pegawai Swasta">Pegawai Swasta</option>
-                    <option value="Karyawan Swasta">Karyawan Swasta</option>
-                    <option value="Wiraswasta">Wiraswasta</option>
-                    <option value="Petani">Petani</option>
-                    <option value="Nelayan">Nelayan</option>
-                    <option value="Buruh">Buruh</option>
-                    <option value="Guru">Guru</option>
-                    <option value="Pedagang">Pedagang</option>
+                    <option value="Belum/Tidak Bekerja">Belum/Tidak Bekerja</option>
+                    <option value="Mengurus Rumah Tangga">Mengurus Rumah Tangga</option>
                     <option value="Pelajar/Mahasiswa">Pelajar/Mahasiswa</option>
-                    <option value="Ibu Rumah Tangga">Ibu Rumah Tangga</option>
                     <option value="Pensiunan">Pensiunan</option>
-                    <option value="IT Consultant">IT Consultant</option>
-                    <option value="Lainnya">Lainnya</option>
+                    <option value="Pegawai Negeri Sipil (PNS)">Pegawai Negeri Sipil (PNS)</option>
+                    <option value="Tentara Nasional Indonesia (TNI)">Tentara Nasional Indonesia (TNI)</option>
+                    <option value="Kepolisian RI (POLRI)">Kepolisian RI (POLRI)</option>
+                    <option value="Karyawan Swasta">Karyawan Swasta</option>
+                    <option value="Karyawan BUMN">Karyawan BUMN</option>
+                    <option value="Wiraswasta">Wiraswasta</option>
+                    <option value="Pertanian/Perkebunan">Pertanian/Perkebunan</option>
+                    <option value="Pedagang">Pedagang</option>
+                    <option value="Guru">Guru</option>
+                    <option value="Dokter">Dokter</option>
+                    <option value="Perawat">Perawat</option>
+                    <option value="Buruh Harian Lepas">Buruh Harian Lepas</option>
+                    <option value="Perangkat Desa">Perangkat Desa</option>
+                    <option value="Kepala Desa">Kepala Desa</option>
+                    <option value="Lainnya, Sebutkan">Lainnya, Sebutkan</option>
                   </select>
                 </div>
               </div>
@@ -1105,9 +1110,138 @@ function EditModal({ warga, onClose, onSuccess, showToast, showError }) {
   );
 }
 
+// Opsi Pekerjaan
+const pekerjaanOptions = [
+  { value: 'Belum/Tidak Bekerja', label: 'Belum/Tidak Bekerja' },
+  { value: 'Mengurus Rumah Tangga', label: 'Mengurus Rumah Tangga' },
+  { value: 'Pelajar/Mahasiswa', label: 'Pelajar/Mahasiswa' },
+  { value: 'Pensiunan', label: 'Pensiunan' },
+  { value: 'Pegawai Negeri Sipil (PNS)', label: 'Pegawai Negeri Sipil (PNS)' },
+  { value: 'Tentara Nasional Indonesia (TNI)', label: 'Tentara Nasional Indonesia (TNI)' },
+  { value: 'Kepolisian RI (POLRI)', label: 'Kepolisian RI (POLRI)' },
+  { value: 'Perdagangan', label: 'Perdagangan' },
+  { value: 'Pertanian/Perkebunan', label: 'Pertanian/Perkebunan' },
+  { value: 'Peternak', label: 'Peternak' },
+  { value: 'Nelayan/Perikanan', label: 'Nelayan/Perikanan' },
+  { value: 'Industri', label: 'Industri' },
+  { value: 'Konstruksi', label: 'Konstruksi' },
+  { value: 'Transportasi', label: 'Transportasi' },
+  { value: 'Karyawan Swasta', label: 'Karyawan Swasta' },
+  { value: 'Karyawan BUMN', label: 'Karyawan BUMN' },
+  { value: 'Karyawan BUMD', label: 'Karyawan BUMD' },
+  { value: 'Karyawan Honorer', label: 'Karyawan Honorer' },
+  { value: 'Buruh Harian Lepas', label: 'Buruh Harian Lepas' },
+  { value: 'Buruh Tani/Perkebunan', label: 'Buruh Tani/Perkebunan' },
+  { value: 'Buruh Nelayan/Perikanan', label: 'Buruh Nelayan/Perikanan' },
+  { value: 'Buruh Peternakan', label: 'Buruh Peternakan' },
+  { value: 'Pembantu Rumah Tangga', label: 'Pembantu Rumah Tangga' },
+  { value: 'Tukang Cukur', label: 'Tukang Cukur' },
+  { value: 'Tukang Listrik', label: 'Tukang Listrik' },
+  { value: 'Tukang Batu', label: 'Tukang Batu' },
+  { value: 'Tukang Kayu', label: 'Tukang Kayu' },
+  { value: 'Tukang Sol Sepatu', label: 'Tukang Sol Sepatu' },
+  { value: 'Tukang Las/Pandai Besi', label: 'Tukang Las/Pandai Besi' },
+  { value: 'Tukang Jahit', label: 'Tukang Jahit' },
+  { value: 'Tukang Gigi', label: 'Tukang Gigi' },
+  { value: 'Penata Rias', label: 'Penata Rias' },
+  { value: 'Penata Busana', label: 'Penata Busana' },
+  { value: 'Penata Rambut', label: 'Penata Rambut' },
+  { value: 'Mekanik', label: 'Mekanik' },
+  { value: 'Seniman', label: 'Seniman' },
+  { value: 'Tabib', label: 'Tabib' },
+  { value: 'Paraji', label: 'Paraji' },
+  { value: 'Perancang Busana', label: 'Perancang Busana' },
+  { value: 'Penterjemah', label: 'Penterjemah' },
+  { value: 'Imam Masjid', label: 'Imam Masjid' },
+  { value: 'Pendeta', label: 'Pendeta' },
+  { value: 'Pastor', label: 'Pastor' },
+  { value: 'Wartawan', label: 'Wartawan' },
+  { value: 'Ustaz/Mubaligh', label: 'Ustaz/Mubaligh' },
+  { value: 'Juru Masak', label: 'Juru Masak' },
+  { value: 'Promotor Acara', label: 'Promotor Acara' },
+  { value: 'Anggota DPR-RI', label: 'Anggota DPR-RI' },
+  { value: 'Anggota DPD', label: 'Anggota DPD' },
+  { value: 'Anggota BPK', label: 'Anggota BPK' },
+  { value: 'Presiden', label: 'Presiden' },
+  { value: 'Wakil Presiden', label: 'Wakil Presiden' },
+  { value: 'Anggota Mahkamah Konstitusi', label: 'Anggota Mahkamah Konstitusi' },
+  { value: 'Anggota Kabinet/Kementerian', label: 'Anggota Kabinet/Kementerian' },
+  { value: 'Duta Besar', label: 'Duta Besar' },
+  { value: 'Gubernur', label: 'Gubernur' },
+  { value: 'Wakil Gubernur', label: 'Wakil Gubernur' },
+  { value: 'Bupati', label: 'Bupati' },
+  { value: 'Wakil Bupati', label: 'Wakil Bupati' },
+  { value: 'Walikota', label: 'Walikota' },
+  { value: 'Wakil Walikota', label: 'Wakil Walikota' },
+  { value: 'Anggota DPRD Prov', label: 'Anggota DPRD Prov' },
+  { value: 'Anggota DPRD Kabu/Kota', label: 'Anggota DPRD Kabu/Kota' },
+  { value: 'Dosen', label: 'Dosen' },
+  { value: 'Guru', label: 'Guru' },
+  { value: 'Pilot', label: 'Pilot' },
+  { value: 'Pengacara', label: 'Pengacara' },
+  { value: 'Notaris', label: 'Notaris' },
+  { value: 'Arsitek', label: 'Arsitek' },
+  { value: 'Akuntan', label: 'Akuntan' },
+  { value: 'Konsultan', label: 'Konsultan' },
+  { value: 'Dokter', label: 'Dokter' },
+  { value: 'Bidan', label: 'Bidan' },
+  { value: 'Perawat', label: 'Perawat' },
+  { value: 'Apoteker', label: 'Apoteker' },
+  { value: 'Psikiater/Psikolog', label: 'Psikiater/Psikolog' },
+  { value: 'Penyiar Televisi', label: 'Penyiar Televisi' },
+  { value: 'Penyiar Radio', label: 'Penyiar Radio' },
+  { value: 'Pelaut', label: 'Pelaut' },
+  { value: 'Peneliti', label: 'Peneliti' },
+  { value: 'Sopir', label: 'Sopir' },
+  { value: 'Pedagang', label: 'Pedagang' },
+  { value: 'Peternong', label: 'Peternong' },
+  { value: 'Perangkat Desa', label: 'Perangkat Desa' },
+  { value: 'Kepala Desa', label: 'Kepala Desa' },
+  { value: 'Biarawati', label: 'Biarawati' },
+  { value: 'Wiraswasta', label: 'Wiraswasta' },
+  { value: 'Buruh Lepas', label: 'Buruh Lepas' },
+  { value: 'Lainnya', label: 'Lainnya, Sebutkan' }
+];
+
+// Success Modal Component
+function SuccessModal({ onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[60] animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-slideUp">
+        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+          <CheckCircle2 className="w-12 h-12 text-green-600" />
+        </div>
+        <h3 className="text-2xl font-bold text-gray-900 mb-3">Berhasil!</h3>
+        <p className="text-gray-600 mb-6">
+          Data warga berhasil ditambahkan ke sistem! 🎉
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-medium hover:from-green-700 hover:to-green-800 transition-all shadow-lg hover:shadow-xl"
+          >
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Add Warga Modal Component
 function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
   const [loading, setLoading] = useState(false);
+  const [showPekerjaanLainnya, setShowPekerjaanLainnya] = useState(false);
+  const [pekerjaanLainnya, setPekerjaanLainnya] = useState('');
+  const [selectedPekerjaan, setSelectedPekerjaan] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [formData, setFormData] = useState({
     nik: '',
     nama: '',
@@ -1131,12 +1265,31 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
     no_telepon: ''
   });
 
+  const handlePekerjaanChange = (selectedOption) => {
+    if (selectedOption && selectedOption.value === 'Lainnya') {
+      setShowPekerjaanLainnya(true);
+      setSelectedPekerjaan(selectedOption);
+      setFormData({ ...formData, pekerjaan: '' });
+    } else {
+      setShowPekerjaanLainnya(false);
+      setPekerjaanLainnya('');
+      setSelectedPekerjaan(selectedOption);
+      setFormData({ ...formData, pekerjaan: selectedOption ? selectedOption.value : '' });
+    }
+  };
+
+  const handlePekerjaanLainnyaChange = (e) => {
+    const value = e.target.value;
+    setPekerjaanLainnya(value);
+    setFormData({ ...formData, pekerjaan: value });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validation
-    if (!formData.nik || !formData.nama || !formData.email) {
-      showError('NIK, Nama, dan Email wajib diisi!');
+    if (!formData.nik || !formData.nama) {
+      showError('NIK dan Nama wajib diisi!');
       return;
     }
 
@@ -1149,14 +1302,18 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
 
     try {
       await api.post('/admin/warga', formData);
-      showToast('Data warga berhasil ditambahkan!', 'success');
-      onSuccess();
+      setLoading(false);
+      setShowSuccessModal(true);
     } catch (err) {
       console.error('Error adding warga:', err);
       showError(err.response?.data?.message || 'Gagal menambahkan data warga');
-    } finally {
       setLoading(false);
     }
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccessModal(false);
+    onSuccess();
   };
 
   return (
@@ -1244,15 +1401,14 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                 <Mail className="w-4 h-4 text-blue-600" />
-                Email <span className="text-red-500">*</span>
+                Email
               </label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="email@example.com"
+                placeholder="email@example.com (opsional)"
                 className="input w-full"
-                required
               />
             </div>
 
@@ -1309,7 +1465,7 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
               <select
                 value={formData.jenis_kelamin}
                 onChange={(e) => setFormData({ ...formData, jenis_kelamin: e.target.value })}
-                className="input w-full"
+                className="input w-full h-11"
               >
                 <option value="">Pilih Jenis Kelamin</option>
                 <option value="Laki-laki">Laki-laki</option>
@@ -1326,7 +1482,7 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
               <select
                 value={formData.agama}
                 onChange={(e) => setFormData({ ...formData, agama: e.target.value })}
-                className="input w-full"
+                className="input w-full h-11"
               >
                 <option value="">Pilih Agama</option>
                 <option value="Islam">Islam</option>
@@ -1347,7 +1503,7 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
               <select
                 value={formData.pendidikan}
                 onChange={(e) => setFormData({ ...formData, pendidikan: e.target.value })}
-                className="input w-full"
+                className="input w-full h-11"
               >
                 <option value="">Pilih Pendidikan</option>
                 <option value="Tidak Sekolah">Tidak Sekolah</option>
@@ -1362,32 +1518,69 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
             </div>
 
             {/* Pekerjaan */}
-            <div>
+            <div className={showPekerjaanLainnya ? "md:col-span-2" : ""}>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                 <Briefcase className="w-4 h-4 text-blue-600" />
                 Pekerjaan
               </label>
-              <select
-                value={formData.pekerjaan}
-                onChange={(e) => setFormData({ ...formData, pekerjaan: e.target.value })}
-                className="input w-full"
-              >
-                <option value="">Pilih Pekerjaan</option>
-                <option value="Belum/Tidak Bekerja">Belum/Tidak Bekerja</option>
-                <option value="Pelajar/Mahasiswa">Pelajar/Mahasiswa</option>
-                <option value="PNS">PNS</option>
-                <option value="TNI/Polri">TNI/Polri</option>
-                <option value="Karyawan Swasta">Karyawan Swasta</option>
-                <option value="Wiraswasta">Wiraswasta</option>
-                <option value="Petani">Petani</option>
-                <option value="Pedagang">Pedagang</option>
-                <option value="Guru">Guru</option>
-                <option value="Dokter">Dokter</option>
-                <option value="Perawat">Perawat</option>
-                <option value="Pengacara">Pengacara</option>
-                <option value="IT Consultant">IT Consultant</option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
+              
+              {!showPekerjaanLainnya ? (
+                <Select
+                  value={selectedPekerjaan}
+                  onChange={handlePekerjaanChange}
+                  options={pekerjaanOptions}
+                  placeholder="Pilih atau ketik pekerjaan..."
+                  isClearable
+                  isSearchable
+                  noOptionsMessage={() => "Tidak ada opsi"}
+                  className="react-select-container"
+                  classNamePrefix="react-select"
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      minHeight: '44px',
+                      borderColor: '#d1d5db',
+                      '&:hover': {
+                        borderColor: '#9ca3af'
+                      }
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      maxHeight: '220px'
+                    }),
+                    menuList: (base) => ({
+                      ...base,
+                      maxHeight: '220px'
+                    })
+                  }}
+                />
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={pekerjaanLainnya}
+                      onChange={handlePekerjaanLainnyaChange}
+                      placeholder="Masukkan pekerjaan lainnya..."
+                      className="input flex-1 h-11"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPekerjaanLainnya(false);
+                        setPekerjaanLainnya('');
+                        setSelectedPekerjaan(null);
+                        setFormData({ ...formData, pekerjaan: '' });
+                      }}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500">Masukkan jenis pekerjaan yang tidak ada dalam daftar</p>
+                </div>
+              )}
             </div>
 
             {/* Status Perkawinan */}
@@ -1398,7 +1591,7 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
               <select
                 value={formData.status_perkawinan}
                 onChange={(e) => setFormData({ ...formData, status_perkawinan: e.target.value })}
-                className="input w-full"
+                className="input w-full h-11"
               >
                 <option value="">Pilih Status</option>
                 <option value="Belum Kawin">Belum Kawin</option>
@@ -1417,7 +1610,7 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
               <select
                 value={formData.golongan_darah}
                 onChange={(e) => setFormData({ ...formData, golongan_darah: e.target.value })}
-                className="input w-full"
+                className="input w-full h-11"
               >
                 <option value="">Pilih Golongan Darah</option>
                 <option value="A">A</option>
@@ -1437,7 +1630,8 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
                 type="text"
                 value={formData.rt}
                 onChange={(e) => setFormData({ ...formData, rt: e.target.value })}
-                placeholder="001"
+                placeholder="01"
+                maxLength={2}
                 className="input w-full"
               />
             </div>
@@ -1452,7 +1646,8 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
                 type="text"
                 value={formData.rw}
                 onChange={(e) => setFormData({ ...formData, rw: e.target.value })}
-                placeholder="001"
+                placeholder="01"
+                maxLength={2}
                 className="input w-full"
               />
             </div>
@@ -1508,7 +1703,7 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
               <select
                 value={formData.hubungan_keluarga}
                 onChange={(e) => setFormData({ ...formData, hubungan_keluarga: e.target.value })}
-                className="input w-full"
+                className="input w-full h-11"
               >
                 <option value="">Pilih Hubungan</option>
                 <option value="Kepala Keluarga">Kepala Keluarga</option>
@@ -1570,6 +1765,10 @@ function AddWargaModal({ onClose, onSuccess, showToast, showError }) {
           </div>
         </form>
       </div>
+      
+      {showSuccessModal && (
+        <SuccessModal onClose={handleSuccessClose} />
+      )}
     </div>
   );
 }

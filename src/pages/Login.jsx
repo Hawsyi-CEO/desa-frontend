@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import { FiMail, FiLock, FiFileText, FiUser, FiShield, FiCheck } from 'react-icons/fi';
+import { FiMail, FiLock, FiFileText, FiUser, FiShield, FiCheck, FiEye, FiEyeOff } from 'react-icons/fi';
 import logoKabupaten from '../assets/Lambang_Kabupaten_Bogor.png';
 
 const Login = () => {
@@ -12,6 +12,7 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { login, user } = useAuth();
   const navigate = useNavigate();
 
@@ -306,14 +307,25 @@ const Login = () => {
                       <input
                         id="password"
                         name="password"
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         autoComplete="current-password"
                         required
                         value={formData.password}
                         onChange={handleChange}
-                        className="w-full pl-10 lg:pl-12 pr-3 lg:pr-4 py-2.5 lg:py-3.5 text-sm lg:text-base text-gray-900 bg-gray-50 border-2 border-gray-200 rounded-lg lg:rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none placeholder:text-gray-400"
+                        className="w-full pl-10 lg:pl-12 pr-10 lg:pr-12 py-2.5 lg:py-3.5 text-sm lg:text-base text-gray-900 bg-gray-50 border-2 border-gray-200 rounded-lg lg:rounded-xl focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none placeholder:text-gray-400"
                         placeholder="••••••••••"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 lg:pr-4 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                      >
+                        {showPassword ? (
+                          <FiEyeOff className="h-4 w-4 lg:h-5 lg:w-5" />
+                        ) : (
+                          <FiEye className="h-4 w-4 lg:h-5 lg:w-5" />
+                        )}
+                      </button>
                     </div>
                   </div>
 
