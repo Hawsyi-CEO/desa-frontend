@@ -490,6 +490,31 @@ const AdminSurat = () => {
             font-size: 11px;
             margin-top: 4px;
           }
+          /* Table styles */
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            page-break-inside: avoid;
+          }
+          th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+            font-size: 14px;
+          }
+          th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
         </style>
       </head>
       <body>

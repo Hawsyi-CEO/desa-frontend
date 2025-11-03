@@ -1,6 +1,6 @@
 import { FiCheckCircle, FiX } from 'react-icons/fi';
 
-const SuccessModal = ({ isOpen, onClose, title, message, onContinue }) => {
+const SuccessModal = ({ isOpen, onClose, title, message, onContinue, requireVerification = true }) => {
   if (!isOpen) return null;
 
   return (
@@ -24,18 +24,32 @@ const SuccessModal = ({ isOpen, onClose, title, message, onContinue }) => {
             {message || 'Surat Anda berhasil diajukan'}
           </p>
 
-          {/* Success Details */}
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 mb-6">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <p className="text-sm font-semibold text-green-800">
-                Status: Menunggu Verifikasi
+          {/* Success Details - DYNAMIC based on verification */}
+          {requireVerification ? (
+            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                <p className="text-sm font-semibold text-yellow-800">
+                  Status: Menunggu Verifikasi
+                </p>
+              </div>
+              <p className="text-xs text-yellow-700">
+                Surat Anda akan diproses oleh RT/RW
               </p>
             </div>
-            <p className="text-xs text-green-700">
-              Surat Anda akan diproses oleh RT/RW
-            </p>
-          </div>
+          ) : (
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <p className="text-sm font-semibold text-green-800">
+                  Status: Langsung ke Admin
+                </p>
+              </div>
+              <p className="text-xs text-green-700">
+                Surat Anda langsung diproses oleh Kepala Desa (tanpa verifikasi RT/RW)
+              </p>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3">

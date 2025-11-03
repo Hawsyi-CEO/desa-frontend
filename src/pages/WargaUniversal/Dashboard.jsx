@@ -30,10 +30,18 @@ const WargaUniversalDashboard = () => {
     try {
       const response = await api.get('/warga-universal/jenis-surat');
       if (response.data.success) {
-        setJenisSuratList(response.data.data);
+        const data = response.data.data;
+        
+        console.log('📥 Fetched jenis surat (Warga Universal):', data);
+        console.log('🔍 Checking require_verification values:');
+        data.forEach(jenis => {
+          console.log(`  - ${jenis.nama_surat}: require_verification = ${jenis.require_verification} (type: ${typeof jenis.require_verification})`);
+        });
+        
+        setJenisSuratList(data);
       }
     } catch (error) {
-      console.error('Error loading jenis surat:', error);
+      console.error('❌ Error loading jenis surat:', error);
       toast.error('Gagal memuat jenis surat');
     }
   };
@@ -47,6 +55,9 @@ const WargaUniversalDashboard = () => {
 
   // Handle surat selection
   const handleSelectJenis = (jenis) => {
+    console.log('📝 Selected jenis surat (Warga Universal):', jenis);
+    console.log('🔍 require_verification:', jenis?.require_verification, `(type: ${typeof jenis?.require_verification})`);
+    
     // Parse fields if it's a string
     let parsedJenis = { ...jenis };
     if (typeof jenis.fields === 'string') {
@@ -91,12 +102,23 @@ const WargaUniversalDashboard = () => {
         console.log('?? Warga data received:', wargaData);
         setWargaData(wargaData);
         
-        // Format tanggal lahir dari timestamp ke YYYY-MM-DD
+        // Format tanggal lahir dari timestamp ke YYYY-MM-DD dan Indonesia
         let formattedTanggalLahir = '';
+        let formattedTanggalLahirIndonesia = '';
         if (wargaData.tanggal_lahir) {
           const date = new Date(wargaData.tanggal_lahir);
           formattedTanggalLahir = date.toISOString().split('T')[0]; // 2017-01-06
+          
+          // Format Indonesia: 15 Januari 1990
+          const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                         'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+          const day = date.getDate();
+          const month = months[date.getMonth()];
+          const year = date.getFullYear();
+          formattedTanggalLahirIndonesia = `${day} ${month} ${year}`;
+          
           console.log('?? Formatted tanggal_lahir:', formattedTanggalLahir);
+          console.log('?? Formatted tanggal_lahir Indonesia:', formattedTanggalLahirIndonesia);
         }
         
         // Normalize field name (lowercase, remove spaces, underscores)
@@ -129,6 +151,16 @@ const WargaUniversalDashboard = () => {
           'tanggallahir': formattedTanggalLahir,
           'tanggal_lahir': formattedTanggalLahir,
           'ttl': formattedTanggalLahir,
+          // Special: Tempat, Tanggal Lahir (combined dengan format Indonesia)
+          'tempat,tanggallahir': wargaData.tempat_lahir && formattedTanggalLahirIndonesia 
+            ? `${wargaData.tempat_lahir}, ${formattedTanggalLahirIndonesia}` 
+            : '',
+          'tempat_tanggal_lahir': wargaData.tempat_lahir && formattedTanggalLahirIndonesia 
+            ? `${wargaData.tempat_lahir}, ${formattedTanggalLahirIndonesia}` 
+            : '',
+          'tempattanggallahir': wargaData.tempat_lahir && formattedTanggalLahirIndonesia 
+            ? `${wargaData.tempat_lahir}, ${formattedTanggalLahirIndonesia}` 
+            : '',
           'jeniskelamin': wargaData.jenis_kelamin,
           'jenis_kelamin': wargaData.jenis_kelamin,
           'pekerjaan': wargaData.pekerjaan,
@@ -155,6 +187,8 @@ const WargaUniversalDashboard = () => {
         setFormData(prev => {
           const newData = { ...prev };
           
+          console.log('📋 Available wargaFieldMapping keys:', Object.keys(wargaFieldMapping));
+          
           // Loop through template fields only
           templateFields.forEach(field => {
             const normalizedFieldName = normalizeFieldName(field.name);
@@ -163,7 +197,9 @@ const WargaUniversalDashboard = () => {
             // Check if we have data for this field
             if (wargaFieldMapping[normalizedFieldName]) {
               newData[field.name] = wargaFieldMapping[normalizedFieldName];
-              console.log(`? Autofilled: ${field.name} = ${wargaFieldMapping[normalizedFieldName]}`);
+              console.log(`✅ Autofilled: ${field.name} = ${wargaFieldMapping[normalizedFieldName]}`);
+            } else {
+              console.log(`❌ NOT FOUND in mapping: ${normalizedFieldName}`);
             }
           });
           
@@ -230,10 +266,16 @@ const WargaUniversalDashboard = () => {
 
     // Check required fields
     const requiredFields = selectedJenis.fields.filter(f => f.required);
-    const missingFields = requiredFields.filter(f => !formData[f.name]);
+    const missingFields = requiredFields.filter(f => {
+      const value = formData[f.name];
+      // Check jika null, undefined, empty string, atau hanya whitespace
+      return !value || (typeof value === 'string' && value.trim() === '');
+    });
     
     if (missingFields.length > 0) {
-      toast.error(`Field wajib belum diisi: ${missingFields.map(f => f.label).join(', ')}`);
+      const missingLabels = missingFields.map(f => f.label).join(', ');
+      toast.error(`Field wajib belum diisi: ${missingLabels}`);
+      console.log('❌ Missing required fields:', missingFields.map(f => f.name));
       return;
     }
 
@@ -647,6 +689,31 @@ const WargaUniversalDashboard = () => {
           .ttd-nip {
             font-size: 11px;
             margin-top: 4px;
+          }
+          /* Table styles */
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            page-break-inside: avoid;
+          }
+          th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+            font-size: 14px;
+          }
+          th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
         </style>
       </head>
@@ -1127,7 +1194,7 @@ const WargaUniversalDashboard = () => {
                         </p>
                         
                         {/* Badge Kode Surat */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className={`inline-flex items-center gap-1.5 px-3 py-1 ${palette.bg} rounded-full text-xs font-semibold`}>
                             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
@@ -1137,13 +1204,22 @@ const WargaUniversalDashboard = () => {
                             </span>
                           </span>
                           
-                          {/* Quick Print Indicator */}
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            Siap Cetak
-                          </span>
+                          {/* Verification Status Badge */}
+                          {jenis.require_verification ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-50 text-yellow-700 rounded-full text-xs font-medium border border-yellow-200">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              Perlu Verifikasi
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium border border-green-200">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              Tanpa Verifikasi
+                            </span>
+                          )}
                         </div>
                       </div>
                     </button>

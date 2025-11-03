@@ -77,10 +77,23 @@ const SuratMobile = () => {
       if (response.data.success) {
         const wargaData = response.data.data;
         
+        // Format tanggal lahir dari timestamp ke YYYY-MM-DD dan Indonesia
         let formattedTanggalLahir = '';
+        let formattedTanggalLahirIndonesia = '';
         if (wargaData.tanggal_lahir) {
           const date = new Date(wargaData.tanggal_lahir);
-          formattedTanggalLahir = date.toISOString().split('T')[0];
+          formattedTanggalLahir = date.toISOString().split('T')[0]; // 2017-01-06
+          
+          // Format Indonesia: 15 Januari 1990
+          const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                         'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+          const day = date.getDate();
+          const month = months[date.getMonth()];
+          const year = date.getFullYear();
+          formattedTanggalLahirIndonesia = `${day} ${month} ${year}`;
+          
+          console.log('📅 Formatted tanggal_lahir:', formattedTanggalLahir);
+          console.log('📅 Formatted tanggal_lahir Indonesia:', formattedTanggalLahirIndonesia);
         }
 
         const normalizeFieldName = (name) => {
@@ -90,38 +103,65 @@ const SuratMobile = () => {
         };
 
         const templateFields = selectedJenis?.fields || [];
-        const newFormData = { ...formData };
+        console.log('📋 Template fields:', templateFields);
 
-        const fieldMappings = {
-          'nik': 'nik',
-          'nama': 'nama',
-          'nama_lengkap': 'nama',
-          'tempat_lahir': 'tempat_lahir',
+        // Master mapping of warga data (all possible fields)
+        const wargaFieldMapping = {
+          'nik': wargaData.nik,
+          'nama': wargaData.nama,
+          'nama_lengkap': wargaData.nama,
+          'tempat_lahir': wargaData.tempat_lahir,
+          'tempatlahir': wargaData.tempat_lahir,
           'tanggal_lahir': formattedTanggalLahir,
-          'jenis_kelamin': 'jenis_kelamin',
-          'agama': 'agama',
-          'status_perkawinan': 'status_perkawinan',
-          'pekerjaan': 'pekerjaan',
-          'alamat': 'alamat',
-          'rt': 'rt',
-          'rw': 'rw',
-          'kelurahan': 'kelurahan_desa',
-          'kecamatan': 'kecamatan',
-          'kabupaten': 'kabupaten_kota',
-          'provinsi': 'provinsi',
-          'kewarganegaraan': 'kewarganegaraan'
+          'tanggallahir': formattedTanggalLahir,
+          'ttl': formattedTanggalLahir,
+          // Special: Tempat, Tanggal Lahir (combined dengan format Indonesia)
+          'tempat_tanggal_lahir': wargaData.tempat_lahir && formattedTanggalLahirIndonesia 
+            ? `${wargaData.tempat_lahir}, ${formattedTanggalLahirIndonesia}` 
+            : '',
+          'tempattanggallahir': wargaData.tempat_lahir && formattedTanggalLahirIndonesia 
+            ? `${wargaData.tempat_lahir}, ${formattedTanggalLahirIndonesia}` 
+            : '',
+          'jenis_kelamin': wargaData.jenis_kelamin,
+          'jeniskelamin': wargaData.jenis_kelamin,
+          'agama': wargaData.agama,
+          'status_perkawinan': wargaData.status_perkawinan,
+          'statusperkawinan': wargaData.status_perkawinan,
+          'status_kawin': wargaData.status_perkawinan,
+          'statuskawin': wargaData.status_perkawinan,
+          'pekerjaan': wargaData.pekerjaan,
+          'alamat': wargaData.alamat,
+          'rt': wargaData.rt,
+          'rw': wargaData.rw,
+          'dusun': wargaData.dusun,
+          'kelurahan': wargaData.kelurahan_desa,
+          'kelurahan_desa': wargaData.kelurahan_desa,
+          'kecamatan': wargaData.kecamatan,
+          'kabupaten': wargaData.kabupaten_kota,
+          'kabupaten_kota': wargaData.kabupaten_kota,
+          'provinsi': wargaData.provinsi,
+          'kewarganegaraan': wargaData.kewarganegaraan,
+          'no_kk': wargaData.no_kk,
+          'no_telepon': wargaData.no_telepon,
+          'pendidikan': wargaData.pendidikan,
+          'golongan_darah': wargaData.golongan_darah,
+          'nama_kepala_keluarga': wargaData.nama_kepala_keluarga,
+          'hubungan_keluarga': wargaData.hubungan_keluarga
         };
 
+        // Update formData HANYA dengan field yang ada di template
+        const newFormData = { ...formData };
+        
         templateFields.forEach(field => {
           const normalizedFieldName = normalizeFieldName(field.name);
-          const mapping = fieldMappings[normalizedFieldName];
+          console.log(`🔍 Checking template field: "${field.name}" → normalized: "${normalizedFieldName}"`);
           
-          if (mapping) {
-            if (mapping === formattedTanggalLahir) {
-              newFormData[field.name] = formattedTanggalLahir;
-            } else {
-              newFormData[field.name] = wargaData[mapping] || '';
-            }
+          // Check if we have data for this field
+          if (wargaFieldMapping[normalizedFieldName]) {
+            newFormData[field.name] = wargaFieldMapping[normalizedFieldName];
+            console.log(`✅ Autofilled: ${field.name} = ${wargaFieldMapping[normalizedFieldName]}`);
+          } else {
+            console.log(`⚠️ No mapping found for: ${normalizedFieldName}`);
           }
         });
 
@@ -162,10 +202,15 @@ const SuratMobile = () => {
 
   const handlePreview = () => {
     const requiredFields = selectedJenis.fields.filter(field => field.required);
-    const emptyFields = requiredFields.filter(field => !formData[field.name]);
+    const emptyFields = requiredFields.filter(field => {
+      const value = formData[field.name];
+      // Check for null, undefined, empty string, or whitespace-only
+      return !value || (typeof value === 'string' && value.trim() === '');
+    });
 
     if (emptyFields.length > 0) {
       warning('Mohon lengkapi semua field yang wajib diisi');
+      console.log('❌ Missing required fields (Preview):', emptyFields.map(f => f.label));
       return;
     }
 
@@ -178,6 +223,21 @@ const SuratMobile = () => {
   };
 
   const handleSubmit = async () => {
+    // Validate required fields before submitting
+    const requiredFields = selectedJenis.fields.filter(field => field.required);
+    const emptyFields = requiredFields.filter(field => {
+      const value = formData[field.name];
+      // Check for null, undefined, empty string, or whitespace-only
+      return !value || (typeof value === 'string' && value.trim() === '');
+    });
+
+    if (emptyFields.length > 0) {
+      const missingLabels = emptyFields.map(f => f.label).join(', ');
+      error(`Field wajib belum diisi: ${missingLabels}`);
+      console.log('❌ Missing required fields (Submit):', emptyFields.map(f => f.label));
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await api.post('/warga/surat', {
@@ -331,15 +391,30 @@ const SuratMobile = () => {
                               {jenis.deskripsi}
                             </p>
                           )}
-                          <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
-                            <span className="flex items-center gap-1">
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md text-xs">
                               <FiClock size={12} />
                               {jenis.fields?.length || 0} field
                             </span>
                             {jenis.auto_generate_nomor && (
-                              <span className="flex items-center gap-1 text-green-600">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-600 rounded-md text-xs">
                                 <FiCheckCircle size={12} />
                                 Auto nomor
+                              </span>
+                            )}
+                            {jenis.require_verification ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-50 text-yellow-700 rounded-md text-xs font-medium border border-yellow-200">
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                                Perlu Verifikasi
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 rounded-md text-xs font-medium border border-green-200">
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                                Tanpa Verifikasi
                               </span>
                             )}
                           </div>
@@ -421,7 +496,12 @@ const SuratMobile = () => {
       <SuccessModal
         isOpen={showSuccessModal}
         title="Surat Berhasil Diajukan!"
-        message="Surat Anda telah berhasil diajukan dan akan segera diproses oleh RT/RW"
+        message={
+          selectedJenis?.require_verification
+            ? "Surat Anda telah berhasil diajukan dan akan segera diproses oleh RT/RW"
+            : "Surat Anda telah berhasil diajukan dan akan langsung diproses oleh Kepala Desa"
+        }
+        requireVerification={selectedJenis?.require_verification || false}
         onClose={() => {
           setShowSuccessModal(false);
           navigate('/warga/dashboard');

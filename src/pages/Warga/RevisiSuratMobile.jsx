@@ -85,49 +85,91 @@ const RevisiSuratMobile = () => {
       if (response.data.success) {
         const wargaData = response.data.data;
         
+        // Format tanggal lahir dari timestamp ke YYYY-MM-DD dan Indonesia
         let formattedTanggalLahir = '';
+        let formattedTanggalLahirIndonesia = '';
         if (wargaData.tanggal_lahir) {
           const date = new Date(wargaData.tanggal_lahir);
-          formattedTanggalLahir = date.toISOString().split('T')[0];
+          formattedTanggalLahir = date.toISOString().split('T')[0]; // 2017-01-06
+          
+          // Format Indonesia: 15 Januari 1990
+          const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                         'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+          const day = date.getDate();
+          const month = months[date.getMonth()];
+          const year = date.getFullYear();
+          formattedTanggalLahirIndonesia = `${day} ${month} ${year}`;
+          
+          console.log('📅 Formatted tanggal_lahir:', formattedTanggalLahir);
+          console.log('📅 Formatted tanggal_lahir Indonesia:', formattedTanggalLahirIndonesia);
         }
 
-        const templateFields = jenisSurat?.fields || [];
-        const newFormData = { ...formData };
-
-        const fieldMappings = {
-          'nik': 'nik',
-          'nama': 'nama',
-          'nama_lengkap': 'nama',
-          'tempat_lahir': 'tempat_lahir',
-          'tanggal_lahir': formattedTanggalLahir,
-          'jenis_kelamin': 'jenis_kelamin',
-          'agama': 'agama',
-          'status_perkawinan': 'status_perkawinan',
-          'pekerjaan': 'pekerjaan',
-          'kewarganegaraan': 'kewarganegaraan',
-          'alamat': 'alamat',
-          'rt': 'rt',
-          'rw': 'rw',
-          'kelurahan': 'kelurahan',
-          'kecamatan': 'kecamatan',
-          'kabupaten': 'kabupaten_kota',
-          'provinsi': 'provinsi'
+        const normalizeFieldName = (name) => {
+          return name.toLowerCase()
+            .replace(/\s+/g, '_')
+            .replace(/[^a-z0-9_]/g, '');
         };
 
-        templateFields.forEach(field => {
-          const normalizedFieldName = field.name.toLowerCase().replace(/\s+/g, '_');
-          const mappingKey = Object.keys(fieldMappings).find(key => 
-            normalizedFieldName.includes(key) || key.includes(normalizedFieldName)
-          );
+        const templateFields = jenisSurat?.fields || [];
+        console.log('📋 Template fields:', templateFields);
 
-          if (mappingKey && wargaData[fieldMappings[mappingKey]]) {
-            let value = wargaData[fieldMappings[mappingKey]];
-            
-            if (mappingKey === 'tanggal_lahir') {
-              value = formattedTanggalLahir;
-            }
-            
-            newFormData[field.name] = value;
+        // Master mapping of warga data (all possible fields)
+        const wargaFieldMapping = {
+          'nik': wargaData.nik,
+          'nama': wargaData.nama,
+          'nama_lengkap': wargaData.nama,
+          'tempat_lahir': wargaData.tempat_lahir,
+          'tempatlahir': wargaData.tempat_lahir,
+          'tanggal_lahir': formattedTanggalLahir,
+          'tanggallahir': formattedTanggalLahir,
+          'ttl': formattedTanggalLahir,
+          // Special: Tempat, Tanggal Lahir (combined dengan format Indonesia)
+          'tempat_tanggal_lahir': wargaData.tempat_lahir && formattedTanggalLahirIndonesia 
+            ? `${wargaData.tempat_lahir}, ${formattedTanggalLahirIndonesia}` 
+            : '',
+          'tempattanggallahir': wargaData.tempat_lahir && formattedTanggalLahirIndonesia 
+            ? `${wargaData.tempat_lahir}, ${formattedTanggalLahirIndonesia}` 
+            : '',
+          'jenis_kelamin': wargaData.jenis_kelamin,
+          'jeniskelamin': wargaData.jenis_kelamin,
+          'agama': wargaData.agama,
+          'status_perkawinan': wargaData.status_perkawinan,
+          'statusperkawinan': wargaData.status_perkawinan,
+          'status_kawin': wargaData.status_perkawinan,
+          'statuskawin': wargaData.status_perkawinan,
+          'pekerjaan': wargaData.pekerjaan,
+          'kewarganegaraan': wargaData.kewarganegaraan,
+          'alamat': wargaData.alamat,
+          'rt': wargaData.rt,
+          'rw': wargaData.rw,
+          'dusun': wargaData.dusun,
+          'kelurahan': wargaData.kelurahan_desa,
+          'kelurahan_desa': wargaData.kelurahan_desa,
+          'kecamatan': wargaData.kecamatan,
+          'kabupaten': wargaData.kabupaten_kota,
+          'kabupaten_kota': wargaData.kabupaten_kota,
+          'provinsi': wargaData.provinsi,
+          'no_kk': wargaData.no_kk,
+          'no_telepon': wargaData.no_telepon,
+          'pendidikan': wargaData.pendidikan,
+          'golongan_darah': wargaData.golongan_darah,
+          'nama_kepala_keluarga': wargaData.nama_kepala_keluarga,
+          'hubungan_keluarga': wargaData.hubungan_keluarga
+        };
+
+        // Update formData HANYA dengan field yang ada di template
+        const newFormData = { ...formData };
+        
+        templateFields.forEach(field => {
+          const normalizedFieldName = normalizeFieldName(field.name);
+          console.log(`🔍 Checking template field: "${field.name}" → normalized: "${normalizedFieldName}"`);
+          
+          // Check if we have data for this field
+          if (wargaFieldMapping[normalizedFieldName]) {
+            newFormData[field.name] = wargaFieldMapping[normalizedFieldName];
+            console.log(`✅ Autofilled: ${field.name} = ${wargaFieldMapping[normalizedFieldName]}`);
+          } else {
+            console.log(`⚠️ No mapping found for: ${normalizedFieldName}`);
           }
         });
 
@@ -408,7 +450,12 @@ const RevisiSuratMobile = () => {
       <SuccessModal
         isOpen={showSuccessModal}
         title="Revisi Berhasil Dikirim!"
-        message="Surat Anda telah berhasil direvisi dan diajukan kembali untuk verifikasi"
+        message={
+          jenisSurat?.require_verification
+            ? "Surat Anda telah berhasil direvisi dan diajukan kembali untuk verifikasi RT/RW"
+            : "Surat Anda telah berhasil direvisi dan akan langsung diproses oleh Kepala Desa"
+        }
+        requireVerification={jenisSurat?.require_verification || false}
         onClose={() => {
           setShowSuccessModal(false);
           navigate('/warga/dashboard');

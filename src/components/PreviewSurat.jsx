@@ -195,19 +195,21 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
           style={{
             borderColor: '#ccc',
             fontFamily: 'Arial, sans-serif',
-            // Mobile: full width dengan padding kecil, Desktop: A4 size
+            // Fixed size untuk konsistensi dengan print
             width: '100%',
             maxWidth: '210mm',
-            padding: '10mm 8mm', // Lebih kecil untuk mobile
-            boxSizing: 'border-box'
+            padding: '12mm 18mm', // Sama dengan print
+            boxSizing: 'border-box',
+            fontSize: '13px', // Base font size sama dengan print
+            lineHeight: '1.35' // Sama dengan print
           }}
         >
           {/* Header/Kop Surat */}
           <div 
             style={{
               position: 'relative',
-              minHeight: '70px',
-              marginBottom: '8px',
+              minHeight: '55px',
+              marginBottom: '4px',
               display: 'flex',
               alignItems: 'flex-start',
               flexDirection: 'row'
@@ -302,17 +304,17 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
           {/* Garis Kop - Thinner on mobile */}
           <hr style={{ 
             border: 'none', 
-            borderTop: 'clamp(2px, 0.5vw, 4px) solid #000', 
-            margin: '0 0 12px 0' 
+            borderTop: 'clamp(2px, 0.5vw, 3px) solid #000', 
+            margin: '0 0 5px 0' 
           }} />
 
           {/* Judul Surat - Responsive */}
-          <div className="text-center" style={{ marginBottom: '12px', marginTop: '12px' }}>
+          <div className="text-center" style={{ marginBottom: '5px', marginTop: '5px' }}>
             <h4 
               className="font-bold uppercase underline"
               style={{ 
                 fontSize: 'clamp(13px, 3.5vw, 16px)', 
-                marginBottom: '6px' 
+                marginBottom: '3px' 
               }}
             >
               {doc.jenis_surat?.nama_surat || 'SURAT KETERANGAN'}
@@ -331,10 +333,10 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
           <div 
             style={{ 
               fontSize: 'clamp(11px, 3vw, 14px)',
-              lineHeight: '1.7'
+              lineHeight: '1.4'
             }}
           >
-            <p className="text-justify" style={{ marginBottom: '10px' }}>
+            <p className="text-justify" style={{ marginBottom: '4px' }}>
               {doc.jenis_surat?.kalimat_pembuka || `Yang bertanda tangan di bawah ini, ${config.jabatan_ttd}, dengan ini menerangkan bahwa :`}
             </p>
 
@@ -342,7 +344,7 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
             {fields && fields.length > 0 && (
               <div style={{ 
                 marginLeft: 'clamp(15px, 4vw, 30px)', 
-                marginBottom: '10px' 
+                marginBottom: '4px' 
               }}>
                 {(() => {
                   console.log('📋 All Fields:', fields);
@@ -355,7 +357,7 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
                     const value = getFieldValue(field.name, dataSurat);
                     console.log(`🔍 Rendering Field "${field.label}" (${field.name}):`, value || '[KOSONG]');
                     return (
-                      <div key={index} className="flex flex-wrap" style={{ marginBottom: '3px' }}>
+                      <div key={index} className="flex flex-wrap" style={{ marginBottom: '1px' }}>
                         <div style={{ 
                           width: 'clamp(100px, 30vw, 150px)',
                           minWidth: '100px' 
@@ -384,7 +386,7 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
               className="text-justify"
               style={{ 
                 whiteSpace: 'pre-line',
-                marginTop: '10px'
+                marginTop: '4px'
               }}
               dangerouslySetInnerHTML={{ 
                 __html: renderTemplate(doc.jenis_surat?.template_konten || '', dataSurat) 
@@ -393,7 +395,7 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
 
             {/* Keperluan - Responsive */}
             {doc.keperluan && (
-              <p className="text-justify" style={{ marginTop: '10px' }}>
+              <p className="text-justify" style={{ marginTop: '4px' }}>
                 Demikian surat keterangan ini dibuat untuk dipergunakan sebagai {doc.keperluan}.
               </p>
             )}
@@ -418,17 +420,17 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
           )}
 
           {/* Tanda Tangan - Responsive */}
-          <div style={{ marginTop: 'clamp(20px, 5vw, 35px)' }} className="flex justify-end">
+          <div style={{ marginTop: 'clamp(10px, 3vw, 18px)' }} className="flex justify-end">
             <div className="text-center" style={{ width: 'clamp(150px, 40vw, 220px)' }}>
               <p style={{ 
                 fontSize: 'clamp(11px, 3vw, 14px)', 
-                marginBottom: 'clamp(30px, 8vw, 50px)' 
+                marginBottom: 'clamp(20px, 5vw, 35px)' 
               }}>
                 {getCurrentDate(doc)}
               </p>
               <p style={{ 
                 fontSize: 'clamp(11px, 3vw, 14px)', 
-                marginBottom: '6px' 
+                marginBottom: '4px' 
               }}>
                 {config.jabatan_ttd}
               </p>
@@ -436,7 +438,7 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
               <p 
                 style={{ 
                   fontSize: 'clamp(11px, 3vw, 14px)', 
-                  marginTop: 'clamp(40px, 10vw, 70px)' 
+                  marginTop: 'clamp(30px, 7vw, 50px)' 
                 }}
                 className="font-bold"
               >
@@ -445,7 +447,7 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
               {config.nip_ttd && (
                 <p style={{ 
                   fontSize: 'clamp(9px, 2.5vw, 11px)', 
-                  marginTop: '4px' 
+                  marginTop: '3px' 
                 }}>
                   NIP. {config.nip_ttd}
                 </p>
@@ -470,6 +472,42 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
 
       {/* Responsive & Print Styles */}
       <style>{`
+        /* General table styles */
+        #surat-preview table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 6px 0;
+          font-size: inherit;
+        }
+        
+        #surat-preview th,
+        #surat-preview td {
+          border: 1px solid #000;
+          padding: 5px;
+          text-align: left;
+          vertical-align: top;
+        }
+        
+        #surat-preview th {
+          background-color: #f0f0f0;
+          font-weight: bold;
+        }
+        
+        #surat-preview tbody tr:nth-child(even) {
+          background-color: #f9f9f9;
+        }
+        
+        /* Compact spacing for paragraphs */
+        #surat-preview p {
+          margin-bottom: 4px;
+        }
+        
+        /* Reduce space in content area */
+        #surat-preview > div > p {
+          margin-top: 0;
+          margin-bottom: 4px;
+        }
+        
         /* Mobile Responsive Adjustments */
         @media (max-width: 768px) {
           #surat-preview {
@@ -486,7 +524,19 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
           
           /* Better spacing on mobile */
           #surat-preview p {
-            margin-bottom: 8px !important;
+            margin-bottom: 6px !important;
+          }
+          
+          /* Responsive table on mobile */
+          #surat-preview table {
+            font-size: 10px !important;
+            margin: 8px 0 !important;
+          }
+          
+          #surat-preview th,
+          #surat-preview td {
+            padding: 4px !important;
+            font-size: 10px !important;
           }
           
           /* Responsive table/field layout */
@@ -535,27 +585,69 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
           
           /* Reset all responsive clamp() to fixed sizes for print */
           #surat-preview {
-            font-size: 14px !important;
-            padding: 15mm 20mm !important;
+            font-size: 13px !important;
+            padding: 12mm 18mm !important;
             width: 210mm !important;
             max-width: 210mm !important;
+            line-height: 1.35 !important;
           }
           
           /* Reset header sizes */
           #surat-preview h2 {
-            font-size: 20px !important;
+            font-size: 17px !important;
+            margin: 0 !important;
+            line-height: 1.15 !important;
           }
           
           #surat-preview h3 {
-            font-size: 18px !important;
+            font-size: 15px !important;
+            margin: 1px 0 !important;
+            line-height: 1.15 !important;
           }
           
           #surat-preview h4 {
-            font-size: 16px !important;
+            font-size: 14px !important;
+            margin-bottom: 3px !important;
           }
           
           #surat-preview p {
-            font-size: 14px !important;
+            font-size: 13px !important;
+            margin-bottom: 4px !important;
+            line-height: 1.35 !important;
+          }
+          
+          #surat-preview hr {
+            margin: 4px 0 !important;
+            border-top-width: 2px !important;
+          }
+          
+          /* Reduce spacing in data fields */
+          #surat-preview .flex {
+            margin-bottom: 1px !important;
+          }
+          
+          /* Table styles for print */
+          #surat-preview table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin: 5px 0 !important;
+            page-break-inside: avoid !important;
+          }
+          
+          #surat-preview th,
+          #surat-preview td {
+            border: 1px solid #000 !important;
+            padding: 4px !important;
+            text-align: left !important;
+            font-size: 12px !important;
+            line-height: 1.25 !important;
+          }
+          
+          #surat-preview th {
+            background-color: #f0f0f0 !important;
+            font-weight: bold !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           
           /* Only show surat */

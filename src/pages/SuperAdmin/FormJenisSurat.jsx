@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../../components/Layout';
 import Toast from '../../components/Toast';
 import ConfirmModal from '../../components/ConfirmModal';
+import RichTextEditor from '../../components/RichTextEditor';
 import { useToast } from '../../hooks/useToast';
 import { useConfirm } from '../../hooks/useConfirm';
 import api from '../../services/api';
@@ -74,12 +75,22 @@ const FormJenisSurat = () => {
     }
   }, [id]);
 
+  // Debug: Log formData.fields changes
+  useEffect(() => {
+    console.log('🔄 FormData.fields changed:', formData.fields);
+    console.log('📊 Fields count:', formData.fields.length);
+  }, [formData.fields]);
+
   const fetchJenisSurat = async () => {
     try {
       setLoading(true);
       const response = await api.get(`/admin/jenis-surat/${id}`);
       if (response.data.success) {
         const data = response.data.data;
+        
+        console.log('📥 Loaded jenis surat data:', data);
+        console.log('🔍 require_verification value:', data.require_verification);
+        
         setFormData({
           nama_surat: data.nama_surat,
           kode_surat: data.kode_surat,
@@ -91,9 +102,11 @@ const FormJenisSurat = () => {
           require_verification: data.require_verification,
           status: data.status
         });
+        
+        console.log('✅ FormData set with require_verification:', data.require_verification);
       }
     } catch (err) {
-      console.error('Error fetching jenis surat:', err);
+      console.error('❌ Error fetching jenis surat:', err);
       error('Gagal memuat data jenis surat');
     } finally {
       setLoading(false);
@@ -102,9 +115,13 @@ const FormJenisSurat = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : value;
+    
+    console.log(`📝 Input changed: ${name} = ${newValue} (type: ${type})`);
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: newValue
     }));
   };
 
@@ -127,6 +144,7 @@ const FormJenisSurat = () => {
 
     if (editingFieldIndex !== null) {
       // Update existing field
+      console.log('✏️ Updating field at index:', editingFieldIndex);
       setFormData(prev => ({
         ...prev,
         fields: prev.fields.map((field, index) => 
@@ -134,12 +152,19 @@ const FormJenisSurat = () => {
         )
       }));
       setEditingFieldIndex(null);
+      success('Field berhasil diupdate');
     } else {
       // Add new field
-      setFormData(prev => ({
-        ...prev,
-        fields: [...prev.fields, { ...newField, name: fieldName }]
-      }));
+      console.log('➕ Adding new field:', { ...newField, name: fieldName });
+      setFormData(prev => {
+        const newFields = [...prev.fields, { ...newField, name: fieldName }];
+        console.log('📋 Total fields after add:', newFields.length);
+        return {
+          ...prev,
+          fields: newFields
+        };
+      });
+      success('Field berhasil ditambahkan');
     }
 
     setNewField({
@@ -265,18 +290,25 @@ const FormJenisSurat = () => {
       return;
     }
 
+    console.log('📤 Submitting jenis surat data:', {
+      ...formData,
+      require_verification: formData.require_verification
+    });
+
     try {
       setLoading(true);
       if (isEdit) {
-        await api.put(`/admin/jenis-surat/${id}`, formData);
+        const response = await api.put(`/admin/jenis-surat/${id}`, formData);
+        console.log('✅ Update response:', response.data);
         success('Jenis surat berhasil diupdate');
       } else {
-        await api.post('/admin/jenis-surat', formData);
+        const response = await api.post('/admin/jenis-surat', formData);
+        console.log('✅ Create response:', response.data);
         success('Jenis surat berhasil ditambahkan');
       }
       setTimeout(() => navigate('/admin/jenis-surat'), 1000);
     } catch (err) {
-      console.error('Error saving jenis surat:', err);
+      console.error('❌ Error saving jenis surat:', err);
       error(err.response?.data?.message || 'Gagal menyimpan jenis surat');
     } finally {
       setLoading(false);
@@ -373,25 +405,34 @@ const FormJenisSurat = () => {
                 />
               </div>
 
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="require_verification"
-                    checked={formData.require_verification}
-                    onChange={handleInputChange}
-                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                  />
-                  <span className="text-sm font-medium text-gray-700">Butuh Verifikasi</span>
-                </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Checkbox Butuh Verifikasi */}
+                <div className="flex items-center">
+                  <label className="flex items-center gap-3 cursor-pointer p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors w-full">
+                    <input
+                      type="checkbox"
+                      name="require_verification"
+                      checked={formData.require_verification}
+                      onChange={handleInputChange}
+                      className="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer"
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-gray-900 block">Butuh Verifikasi</span>
+                      <span className="text-xs text-gray-500">
+                        {formData.require_verification ? 'Surat perlu verifikasi RT/RW' : 'Surat tidak perlu verifikasi'}
+                      </span>
+                    </div>
+                  </label>
+                </div>
 
+                {/* Dropdown Status */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                   <select
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="aktif">Aktif</option>
                     <option value="nonaktif">Non-Aktif</option>
@@ -807,15 +848,11 @@ const FormJenisSurat = () => {
               </div>
             )}
 
-            <textarea
-              ref={templateRef}
-              name="template_konten"
+            <RichTextEditor
               value={formData.template_konten}
-              onChange={handleInputChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono text-sm"
-              rows="12"
+              onChange={(content) => setFormData(prev => ({ ...prev, template_konten: content }))}
               placeholder="Tulis konten surat di sini...&#10;&#10;Contoh:&#10;Adalah benar bahwa orang tersebut di atas adalah warga Desa Cibadak.&#10;&#10;Demikian surat keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya."
-              required
+              availableFields={formData.fields}
             />
           </div>
 
