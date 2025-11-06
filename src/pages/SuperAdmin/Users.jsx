@@ -828,7 +828,7 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
               </div>
               <div>
                 <h2 className="text-xl font-bold">Tambah User Baru</h2>
-                <p className="text-sm text-slate-200 mt-1">Login: NIK sebagai username, password default: password123</p>
+                <p className="text-sm text-slate-200 mt-1">Login: NIK/Email sebagai username</p>
               </div>
             </div>
             <button
@@ -852,11 +852,11 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
                 <ul className="text-sm text-purple-800 space-y-1">
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 bg-purple-600 rounded-full"></span>
-                    <strong>Username:</strong> NIK yang didaftarkan
+                    <strong>Username:</strong> NIK atau Email
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 bg-purple-600 rounded-full"></span>
-                    <strong>Password Default:</strong> password123 (user dapat mengubahnya setelah login)
+                    <strong>Password Default:</strong> Warga: password123 | Verifikator: verifikator123 | Admin: admin123
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 bg-purple-600 rounded-full"></span>
@@ -934,7 +934,9 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
                 placeholder="Kosongkan untuk password default"
                 className="input w-full"
               />
-              <p className="text-xs text-gray-500 mt-1">Default: <strong>password123</strong></p>
+              <p className="text-xs text-gray-500 mt-1">
+                Default: Warga: <strong>password123</strong> | Verifikator: <strong>verifikator123</strong> | Admin: <strong>admin123</strong>
+              </p>
             </div>
 
             {/* Role */}
