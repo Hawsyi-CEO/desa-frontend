@@ -1009,16 +1009,30 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     role: user.role || 'warga',
-    status: user.status || 'aktif'
+    status: user.status || 'aktif',
+    rt: user.rt || '',
+    rw: user.rw || ''
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Validasi RT/RW untuk verifikator
+    if (formData.role === 'verifikator') {
+      if (!formData.rt || !formData.rw) {
+        showError('RT dan RW wajib diisi untuk Verifikator!');
+        return;
+      }
+      if (formData.rt.length !== 3 || formData.rw.length !== 3) {
+        showError('RT dan RW harus 3 digit (contoh: 001)!');
+        return;
+      }
+    }
+    
     setLoading(true);
     try {
       await api.put(`/admin/users/${user.id}`, formData);
-      showToast('Role dan status user berhasil diupdate!');
+      showToast('Data user berhasil diupdate!');
       onSuccess();
     } catch (err) {
       showError(err.response?.data?.message || 'Gagal update user');
@@ -1096,6 +1110,44 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
               <p className="text-xs text-red-600 mt-1">Role Super Admin tidak dapat diubah</p>
             )}
           </div>
+
+          {/* RT - Conditional untuk Verifikator */}
+          {formData.role === 'verifikator' && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                RT <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.rt}
+                onChange={(e) => setFormData({ ...formData, rt: e.target.value })}
+                placeholder="Contoh: 001"
+                maxLength={3}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">3 digit RT (contoh: 001, 002)</p>
+            </div>
+          )}
+
+          {/* RW - Conditional untuk Verifikator */}
+          {formData.role === 'verifikator' && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                RW <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.rw}
+                onChange={(e) => setFormData({ ...formData, rw: e.target.value })}
+                placeholder="Contoh: 001"
+                maxLength={3}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">3 digit RW (contoh: 001, 002)</p>
+            </div>
+          )}
 
           {/* Status Field */}
           <div className="mb-6">
