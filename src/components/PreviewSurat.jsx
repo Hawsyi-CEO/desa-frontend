@@ -514,16 +514,16 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
           <div 
             style={{
               position: 'relative',
-              minHeight: '55px',
-              marginBottom: '4px',
+              minHeight: 'clamp(70px, 18vw, 95px)',
+              marginBottom: 'clamp(6px, 1.5vw, 8px)',
               display: 'flex',
               alignItems: 'flex-start',
-              flexDirection: 'row'
+              gap: 'clamp(8px, 2vw, 12px)'
             }}
           >
-            {/* Logo - Smaller on mobile */}
+            {/* Logo - Responsive */}
             <div style={{ 
-              width: 'clamp(50px, 15vw, 90px)', // Responsive: 50px min, 90px max
+              width: 'clamp(60px, 15vw, 90px)', // Responsive: 60px min, 90px max
               flexShrink: 0,
               paddingTop: '0'
             }}>
@@ -543,75 +543,78 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
               />
             </div>
             
-            {/* Kop Surat - Responsive text */}
+            {/* Kop Surat - Centered & Responsive */}
             <div style={{ 
               flex: 1, 
-              textAlign: 'center', 
-              paddingTop: '2px',
-              paddingLeft: '8px',
-              paddingRight: 'clamp(50px, 15vw, 90px)' // Match logo width
+              textAlign: 'center',
+              paddingTop: 'clamp(1px, 0.5vw, 2px)'
             }}>
               <h2 
                 className="font-bold uppercase"
                 style={{ 
-                  fontSize: 'clamp(12px, 3.5vw, 20px)', // Responsive font
-                  lineHeight: '1.2', 
-                  margin: '0', 
-                  padding: '0' 
+                  fontSize: 'clamp(11px, 3.2vw, 18px)', // Responsive font
+                  lineHeight: '1.3', 
+                  margin: '0 0 2px 0', 
+                  padding: '0',
+                  letterSpacing: '0.3px'
                 }}
               >
-                {config.nama_kabupaten}
+                {config.nama_kabupaten || 'PEMERINTAH KABUPATEN BOGOR'}
               </h2>
               <h3 
                 className="font-bold uppercase"
                 style={{ 
-                  fontSize: 'clamp(11px, 3vw, 18px)', 
-                  lineHeight: '1.2', 
-                  margin: '2px 0', 
-                  padding: '0' 
+                  fontSize: 'clamp(10px, 2.8vw, 16px)', 
+                  lineHeight: '1.3', 
+                  margin: '0 0 2px 0', 
+                  padding: '0',
+                  letterSpacing: '0.3px'
                 }}
               >
-                {config.nama_kecamatan}
+                {config.nama_kecamatan || 'KECAMATAN CIAMPEA'}
               </h3>
               <h3 
                 className="font-bold uppercase"
                 style={{ 
-                  fontSize: 'clamp(12px, 3.5vw, 20px)', 
-                  lineHeight: '1.2', 
-                  margin: '2px 0 4px 0', 
-                  padding: '0' 
+                  fontSize: 'clamp(10px, 2.8vw, 16px)', 
+                  lineHeight: '1.3', 
+                  margin: '0 0 5px 0', 
+                  padding: '0',
+                  letterSpacing: '0.3px'
                 }}
               >
-                {config.nama_desa}
+                KANTOR KEPALA {config.nama_desa || 'DESA CIBADAK'}
               </h3>
               <p 
                 style={{ 
-                  fontSize: 'clamp(8px, 2vw, 11px)', 
-                  lineHeight: '1.3', 
+                  fontSize: 'clamp(7px, 1.8vw, 10px)', 
+                  lineHeight: '1.4', 
                   margin: '0', 
                   padding: '0' 
                 }}
               >
-                {config.alamat_kantor}
+                {config.alamat_kantor || 'Kp. Cibadak Balai Desa No. 5 RT. 005/001 Desa Cibadak, Kecamatan Ciampea - Kabupaten Bogor 16620'}
               </p>
-              {config.telepon && (
+              {(config.telepon || config.email) && (
                 <p style={{ 
-                  fontSize: 'clamp(8px, 2vw, 11px)', 
-                  lineHeight: '1.3', 
+                  fontSize: 'clamp(7px, 1.8vw, 10px)', 
+                  lineHeight: '1.4', 
                   margin: '0', 
                   padding: '0' 
                 }}>
-                  Telp: {config.telepon}{config.email ? ` Email: ${config.email}` : ''}
+                  {config.telepon ? `Telp: ${config.telepon}` : ''}{config.telepon && config.email ? ' | ' : ''}{config.email ? `Email: ${config.email}` : ''}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Garis Kop - Thinner on mobile */}
+          {/* Garis Kop - Double line effect */}
           <hr style={{ 
             border: 'none', 
-            borderTop: 'clamp(2px, 0.5vw, 3px) solid #000', 
-            margin: '0 0 5px 0' 
+            borderTop: 'clamp(2px, 0.6vw, 3px) solid #000',
+            borderBottom: 'clamp(0.5px, 0.2vw, 1px) solid #000',
+            height: 'clamp(3px, 0.8vw, 4px)',
+            margin: '0 0 clamp(8px, 2vw, 12px) 0' 
           }} />
 
           {/* Judul Surat - Responsive */}

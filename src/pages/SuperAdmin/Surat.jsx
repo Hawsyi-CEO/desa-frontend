@@ -635,13 +635,14 @@ const AdminSurat = () => {
             background: white;
           }
           .kop-surat {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
           }
           .kop-header {
             display: flex;
             align-items: flex-start;
             min-height: 95px;
             margin-bottom: 8px;
+            gap: 12px;
           }
           .logo-cell {
             width: 90px;
@@ -657,43 +658,49 @@ const AdminSurat = () => {
           .kop-text-cell {
             flex: 1;
             text-align: center;
-            padding-top: 5px;
-            padding-left: 0;
-            padding-right: 90px;
+            padding-top: 2px;
+          }
+          .kop-text {
+            width: 100%;
           }
           .kop-text h1 {
-            font-size: 20px;
+            font-size: 18px;
             line-height: 1.3;
             font-weight: bold;
             text-transform: uppercase;
-            margin: 0 0 3px 0;
+            margin: 0 0 2px 0;
             padding: 0;
+            letter-spacing: 0.3px;
           }
           .kop-text h2 {
-            font-size: 18px;
+            font-size: 16px;
             line-height: 1.3;
             font-weight: bold;
             text-transform: uppercase;
-            margin: 0 0 3px 0;
+            margin: 0 0 2px 0;
             padding: 0;
+            letter-spacing: 0.3px;
           }
           .kop-text h3 {
-            font-size: 18px;
+            font-size: 16px;
             line-height: 1.3;
             font-weight: bold;
             text-transform: uppercase;
             margin: 0 0 5px 0;
             padding: 0;
+            letter-spacing: 0.3px;
           }
           .kop-text .alamat {
-            font-size: 12px;
+            font-size: 10px;
             line-height: 1.4;
-            margin: 0 0 2px 0;
+            margin: 0;
             padding: 0;
           }
           .garis-kop {
             border: none;
-            border-top: 4px solid #000;
+            border-top: 3px solid #000;
+            border-bottom: 1px solid #000;
+            height: 4px;
             margin: 0;
             padding: 0;
           }
@@ -798,11 +805,11 @@ const AdminSurat = () => {
             </div>
             <div class="kop-text-cell">
               <div class="kop-text">
-                <h1>${config.nama_kabupaten}</h1>
-                <h2>${config.nama_kecamatan}</h2>
-                <h3>${config.nama_desa}</h3>
-                <p class="alamat">${config.alamat_kantor}</p>
-                ${config.telepon ? `<p class="alamat">Telp: ${config.telepon}${config.email ? ` Email: ${config.email}` : ''}</p>` : ''}
+                <h1>${config.nama_kabupaten || 'PEMERINTAH KABUPATEN BOGOR'}</h1>
+                <h2>${config.nama_kecamatan || 'KECAMATAN CIAMPEA'}</h2>
+                <h3>KANTOR KEPALA ${config.nama_desa || 'DESA CIBADAK'}</h3>
+                <p class="alamat">${config.alamat_kantor || 'Kp. Cibadak Balai Desa No. 5 RT. 005/001 Desa Cibadak, Kecamatan Ciampea - Kabupaten Bogor 16620'}</p>
+                ${config.telepon || config.email ? `<p class="alamat">${config.telepon ? `Telp: ${config.telepon}` : ''}${config.telepon && config.email ? ' | ' : ''}${config.email ? `Email: ${config.email}` : ''}</p>` : ''}
               </div>
             </div>
           </div>
