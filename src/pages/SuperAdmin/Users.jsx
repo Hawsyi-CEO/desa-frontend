@@ -771,12 +771,19 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
 
     // Validasi RT/RW untuk verifikator
     if (formData.role === 'verifikator') {
-      if (!formData.rt || !formData.rw) {
-        showError('RT dan RW wajib diisi untuk Verifikator!');
+      // Jika RT diisi, maka RW WAJIB diisi
+      if (formData.rt && !formData.rw) {
+        showError('Jika RT diisi, maka RW juga harus diisi!');
         return;
       }
-      if (formData.rt.length !== 3 || formData.rw.length !== 3) {
-        showError('RT dan RW harus 3 digit (contoh: 001)!');
+      
+      // Validasi format 2 digit jika diisi
+      if (formData.rt && formData.rt.length !== 2) {
+        showError('RT harus 2 digit (contoh: 01)!');
+        return;
+      }
+      if (formData.rw && formData.rw.length !== 2) {
+        showError('RW harus 2 digit (contoh: 01)!');
         return;
       }
     }
@@ -920,18 +927,17 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <Hash className="w-4 h-4 text-red-600" />
-                  RT <span className="text-red-500">*</span>
+                  RT
                 </label>
                 <input
                   type="text"
                   value={formData.rt}
                   onChange={(e) => setFormData({ ...formData, rt: e.target.value })}
-                  placeholder="Contoh: 001"
-                  maxLength={3}
+                  placeholder="Contoh: 01"
+                  maxLength={2}
                   className="input w-full"
-                  required
                 />
-                <p className="text-xs text-gray-500 mt-1">3 digit RT (contoh: 001, 002)</p>
+                <p className="text-xs text-gray-500 mt-1">Opsional - Jika diisi RT maka RW wajib diisi</p>
               </div>
             )}
 
@@ -940,18 +946,17 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <Hash className="w-4 h-4 text-red-600" />
-                  RW <span className="text-red-500">*</span>
+                  RW
                 </label>
                 <input
                   type="text"
                   value={formData.rw}
                   onChange={(e) => setFormData({ ...formData, rw: e.target.value })}
-                  placeholder="Contoh: 001"
-                  maxLength={3}
+                  placeholder="Contoh: 01"
+                  maxLength={2}
                   className="input w-full"
-                  required
                 />
-                <p className="text-xs text-gray-500 mt-1">3 digit RW (contoh: 001, 002)</p>
+                <p className="text-xs text-gray-500 mt-1">Opsional - Bisa diisi tanpa RT</p>
               </div>
             )}
 
@@ -1019,12 +1024,19 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
     
     // Validasi RT/RW untuk verifikator
     if (formData.role === 'verifikator') {
-      if (!formData.rt || !formData.rw) {
-        showError('RT dan RW wajib diisi untuk Verifikator!');
+      // Jika RT diisi, maka RW WAJIB diisi
+      if (formData.rt && !formData.rw) {
+        showError('Jika RT diisi, maka RW juga harus diisi!');
         return;
       }
-      if (formData.rt.length !== 3 || formData.rw.length !== 3) {
-        showError('RT dan RW harus 3 digit (contoh: 001)!');
+      
+      // Validasi format 2 digit jika diisi
+      if (formData.rt && formData.rt.length !== 2) {
+        showError('RT harus 2 digit (contoh: 01)!');
+        return;
+      }
+      if (formData.rw && formData.rw.length !== 2) {
+        showError('RW harus 2 digit (contoh: 01)!');
         return;
       }
     }
@@ -1115,18 +1127,17 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
           {formData.role === 'verifikator' && (
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                RT <span className="text-red-500">*</span>
+                RT
               </label>
               <input
                 type="text"
                 value={formData.rt}
                 onChange={(e) => setFormData({ ...formData, rt: e.target.value })}
-                placeholder="Contoh: 001"
-                maxLength={3}
+                placeholder="Contoh: 01"
+                maxLength={2}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
-                required
               />
-              <p className="text-xs text-gray-500 mt-1">3 digit RT (contoh: 001, 002)</p>
+              <p className="text-xs text-gray-500 mt-1">Opsional - Jika diisi RT maka RW wajib diisi</p>
             </div>
           )}
 
@@ -1134,18 +1145,17 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
           {formData.role === 'verifikator' && (
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                RW <span className="text-red-500">*</span>
+                RW
               </label>
               <input
                 type="text"
                 value={formData.rw}
                 onChange={(e) => setFormData({ ...formData, rw: e.target.value })}
-                placeholder="Contoh: 001"
-                maxLength={3}
+                placeholder="Contoh: 01"
+                maxLength={2}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
-                required
               />
-              <p className="text-xs text-gray-500 mt-1">3 digit RW (contoh: 001, 002)</p>
+              <p className="text-xs text-gray-500 mt-1">Opsional - Bisa diisi tanpa RT</p>
             </div>
           )}
 
