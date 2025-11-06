@@ -24,10 +24,6 @@ const AdminSurat = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedSurat, setSelectedSurat] = useState(null);
-  // State untuk modal pilihan penandatangan
-  const [showSignerModal, setShowSignerModal] = useState(false);
-  const [pendingSuratData, setPendingSuratData] = useState(null);
-  const [configData, setConfigData] = useState(null);
   // State untuk pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
@@ -218,46 +214,14 @@ const AdminSurat = () => {
         config = getDefaultConfig();
       }
 
-      // Simpan data dan config, lalu tampilkan modal pilihan penandatangan
-      setPendingSuratData(suratData);
-      setConfigData(config);
-      setShowSignerModal(true);
+      // Langsung print tanpa modal
+      await printSurat(suratData, config);
     } catch (err) {
       console.error('Error fetching surat detail for print:', err);
       error('Gagal mengambil detail surat untuk dicetak');
     } finally {
       setLoading(false);
     }
-  };
-
-  // Handle pilihan penandatangan
-  const handleSelectSigner = async (signerType) => {
-    setShowSignerModal(false);
-    
-    // Buat config dengan penandatangan yang dipilih
-    let finalConfig = { ...configData };
-    
-    if (signerType === 'sekretaris') {
-      // Ganti dengan data sekretaris desa
-      finalConfig = {
-        ...finalConfig,
-        isSekretaris: true, // Tambahkan flag untuk identifikasi
-        jabatan_ttd: configData.jabatan_sekretaris || 'Sekretaris Desa',
-        nama_ttd: configData.nama_sekretaris || configData.nama_ttd,
-        nip_ttd: configData.nip_sekretaris || configData.nip_ttd
-      };
-    } else {
-      finalConfig = {
-        ...finalConfig,
-        isSekretaris: false
-      };
-    }
-    
-    console.log('✅ Selected signer:', signerType);
-    console.log('✅ Final config for print:', finalConfig);
-    
-    // Langsung print dengan config yang sudah dipilih
-    await printSurat(pendingSuratData, finalConfig);
   };
 
   const printSurat = async (suratData, config) => {
@@ -323,23 +287,13 @@ const AdminSurat = () => {
       layout_ttd: suratData.jenis_surat?.layout_ttd
     });
     
-    // Paper size configuration
-    const paperConfig = {
-      a4: {
-        size: 'A4 portrait',
-        width: '210mm',
-        height: '297mm',
-        padding: '15mm 20mm'
-      },
-      legal: {
-        size: 'legal portrait',
-        width: '215.9mm',
-        height: '355.6mm',
-        padding: '20mm 25mm'
-      }
+    // Always use A4 paper size
+    const paper = {
+      size: 'A4 portrait',
+      width: '210mm',
+      height: '297mm',
+      padding: '10mm 20mm'
     };
-    
-    const paper = paperConfig[paperSize] || paperConfig.a4;
     
     console.log('📐 Using paper config:', paper);
     
@@ -390,16 +344,13 @@ const AdminSurat = () => {
         });
       }
       
-      // Strip HTML tags dan convert ke plain text
+      // JANGAN strip HTML tags - biarkan table dan HTML lain tetap ada untuk print
+      // Hanya decode HTML entities
       rendered = rendered
-        .replace(/<[^>]+>/g, '')
         .replace(/&nbsp;/g, ' ')
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
-        .replace(/&amp;/g, '&')
-        .split('\n')
-        .filter(line => line.trim())
-        .join('\n');
+        .replace(/&amp;/g, '&');
       
       return rendered;
     };
@@ -424,6 +375,14 @@ const AdminSurat = () => {
 
     const generateSignatureHTML = () => {
       const jenisSurat = suratData.jenis_surat || {};
+      
+      console.log('🚨 RAW DATA CHECK:', {
+        'jenisSurat': jenisSurat,
+        'jenisSurat.penandatangan': jenisSurat.penandatangan,
+        'typeof penandatangan': typeof jenisSurat.penandatangan,
+        'jenisSurat.layout_ttd': jenisSurat.layout_ttd
+      });
+      
       const penandatangan = jenisSurat.penandatangan || [{
         jabatan: 'kepala_desa',
         label: config.jabatan_ttd,
@@ -437,7 +396,9 @@ const AdminSurat = () => {
       let signatories = [];
       try {
         signatories = typeof penandatangan === 'string' ? JSON.parse(penandatangan) : penandatangan;
+        console.log('✅ PARSED signatories:', signatories);
       } catch (e) {
+        console.error('❌ ERROR parsing penandatangan:', e);
         signatories = [{
           jabatan: 'kepala_desa',
           label: config.jabatan_ttd,
@@ -446,37 +407,51 @@ const AdminSurat = () => {
         }];
       }
 
+      // DEBUG: Log untuk troubleshooting
+      console.log('🔍 generateSignatureHTML Debug:', {
+        penandatangan: penandatangan,
+        signatories: signatories,
+        signatories_length: signatories.length,
+        layout: layout,
+        showMaterai: showMaterai,
+        config: config // Log config untuk cek nama_camat dll
+      });
+
       // Helper untuk render single TTD
       const renderSignatureBox = (data, withDate = false) => {
-        // Gunakan nama dari config yang sudah di-fetch sebelumnya
-        let nama = '(...........................)';
-        let nip = '';
+        // PRIORITAS: Gunakan nama dan NIP yang sudah tersimpan di data dari FormJenisSurat
+        let nama = data.nama || '(...........................)';
+        let nip = data.nip || '';
+        let label = data.label || '';
         
-        if (data.jabatan === 'kepala_desa') {
-          nama = config.nama_ttd;
-          nip = config.nip_ttd || '';
-        } else if (data.jabatan === 'sekretaris_desa') {
-          nama = config.nama_sekretaris || config.nama_ttd;
-          nip = config.nip_sekretaris || '';
-        } else if (data.jabatan === 'camat') {
-          nama = config.nama_camat || 'NAMA CAMAT';
-        } else if (data.jabatan === 'kapolsek') {
-          nama = config.nama_kapolsek || 'NAMA KAPOLSEK';
-        } else if (data.jabatan === 'danramil') {
-          nama = config.nama_danramil || 'NAMA DANRAMIL';
-        } else if (data.jabatan === 'ketua_rt' && data.rt_number) {
-          nama = config[`nama_rt_${data.rt_number}`] || 'NAMA RT';
-        } else if (data.jabatan === 'ketua_rw' && data.rw_number) {
-          nama = config[`nama_rw_${data.rw_number}`] || 'NAMA RW';
+        // FALLBACK: Jika data.nama kosong, ambil dari config (backward compatibility)
+        if (!data.nama) {
+          if (data.jabatan === 'kepala_desa') {
+            nama = config.nama_ttd;
+            nip = config.nip_ttd || '';
+          } else if (data.jabatan === 'sekretaris_desa') {
+            nama = config.nama_sekretaris || config.nama_ttd;
+            nip = config.nip_sekretaris || '';
+          } else if (data.jabatan === 'camat') {
+            nama = config.nama_camat || 'NAMA CAMAT';
+            nip = config.nip_camat || '';
+          } else if (data.jabatan === 'kapolsek') {
+            nama = config.nama_kapolsek || 'NAMA KAPOLSEK';
+            nip = config.nip_kapolsek || '';
+          } else if (data.jabatan === 'danramil') {
+            nama = config.nama_danramil || 'NAMA DANRAMIL';
+            nip = config.nip_danramil || '';
+          } else if (data.jabatan === 'ketua_rt' && data.rt_number) {
+            nama = config[`nama_rt_${data.rt_number}`] || 'NAMA RT';
+          } else if (data.jabatan === 'ketua_rw' && data.rw_number) {
+            nama = config[`nama_rw_${data.rw_number}`] || 'NAMA RW';
+          }
         }
         
         return `
           <div style="text-align: center; width: 220px; max-width: 220px; flex: none; display: inline-block; vertical-align: top;">
             ${withDate ? `<div style="font-size: 14px; margin-bottom: 10px;">${getCurrentDate()}</div>` : ''}
-            ${config.isSekretaris && data.jabatan === 'sekretaris_desa' ? 
-              `<div style="font-size: 14px; margin-bottom: 2px;">a.n Kepala Desa ${config.nama_desa_penandatangan || formatNamaDesa(config.nama_desa) || 'Cibadak'}</div>` 
-              : ''}
-            <div style="font-size: 14px; margin-bottom: 8px;">${data.label || config.jabatan_ttd}</div>
+            <div style="font-size: 14px; margin-bottom: 8px;">${label}</div>
             <div style="height: 60px;"></div>
             <div style="font-size: 14px; margin-top: 10px; font-weight: bold; text-decoration: underline;">${nama}</div>
             ${nip ? `<div style="font-size: 12px; margin-top: 4px;">NIP. ${nip}</div>` : ''}
@@ -493,8 +468,16 @@ const AdminSurat = () => {
         </div>
       `;
 
-      // Layout 1: Hanya Kepala Desa di kanan
-      if (layout === '1_kanan' || signatories.length === 1) {
+      // PRIORITAS: Cek jumlah signatories dulu sebelum layout
+      console.log('🎯 Signature Detection:', {
+        signatories_count: signatories.length,
+        layout: layout,
+        signatories_detail: signatories
+      });
+      
+      // Jika hanya 1 penandatangan, tampilkan 1 TTD di kanan
+      if (signatories.length === 1) {
+        console.log('📝 Rendering 1 TTD (kanan)');
         return `
           <div style="margin-top: 35px; display: flex; justify-content: flex-end; align-items: flex-start; width: 100%;">
             ${renderSignatureBox(signatories[0], true)}
@@ -502,28 +485,48 @@ const AdminSurat = () => {
         `;
       }
 
-      // Layout 2 Horizontal: 2 TTD sejajar
-      if (layout === '2_horizontal' && signatories.length >= 2) {
+      // Layout 2 Horizontal: 2 TTD sejajar (AUTO-DETECT jika 2 penandatangan)
+      if (signatories.length === 2) {
+        console.log('📝 Rendering 2 TTD (horizontal)', { kiri: signatories[0], kanan: signatories[1] });
+        // Urutkan berdasarkan posisi: kiri dulu, baru kanan
+        const kiri = signatories.find(s => s.posisi === 'kiri') || signatories[0];
+        const kanan = signatories.find(s => s.posisi === 'kanan') || signatories[1];
+        
         return `
           <div style="margin-top: 35px;">
-            <div style="font-size: 14px; margin-bottom: 20px; text-align: right; padding-right: 220px;">${getCurrentDate()}</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <div style="width: 220px;"></div>
+              <div style="width: 220px; text-align: center;">
+                <div style="font-size: 14px;">${getCurrentDate()}</div>
+              </div>
+            </div>
             <div style="display: flex; justify-content: space-between;">
-              ${renderSignatureBox(signatories[0])}
-              ${renderSignatureBox(signatories[1])}
+              ${renderSignatureBox(kiri)}
+              ${renderSignatureBox(kanan)}
             </div>
           </div>
         `;
       }
 
       // Layout 3 Horizontal: 2 TTD + Materai
-      if (layout === '3_horizontal') {
+      if (layout === '3_horizontal' && signatories.length >= 2) {
+        // Urutkan berdasarkan posisi: kiri dulu, baru kanan
+        const kiri = signatories.find(s => s.posisi === 'kiri') || signatories[0];
+        const kanan = signatories.find(s => s.posisi === 'kanan') || signatories[1] || signatories[0];
+        
         return `
           <div style="margin-top: 35px;">
-            <div style="font-size: 14px; margin-bottom: 20px; text-align: center;">${getCurrentDate()}</div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+              <div style="width: 220px;"></div>
+              ${showMaterai ? '<div style="width: 150px;"></div>' : ''}
+              <div style="width: 220px; text-align: center;">
+                <div style="font-size: 14px;">${getCurrentDate()}</div>
+              </div>
+            </div>
             <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-              ${renderSignatureBox(signatories[0])}
+              ${renderSignatureBox(kiri)}
               ${showMaterai ? renderMateraiBox() : '<div style="width: 150px;"></div>'}
-              ${renderSignatureBox(signatories[1] || signatories[0])}
+              ${renderSignatureBox(kanan)}
             </div>
           </div>
         `;
@@ -531,13 +534,20 @@ const AdminSurat = () => {
 
       // Layout 2 Vertical: 2 TTD bertingkat
       if (layout === '2_vertical' && signatories.length >= 2) {
+        // Untuk vertical: kiri_atas -> atas (kiri), kanan_bawah -> bawah (kanan)
+        const atas = signatories.find(s => s.posisi === 'kiri_atas' || s.posisi === 'kiri' || s.posisi === 'atas') || signatories[0];
+        const bawah = signatories.find(s => s.posisi === 'kanan_bawah' || s.posisi === 'kanan' || s.posisi === 'bawah') || signatories[1];
+        
         return `
           <div style="margin-top: 35px;">
+            <div style="text-align: right; margin-bottom: 10px;">
+              <div style="font-size: 14px;">${getCurrentDate()}</div>
+            </div>
             <div style="display: flex; justify-content: flex-start; margin-bottom: 20px;">
-              ${renderSignatureBox(signatories[0], true)}
+              ${renderSignatureBox(atas)}
             </div>
             <div style="display: flex; justify-content: flex-end;">
-              ${renderSignatureBox(signatories[1])}
+              ${renderSignatureBox(bawah)}
             </div>
           </div>
         `;
@@ -552,7 +562,12 @@ const AdminSurat = () => {
 
         return `
           <div style="margin-top: 35px;">
-            <div style="font-size: 14px; margin-bottom: 20px; text-align: center;">${getCurrentDate()}</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <div style="width: 220px;"></div>
+              <div style="width: 220px; text-align: center;">
+                <div style="font-size: 14px;">${getCurrentDate()}</div>
+              </div>
+            </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
               <div style="width: 220px;">${kiriAtas ? renderSignatureBox(kiriAtas) : ''}</div>
               <div style="width: 220px;">${kananAtas ? renderSignatureBox(kananAtas) : ''}</div>
@@ -565,10 +580,33 @@ const AdminSurat = () => {
         `;
       }
 
-      // Fallback: default layout
+      // Fallback: 3+ signatories atau layout tidak dikenali
+      if (signatories.length >= 3) {
+        console.log('📝 Rendering 3+ TTD (horizontal first 2)');
+        const kiri = signatories[0];
+        const kanan = signatories[1];
+        
+        return `
+          <div style="margin-top: 35px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <div style="width: 220px;"></div>
+              <div style="width: 220px; text-align: center;">
+                <div style="font-size: 14px;">${getCurrentDate()}</div>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              ${renderSignatureBox(kiri)}
+              ${renderSignatureBox(kanan)}
+            </div>
+          </div>
+        `;
+      }
+      
+      // Fallback final: hanya 1 TTD atau error
+      console.log('📝 Rendering fallback (1 TTD kanan)');
       return `
         <div style="margin-top: 35px; display: flex; justify-content: flex-end;">
-          ${renderSignatureBox(signatories[0], true)}
+          ${renderSignatureBox(signatories[0] || {jabatan: 'kepala_desa', label: 'Kepala Desa'}, true)}
         </div>
       `;
     };
@@ -625,32 +663,32 @@ const AdminSurat = () => {
           }
           .kop-text h1 {
             font-size: 20px;
-            line-height: 1.2;
+            line-height: 1.3;
             font-weight: bold;
             text-transform: uppercase;
-            margin: 0;
+            margin: 0 0 3px 0;
             padding: 0;
           }
           .kop-text h2 {
             font-size: 18px;
-            line-height: 1.2;
+            line-height: 1.3;
             font-weight: bold;
             text-transform: uppercase;
-            margin: 2px 0;
+            margin: 0 0 3px 0;
             padding: 0;
           }
           .kop-text h3 {
-            font-size: 20px;
-            line-height: 1.2;
+            font-size: 18px;
+            line-height: 1.3;
             font-weight: bold;
             text-transform: uppercase;
-            margin: 2px 0 4px 0;
+            margin: 0 0 5px 0;
             padding: 0;
           }
           .kop-text .alamat {
-            font-size: 11px;
-            line-height: 1.3;
-            margin: 0;
+            font-size: 12px;
+            line-height: 1.4;
+            margin: 0 0 2px 0;
             padding: 0;
           }
           .garis-kop {
@@ -677,27 +715,26 @@ const AdminSurat = () => {
           }
           .isi-surat {
             font-size: 14px;
-            line-height: 1.4;
+            line-height: 1.7;
           }
           .isi-surat p {
             text-align: justify;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
           }
           .data-pemohon {
             margin-left: 30px;
             margin-bottom: 8px;
-            line-height: 1.5;
+            line-height: 1.7;
           }
           .data-pemohon div {
             margin-bottom: 0;
-            line-height: 1.5;
+            line-height: 1.7;
           }
           .template-konten {
             text-align: justify;
             margin-top: 8px;
-            line-height: 1.5;
+            line-height: 1.7;
             font-size: 14px;
-            white-space: pre-line;
           }
           .ttd-container {
             margin-top: 35px;
@@ -1556,90 +1593,6 @@ const AdminSurat = () => {
               }}
               onClose={() => setShowPreview(false)} 
             />
-          )}
-
-          {/* Modal Pilih Penandatangan */}
-          {showSignerModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 transform transition-all">
-                <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
-                    <svg className="w-8 h-8 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-800 mb-2">Pilih Penandatangan</h3>
-                  <p className="text-gray-600">Siapa yang akan menandatangani surat ini?</p>
-                </div>
-
-                <div className="space-y-3 mb-6">
-                  {/* Kepala Desa */}
-                  <button
-                    onClick={() => handleSelectSigner('kepala')}
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl hover:border-slate-600 hover:bg-slate-50 transition-all text-left group"
-                  >
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <div className="ml-4 flex-1">
-                        <h4 className="font-semibold text-gray-800 group-hover:text-slate-700">
-                          {configData?.jabatan_ttd || 'Kepala Desa'}
-                        </h4>
-                        <p className="text-sm text-gray-600 font-medium mt-1">
-                          {configData?.nama_ttd || 'Nama Kepala Desa'}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          Desa {configData?.nama_desa || ''}
-                        </p>
-                      </div>
-                      <svg className="w-5 h-5 text-gray-400 group-hover:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </button>
-
-                  {/* Sekretaris Desa */}
-                  <button
-                    onClick={() => handleSelectSigner('sekretaris')}
-                    className="w-full p-4 border-2 border-gray-200 rounded-xl hover:border-blue-800 hover:bg-blue-50 transition-all text-left group"
-                  >
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-800 to-blue-950 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <div className="ml-4 flex-1">
-                        <p className="text-xs text-gray-500 mb-0.5">
-                          a.n Kepala Desa {configData?.nama_desa || ''}
-                        </p>
-                        <h4 className="font-semibold text-gray-800 group-hover:text-blue-900">Sekretaris Desa</h4>
-                        <p className="text-sm text-gray-600 font-medium mt-1">
-                          {configData?.nama_sekretaris || configData?.nama_ttd || 'Nama Sekretaris Desa'}
-                        </p>
-                      </div>
-                      <svg className="w-5 h-5 text-gray-400 group-hover:text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setShowSignerModal(false);
-                    setPendingSuratData(null);
-                    setConfigData(null);
-                  }}
-                  className="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all font-semibold"
-                >
-                  Batal
-                </button>
-              </div>
-            </div>
           )}
 
           {/* Confirm Modal */}

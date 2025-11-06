@@ -18,7 +18,7 @@ const FormJenisSurat = () => {
   const { confirm, confirmState } = useConfirm();
 
   const [loading, setLoading] = useState(false);
-  const [paperSize, setPaperSize] = useState('a4'); // 'a4' or 'legal'
+  const [config, setConfig] = useState(null); // State untuk konfigurasi
   const [showTips, setShowTips] = useState({
     formatNomor: false,
     kalimatPembuka: false,
@@ -86,7 +86,25 @@ const FormJenisSurat = () => {
       fetchJenisSurat();
     }
     fetchRTRWOptions();
+    fetchKonfigurasi(); // Fetch config untuk auto-fill nama & NIP
   }, [id]);
+
+  // Auto-fill nama & NIP untuk penandatangan pertama kali setelah config loaded
+  useEffect(() => {
+    if (config && !isEdit && formData.penandatangan.length > 0 && !formData.penandatangan[0].nama) {
+      const updatedPenandatangan = formData.penandatangan.map(ttd => {
+        if (ttd.jabatan === 'kepala_desa' && !ttd.nama) {
+          return {
+            ...ttd,
+            nama: config.nama_ttd || '',
+            nip: config.nip_ttd || ''
+          };
+        }
+        return ttd;
+      });
+      setFormData(prev => ({ ...prev, penandatangan: updatedPenandatangan }));
+    }
+  }, [config]);
 
   // Debug: Log formData.fields changes
   useEffect(() => {
@@ -147,11 +165,8 @@ const FormJenisSurat = () => {
           penandatangan: penandatanganData,
           layout_ttd: data.layout_ttd || '1_kanan',
           show_materai: data.show_materai || false,
-          paper_size: data.paper_size || 'a4'
+          paper_size: 'a4'  // Always A4
         });
-        
-        // Sync paperSize state with loaded data
-        setPaperSize(data.paper_size || 'a4');
         
         console.log('✅ FormData set with require_verification:', data.require_verification);
       }
@@ -160,6 +175,18 @@ const FormJenisSurat = () => {
       error('Gagal memuat data jenis surat');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchKonfigurasi = async () => {
+    try {
+      const response = await api.get('/auth/konfigurasi');
+      if (response.data.success) {
+        setConfig(response.data.data);
+        console.log('✅ Config loaded for auto-fill:', response.data.data);
+      }
+    } catch (err) {
+      console.error('❌ Error fetching konfigurasi:', err);
     }
   };
 
@@ -384,6 +411,28 @@ const FormJenisSurat = () => {
 
   return (
     <Layout>
+      <style>{`
+        .text-justify table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 15px 0;
+        }
+        .text-justify th,
+        .text-justify td {
+          border: 1px solid #000;
+          padding: 8px;
+          text-align: left;
+          vertical-align: top;
+          font-size: 14px;
+        }
+        .text-justify th {
+          background-color: #f0f0f0;
+          font-weight: bold;
+        }
+        .text-justify tbody tr:nth-child(even) {
+          background-color: #f9f9f9;
+        }
+      `}</style>
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">
@@ -662,7 +711,30 @@ const FormJenisSurat = () => {
                         value={ttd.jabatan}
                         onChange={(e) => {
                           const newPenandatangan = [...formData.penandatangan];
-                          newPenandatangan[index].jabatan = e.target.value;
+                          const jabatan = e.target.value;
+                          newPenandatangan[index].jabatan = jabatan;
+                          
+                          // Auto-fill nama dan NIP berdasarkan jabatan dari config
+                          if (jabatan === 'kepala_desa') {
+                            newPenandatangan[index].nama = config?.nama_ttd || '';
+                            newPenandatangan[index].nip = config?.nip_ttd || '';
+                          } else if (jabatan === 'sekretaris_desa') {
+                            newPenandatangan[index].nama = config?.nama_sekretaris || '';
+                            newPenandatangan[index].nip = config?.nip_sekretaris || '';
+                          } else if (jabatan === 'camat') {
+                            newPenandatangan[index].nama = config?.nama_camat || '';
+                            newPenandatangan[index].nip = config?.nip_camat || '';
+                          } else if (jabatan === 'kapolsek') {
+                            newPenandatangan[index].nama = config?.nama_kapolsek || '';
+                            newPenandatangan[index].nip = config?.nip_kapolsek || '';
+                          } else if (jabatan === 'danramil') {
+                            newPenandatangan[index].nama = config?.nama_danramil || '';
+                            newPenandatangan[index].nip = config?.nip_danramil || '';
+                          } else {
+                            newPenandatangan[index].nama = '';
+                            newPenandatangan[index].nip = '';
+                          }
+                          
                           setFormData(prev => ({ ...prev, penandatangan: newPenandatangan }));
                         }}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
@@ -718,6 +790,42 @@ const FormJenisSurat = () => {
                       className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
                     />
                   </div>
+
+                  {/* Nama Penandatangan */}
+                  {ttd.jabatan !== 'ketua_rt' && ttd.jabatan !== 'ketua_rw' && (
+                    <div className="mb-2">
+                      <label className="block text-xs text-gray-600 mb-1">Nama Penandatangan</label>
+                      <input
+                        type="text"
+                        value={ttd.nama || ''}
+                        onChange={(e) => {
+                          const newPenandatangan = [...formData.penandatangan];
+                          newPenandatangan[index].nama = e.target.value;
+                          setFormData(prev => ({ ...prev, penandatangan: newPenandatangan }));
+                        }}
+                        placeholder="Otomatis terisi dari Konfigurasi"
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded bg-gray-50"
+                      />
+                    </div>
+                  )}
+
+                  {/* NIP Penandatangan */}
+                  {ttd.jabatan !== 'ketua_rt' && ttd.jabatan !== 'ketua_rw' && (
+                    <div className="mb-2">
+                      <label className="block text-xs text-gray-600 mb-1">NIP Penandatangan</label>
+                      <input
+                        type="text"
+                        value={ttd.nip || ''}
+                        onChange={(e) => {
+                          const newPenandatangan = [...formData.penandatangan];
+                          newPenandatangan[index].nip = e.target.value;
+                          setFormData(prev => ({ ...prev, penandatangan: newPenandatangan }));
+                        }}
+                        placeholder="Otomatis terisi dari Konfigurasi (opsional)"
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded bg-gray-50"
+                      />
+                    </div>
+                  )}
 
                   {/* RT/RW Number Selector */}
                   {ttd.jabatan === 'ketua_rt' && (
@@ -801,7 +909,9 @@ const FormJenisSurat = () => {
                       jabatan: 'sekretaris_desa',
                       label: 'Sekretaris Desa',
                       posisi: formData.layout_ttd === '4_grid' ? 'kanan_atas' : 'kiri',
-                      required: false
+                      required: false,
+                      nama: config?.nama_sekretaris || '',
+                      nip: config?.nip_sekretaris || ''
                     }];
                     setFormData(prev => ({ ...prev, penandatangan: newPenandatangan }));
                   }}
@@ -1153,45 +1263,15 @@ const FormJenisSurat = () => {
 
         {/* Live Preview Surat */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
-          {/* Paper Size Selector Header */}
+          {/* Preview Header */}
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
             <div>
               <h2 className="text-xl font-bold text-gray-900">Preview Surat</h2>
-              <p className="text-sm text-gray-600 mt-1">Preview tampilan surat dengan data sample</p>
-            </div>
-            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setPaperSize('a4');
-                  setFormData(prev => ({ ...prev, paper_size: 'a4' }));
-                }}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  paperSize === 'a4'
-                    ? 'bg-white text-gray-900 shadow'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                A4 (210×297mm)
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setPaperSize('legal');
-                  setFormData(prev => ({ ...prev, paper_size: 'legal' }));
-                }}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  paperSize === 'legal'
-                    ? 'bg-white text-gray-900 shadow'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Legal (216×356mm)
-              </button>
+              <p className="text-sm text-gray-600 mt-1">Preview tampilan surat A4 (210×297mm) dengan data sample</p>
             </div>
           </div>
           
-          <PreviewSuratLive formData={formData} paperSize={paperSize} />
+          <PreviewSuratLive formData={formData} paperSize="a4" />
         </div>
       </div>
 
@@ -1355,16 +1435,13 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
       });
     }
     
-    // Strip HTML tags dan convert ke plain text
+    // JANGAN strip HTML tags - biarkan table dan HTML lain tetap ada
+    // Hanya decode HTML entities
     rendered = rendered
-      .replace(/<[^>]+>/g, '')
       .replace(/&nbsp;/g, ' ')
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .split('\n')
-      .filter(line => line.trim())
-      .join('\n');
+      .replace(/&amp;/g, '&');
     
     return rendered;
   };
@@ -1402,26 +1479,29 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
     });
 
     const SignatureBox = ({ data, withDate = false }) => {
-      // Get nama berdasarkan jabatan
-      let nama = '(...........................)';
-      let nip = '';
+      // PRIORITAS: Gunakan nama yang sudah tersimpan di data.nama
+      let nama = data.nama || '(...........................)';
+      let nip = data.nip || '';
       
-      if (data.jabatan === 'kepala_desa') {
-        nama = config?.nama_ttd || 'NAMA KEPALA DESA';
-        nip = config?.nip_ttd || '';
-      } else if (data.jabatan === 'sekretaris_desa') {
-        nama = config?.nama_sekretaris || 'NAMA SEKRETARIS DESA';
-        nip = config?.nip_sekretaris || '';
-      } else if (data.jabatan === 'camat') {
-        nama = config?.nama_camat || 'NAMA CAMAT';
-      } else if (data.jabatan === 'kapolsek') {
-        nama = config?.nama_kapolsek || 'NAMA KAPOLSEK';
-      } else if (data.jabatan === 'danramil') {
-        nama = config?.nama_danramil || 'NAMA DANRAMIL';
-      } else if (data.jabatan === 'ketua_rt') {
-        nama = config?.[`nama_rt_${data.rt_number}`] || `KETUA RT ${data.rt_number || ''}`;
-      } else if (data.jabatan === 'ketua_rw') {
-        nama = config?.[`nama_rw_${data.rw_number}`] || `KETUA RW ${data.rw_number || ''}`;
+      // FALLBACK: Jika data.nama kosong, ambil dari config (backward compatibility)
+      if (!data.nama) {
+        if (data.jabatan === 'kepala_desa') {
+          nama = config?.nama_ttd || 'NAMA KEPALA DESA';
+          nip = config?.nip_ttd || '';
+        } else if (data.jabatan === 'sekretaris_desa') {
+          nama = config?.nama_sekretaris || 'NAMA SEKRETARIS DESA';
+          nip = config?.nip_sekretaris || '';
+        } else if (data.jabatan === 'camat') {
+          nama = config?.nama_camat || 'NAMA CAMAT';
+        } else if (data.jabatan === 'kapolsek') {
+          nama = config?.nama_kapolsek || 'NAMA KAPOLSEK';
+        } else if (data.jabatan === 'danramil') {
+          nama = config?.nama_danramil || 'NAMA DANRAMIL';
+        } else if (data.jabatan === 'ketua_rt') {
+          nama = config?.[`nama_rt_${data.rt_number}`] || `KETUA RT ${data.rt_number || ''}`;
+        } else if (data.jabatan === 'ketua_rw') {
+          nama = config?.[`nama_rw_${data.rw_number}`] || `KETUA RW ${data.rw_number || ''}`;
+        }
       }
       
       return (
@@ -1474,7 +1554,10 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
       </div>
     );
 
-    if (layout === '1_kanan' || penandatangan.length === 1) {
+    // PRIORITAS: Cek jumlah penandatangan dulu sebelum layout
+    
+    // Jika hanya 1 penandatangan, tampilkan 1 TTD di kanan
+    if (penandatangan.length === 1) {
       return (
         <div style={{ marginTop: '35px', display: 'flex', justifyContent: 'flex-end' }}>
           <SignatureBox data={penandatangan[0]} withDate={true} />
@@ -1482,41 +1565,73 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
       );
     }
 
-    if (layout === '2_horizontal' && penandatangan.length === 2) {
+    // Layout 2 Horizontal: 2 TTD sejajar (AUTO-DETECT jika 2 penandatangan)
+    if ((layout === '2_horizontal' || penandatangan.length === 2) && penandatangan.length >= 2) {
+      // Urutkan berdasarkan posisi: kiri dulu, baru kanan
+      const kiri = penandatangan.find(s => s.posisi === 'kiri') || penandatangan[0];
+      const kanan = penandatangan.find(s => s.posisi === 'kanan') || penandatangan[1];
+      
       return (
         <div style={{ marginTop: '35px' }}>
-          <p style={{ fontSize: '14px', marginBottom: '20px', textAlign: 'right', paddingRight: '220px' }}>
-            {getCurrentDate()}
-          </p>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '32px' }}>
-            <SignatureBox data={penandatangan[0]} />
-            <SignatureBox data={penandatangan[1]} />
+            <div style={{ width: '220px' }}></div>
+            <div style={{ width: '220px', textAlign: 'center' }}>
+              <p style={{ fontSize: '14px', marginBottom: '20px' }}>
+                {getCurrentDate()}
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '32px', marginTop: '-10px' }}>
+            <SignatureBox data={kiri} />
+            <SignatureBox data={kanan} />
           </div>
         </div>
       );
     }
 
     if (layout === '3_horizontal') {
+      // Urutkan berdasarkan posisi: kiri dulu, baru kanan
+      const kiri = penandatangan.find(s => s.posisi === 'kiri') || penandatangan[0];
+      const kanan = penandatangan.find(s => s.posisi === 'kanan') || penandatangan[1] || penandatangan[0];
+      
       return (
         <div style={{ marginTop: '35px' }}>
-          <p style={{ fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>{getCurrentDate()}</p>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '16px' }}>
-            <SignatureBox data={penandatangan[0]} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
+            <div style={{ width: '220px' }}></div>
+            {showMaterai && <div style={{ width: '150px' }}></div>}
+            <div style={{ width: '220px', textAlign: 'center' }}>
+              <p style={{ fontSize: '14px', marginBottom: '20px' }}>
+                {getCurrentDate()}
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '16px', marginTop: '-10px' }}>
+            <SignatureBox data={kiri} />
             {showMaterai && <MateraiBox />}
-            <SignatureBox data={penandatangan[1] || penandatangan[0]} />
+            <SignatureBox data={kanan} />
           </div>
         </div>
       );
     }
 
     if (layout === '2_vertical' && penandatangan.length === 2) {
+      // Untuk vertical: kiri_atas -> atas (kiri), kanan_bawah -> bawah (kanan)
+      const atas = penandatangan.find(s => s.posisi === 'kiri_atas' || s.posisi === 'kiri' || s.posisi === 'atas') || penandatangan[0];
+      const bawah = penandatangan.find(s => s.posisi === 'kanan_bawah' || s.posisi === 'kanan' || s.posisi === 'bawah') || penandatangan[1];
+      
       return (
         <div style={{ marginTop: '35px' }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
-            <SignatureBox data={penandatangan[0]} withDate={true} />
+          {/* Tanggal di kanan atas */}
+          <div style={{ textAlign: 'right', marginBottom: '20px' }}>
+            <p style={{ fontSize: '14px' }}>{getCurrentDate()}</p>
           </div>
+          {/* TTD Atas di Kiri */}
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px', marginTop: '-10px' }}>
+            <SignatureBox data={atas} />
+          </div>
+          {/* TTD Bawah di Kanan */}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <SignatureBox data={penandatangan[1]} />
+            <SignatureBox data={bawah} />
           </div>
         </div>
       );
@@ -1530,8 +1645,15 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
 
       return (
         <div style={{ marginTop: '35px' }}>
-          <p style={{ fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>{getCurrentDate()}</p>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '32px', marginBottom: '24px' }}>
+          {/* Tanggal di kanan atas */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '32px', marginBottom: '20px' }}>
+            <div style={{ width: '220px' }}></div>
+            <div style={{ width: '220px', textAlign: 'center' }}>
+              <p style={{ fontSize: '14px' }}>{getCurrentDate()}</p>
+            </div>
+          </div>
+          {/* Grid 2x2 TTD */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '32px', marginBottom: '24px', marginTop: '-10px' }}>
             <div style={{ width: '220px' }}>{kiriAtas && <SignatureBox data={kiriAtas} />}</div>
             <div style={{ width: '220px' }}>{kananAtas && <SignatureBox data={kananAtas} />}</div>
           </div>
@@ -1543,6 +1665,30 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
       );
     }
 
+    // Fallback: Jika ada 2+ penandatangan, tampilkan horizontal
+    if (penandatangan.length >= 2) {
+      const kiri = penandatangan.find(s => s.posisi === 'kiri') || penandatangan[0];
+      const kanan = penandatangan.find(s => s.posisi === 'kanan') || penandatangan[1];
+      
+      return (
+        <div style={{ marginTop: '35px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '32px' }}>
+            <div style={{ width: '220px' }}></div>
+            <div style={{ width: '220px', textAlign: 'center' }}>
+              <p style={{ fontSize: '14px', marginBottom: '20px' }}>
+                {getCurrentDate()}
+              </p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '32px', marginTop: '-10px' }}>
+            <SignatureBox data={kiri} />
+            <SignatureBox data={kanan} />
+          </div>
+        </div>
+      );
+    }
+    
+    // Fallback final: hanya 1 TTD
     return (
       <div style={{ marginTop: '35px', display: 'flex', justifyContent: 'flex-end' }}>
         <SignatureBox data={penandatangan[0]} withDate={true} />
@@ -1558,12 +1704,8 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
     );
   }
 
-  const paperConfig = {
-    a4: { width: '210mm', height: '297mm', padding: '10mm 20mm' },
-    legal: { width: '215.9mm', height: '355.6mm', padding: '15mm 20mm' }
-  };
-
-  const currentPaper = paperConfig[paperSize];
+  // Always use A4 paper size
+  const currentPaper = { width: '210mm', height: '297mm', padding: '10mm 20mm' };
 
   return (
     <div className="mt-8">
@@ -1594,39 +1736,39 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
                   src="/assets/Lambang_Kabupaten_Bogor.png"
                   alt="Logo"
                   style={{ 
-                    width: paperSize === 'legal' ? '85px' : '90px',
-                    height: paperSize === 'legal' ? '85px' : '90px',
+                    width: '90px',
+                    height: '90px',
                     objectFit: 'contain'
                   }}
                   onError={(e) => { e.target.src = '/src/assets/Lambang_Kabupaten_Bogor.png'; }}
                 />
               </div>
-              <div className="flex-1 text-center" style={{ marginRight: paperSize === 'legal' ? '85px' : '90px' }}>
+              <div className="flex-1 text-center" style={{ marginRight: '90px' }}>
                 <h2 className="font-bold uppercase" style={{ 
-                  fontSize: paperSize === 'legal' ? '19px' : '20px', 
+                  fontSize: '20px', 
                   lineHeight: '1.3', marginBottom: '3px' 
                 }}>
                   {config.nama_kabupaten}
                 </h2>
                 <h3 className="font-bold uppercase" style={{ 
-                  fontSize: paperSize === 'legal' ? '17px' : '18px', 
+                  fontSize: '18px', 
                   lineHeight: '1.3', marginBottom: '3px' 
                 }}>
                   {config.nama_kecamatan}
                 </h3>
                 <h3 className="font-bold uppercase" style={{ 
-                  fontSize: paperSize === 'legal' ? '17px' : '18px', 
+                  fontSize: '18px', 
                   lineHeight: '1.3', marginBottom: '5px' 
                 }}>
                   {config.nama_desa}
                 </h3>
                 <p style={{ 
-                  fontSize: paperSize === 'legal' ? '11px' : '12px', 
+                  fontSize: '12px', 
                   lineHeight: '1.4', marginBottom: '2px' 
                 }}>
                   {config.alamat_kantor}
                 </p>
-                <p style={{ fontSize: paperSize === 'legal' ? '11px' : '12px', lineHeight: '1.4' }}>
+                <p style={{ fontSize: '12px', lineHeight: '1.4' }}>
                   {config.kota} {config.kode_pos}
                 </p>
               </div>
@@ -1635,33 +1777,33 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
 
           {/* Judul Surat */}
           <div className="text-center" style={{ 
-            marginBottom: paperSize === 'legal' ? '12px' : '14px', 
-            marginTop: paperSize === 'legal' ? '14px' : '16px' 
+            marginBottom: '14px', 
+            marginTop: '16px' 
           }}>
             <h4 className="font-bold uppercase underline" style={{ 
-              fontSize: paperSize === 'legal' ? '15px' : '16px', 
+              fontSize: '16px', 
               marginBottom: '7px' 
             }}>
               {formData.nama_surat || 'NAMA SURAT'}
             </h4>
-            <p className="font-semibold" style={{ fontSize: paperSize === 'legal' ? '13px' : '14px' }}>
+            <p className="font-semibold" style={{ fontSize: '14px' }}>
               Nomor : {generateNomorSurat(formData.format_nomor || 'NOMOR/KODE/BULAN/TAHUN')}
             </p>
           </div>
 
           {/* Isi Surat */}
           <div style={{ 
-            fontSize: paperSize === 'legal' ? '13px' : '14px',
-            lineHeight: paperSize === 'legal' ? '1.6' : '1.7'
+            fontSize: '14px',
+            lineHeight: '1.7'
           }}>
-            <p className="text-justify" style={{ marginBottom: paperSize === 'legal' ? '8px' : '10px' }}>
+            <p className="text-justify" style={{ marginBottom: '10px' }}>
               {formData.kalimat_pembuka || `Yang bertanda tangan di bawah ini, ${config.jabatan_ttd}, dengan ini menerangkan bahwa :`}
             </p>
 
             {formData.fields && formData.fields.length > 0 && (
               <div style={{ 
-                marginLeft: paperSize === 'legal' ? '25px' : '30px', 
-                marginBottom: paperSize === 'legal' ? '8px' : '10px' 
+                marginLeft: '30px', 
+                marginBottom: '10px' 
               }}>
                 {formData.fields
                   .filter(field => field.showInDocument !== false)
@@ -1669,9 +1811,9 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
                     <div 
                       key={index} 
                       className="flex" 
-                      style={{ marginBottom: paperSize === 'legal' ? '2px' : '3px' }}
+                      style={{ marginBottom: '3px' }}
                     >
-                      <div style={{ width: paperSize === 'legal' ? '150px' : '160px' }}>
+                      <div style={{ width: '160px' }}>
                         {field.label}
                       </div>
                       <div style={{ width: '25px', textAlign: 'center' }}>:</div>
@@ -1686,10 +1828,9 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
 
             <div 
               className="text-justify"
-              style={{ whiteSpace: 'pre-line', marginTop: '10px' }}
-            >
-              {renderTemplate(formData.template_konten)}
-            </div>
+              style={{ marginTop: '10px', lineHeight: '1.7' }}
+              dangerouslySetInnerHTML={{ __html: renderTemplate(formData.template_konten) }}
+            />
           </div>
 
           {/* Tanda Tangan */}

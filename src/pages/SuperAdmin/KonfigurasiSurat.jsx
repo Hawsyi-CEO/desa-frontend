@@ -33,8 +33,11 @@ const KonfigurasiSurat = () => {
     
     // Pejabat Lainnya
     nama_camat: '',
+    nip_camat: '',
     nama_kapolsek: '',
-    nama_danramil: ''
+    nip_kapolsek: '',
+    nama_danramil: '',
+    nip_danramil: ''
   });
 
   useEffect(() => {
@@ -46,7 +49,28 @@ const KonfigurasiSurat = () => {
       setLoading(true);
       const response = await api.get('/auth/konfigurasi');
       if (response.data.success) {
-        setFormData(response.data.data);
+        const data = response.data.data;
+        console.log('📥 Fetched konfigurasi:', data); // Debug
+        console.log('🔍 Check NIP fields:', {
+          nama_sekretaris: data.nama_sekretaris,
+          nip_sekretaris: data.nip_sekretaris,
+          nama_camat: data.nama_camat,
+          nip_camat: data.nip_camat,
+          nama_kapolsek: data.nama_kapolsek,
+          nip_kapolsek: data.nip_kapolsek,
+          nama_danramil: data.nama_danramil,
+          nip_danramil: data.nip_danramil
+        }); // Debug specific fields
+        
+        // PENTING: Konversi NULL ke empty string untuk controlled input
+        const cleanedData = {};
+        Object.keys(data).forEach(key => {
+          cleanedData[key] = data[key] === null ? '' : data[key];
+        });
+        
+        console.log('🧹 Cleaned data (NULL → ""):', cleanedData); // Debug
+        setFormData(cleanedData);
+        console.log('✅ Form data updated'); // Debug
       }
     } catch (error) {
       console.error('Error fetching konfigurasi:', error);
@@ -57,6 +81,7 @@ const KonfigurasiSurat = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    console.log(`📝 Input changed: ${name} = "${value}"`); // Debug
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -68,19 +93,37 @@ const KonfigurasiSurat = () => {
     
     try {
       setLoading(true);
+      
+      // JANGAN convert empty string ke null - biarkan empty string
+      // Karena SQL UPDATE dengan NULL tidak meng-update field
+      console.log('📤 Sending konfigurasi data:', formData); // Debug
       const response = await api.put('/admin/konfigurasi', formData);
       
       if (response.data.success) {
+        console.log('✅ Konfigurasi saved:', response.data.data); // Debug
         success('Konfigurasi berhasil disimpan!');
         fetchKonfigurasi(); // Refresh data
       }
     } catch (err) {
-      console.error('Error saving konfigurasi:', err);
+      console.error('❌ Error saving konfigurasi:', err);
+      console.error('Error response:', err.response?.data); // Debug
       error(err.response?.data?.message || 'Gagal menyimpan konfigurasi');
     } finally {
       setLoading(false);
     }
   };
+
+  // Debug: Log formData saat render
+  console.log('🎨 Rendering KonfigurasiSurat with formData:', {
+    nama_sekretaris: formData.nama_sekretaris,
+    nip_sekretaris: formData.nip_sekretaris,
+    nama_camat: formData.nama_camat,
+    nip_camat: formData.nip_camat,
+    nama_kapolsek: formData.nama_kapolsek,
+    nip_kapolsek: formData.nip_kapolsek,
+    nama_danramil: formData.nama_danramil,
+    nip_danramil: formData.nip_danramil
+  });
 
   if (loading && !formData.nama_desa) {
     return (
@@ -520,6 +563,23 @@ const KonfigurasiSurat = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">
+                        <div className="flex items-center gap-2">
+                          <IdCard className="w-4 h-4" />
+                          <span>NIP Camat (Opsional)</span>
+                        </div>
+                      </label>
+                      <input
+                        type="text"
+                        name="nip_camat"
+                        value={formData.nip_camat || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                        placeholder="NIP Camat..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
                         Nama Kapolsek (Opsional)
                       </label>
                       <input
@@ -534,6 +594,23 @@ const KonfigurasiSurat = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">
+                        <div className="flex items-center gap-2">
+                          <IdCard className="w-4 h-4" />
+                          <span>NIP/NRP Kapolsek (Opsional)</span>
+                        </div>
+                      </label>
+                      <input
+                        type="text"
+                        name="nip_kapolsek"
+                        value={formData.nip_kapolsek || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                        placeholder="NRP Kapolsek..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
                         Nama Danramil (Opsional)
                       </label>
                       <input
@@ -543,6 +620,23 @@ const KonfigurasiSurat = () => {
                         onChange={handleInputChange}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
                         placeholder="Nama Danramil Koramil..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        <div className="flex items-center gap-2">
+                          <IdCard className="w-4 h-4" />
+                          <span>NRP Danramil (Opsional)</span>
+                        </div>
+                      </label>
+                      <input
+                        type="text"
+                        name="nip_danramil"
+                        value={formData.nip_danramil || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                        placeholder="NRP Danramil..."
                       />
                     </div>
                   </div>
