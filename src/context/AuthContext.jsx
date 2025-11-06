@@ -48,7 +48,13 @@ export const AuthProvider = ({ children }) => {
       const userData = response.data.data.user;
       
       console.log('✅ Login successful - User:', userData.email, '- Role:', userData.role);
+      
+      // Set user state FIRST
       setUser(userData);
+      
+      // Wait for state to update before returning
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       return response;
     } catch (error) {
       console.error('❌ Login failed:', error.response?.data?.message || error.message);

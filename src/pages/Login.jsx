@@ -51,7 +51,7 @@ const Login = () => {
       console.log('👤 User data:', response.data.data.user);
       console.log('🎯 User role:', response.data.data.user.role);
       
-      // Trigger redirect setelah 200ms untuk ensure state updated
+      // Trigger redirect setelah 500ms untuk ensure state & sessionStorage updated
       setTimeout(() => {
         const userRole = response.data.data.user.role;
         console.log('🔄 Triggering redirect for role:', userRole);
@@ -65,7 +65,7 @@ const Login = () => {
         
         console.log('➡️ Redirecting to:', redirectPath);
         navigate(redirectPath, { replace: true });
-      }, 200);
+      }, 500);
       
     } catch (error) {
       console.error('❌ Login FAILED:', error);
