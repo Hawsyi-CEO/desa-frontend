@@ -29,7 +29,10 @@ const Sidebar = () => {
   // Auto-close sidebar on mobile initially
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 1024) {
+      const isMobile = window.innerWidth < 1024;
+      console.log('Sidebar resize:', { width: window.innerWidth, isMobile, willClose: isMobile });
+      
+      if (isMobile) {
         setIsOpen(false);
       } else {
         setIsOpen(true);
@@ -43,6 +46,8 @@ const Sidebar = () => {
 
   // Update body class when sidebar state changes
   useEffect(() => {
+    console.log('Sidebar state changed:', isOpen);
+    
     if (isOpen) {
       document.body.classList.add('sidebar-open');
       document.body.classList.remove('sidebar-closed');
@@ -208,7 +213,11 @@ const Sidebar = () => {
       {isOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden animate-fade-in"
-          onClick={() => setIsOpen(false)}
+          onClick={() => {
+            console.log('Overlay clicked - closing sidebar');
+            setIsOpen(false);
+          }}
+          aria-label="Close sidebar overlay"
         />
       )}
 
