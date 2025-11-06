@@ -750,7 +750,9 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
     nama: '',
     password: '',
     role: 'warga',
-    status: 'aktif'
+    status: 'aktif',
+    rt: '',
+    rw: ''
   });
 
   const handleSubmit = async (e) => {
@@ -765,6 +767,18 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
     if (formData.nik.length !== 16) {
       showError('NIK harus 16 digit!');
       return;
+    }
+
+    // Validasi RT/RW untuk verifikator
+    if (formData.role === 'verifikator') {
+      if (!formData.rt || !formData.rw) {
+        showError('RT dan RW wajib diisi untuk Verifikator!');
+        return;
+      }
+      if (formData.rt.length !== 3 || formData.rw.length !== 3) {
+        showError('RT dan RW harus 3 digit (contoh: 001)!');
+        return;
+      }
     }
 
     setLoading(true);
@@ -901,8 +915,48 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
               </select>
             </div>
 
+            {/* RT - Conditional untuk Verifikator */}
+            {formData.role === 'verifikator' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Hash className="w-4 h-4 text-red-600" />
+                  RT <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.rt}
+                  onChange={(e) => setFormData({ ...formData, rt: e.target.value })}
+                  placeholder="Contoh: 001"
+                  maxLength={3}
+                  className="input w-full"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">3 digit RT (contoh: 001, 002)</p>
+              </div>
+            )}
+
+            {/* RW - Conditional untuk Verifikator */}
+            {formData.role === 'verifikator' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Hash className="w-4 h-4 text-red-600" />
+                  RW <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.rw}
+                  onChange={(e) => setFormData({ ...formData, rw: e.target.value })}
+                  placeholder="Contoh: 001"
+                  maxLength={3}
+                  className="input w-full"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">3 digit RW (contoh: 001, 002)</p>
+              </div>
+            )}
+
             {/* Status - Full Width */}
-            <div className="md:col-span-2">
+            <div className={formData.role === 'verifikator' ? 'md:col-span-2' : 'md:col-span-2'}>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Status Akun
               </label>
@@ -920,7 +974,11 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
           {/* Info Note */}
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>💡 Catatan:</strong> Data detail seperti alamat, pekerjaan, RT/RW, dll akan diambil dari menu <strong>Data Warga</strong> saat pengajuan surat. Pastikan data warga sudah lengkap di menu tersebut.
+              <strong>💡 Catatan:</strong> 
+              {formData.role === 'verifikator' 
+                ? ' Pastikan RT dan RW sudah diisi dengan benar (3 digit). Verifikator hanya bisa memverifikasi surat sesuai RT/RW yang terdaftar.'
+                : ' Data detail seperti alamat, pekerjaan, RT/RW, dll akan diambil dari menu Data Warga saat pengajuan surat. Pastikan data warga sudah lengkap di menu tersebut.'
+              }
             </p>
           </div>
 
