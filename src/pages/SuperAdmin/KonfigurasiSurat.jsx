@@ -29,7 +29,12 @@ const KonfigurasiSurat = () => {
     
     // Sekretaris Desa
     nama_sekretaris: '',
-    nip_sekretaris: ''
+    nip_sekretaris: '',
+    
+    // Pejabat Lainnya
+    nama_camat: '',
+    nama_kapolsek: '',
+    nama_danramil: ''
   });
 
   useEffect(() => {
@@ -488,6 +493,56 @@ const KonfigurasiSurat = () => {
                         onChange={handleInputChange}
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
                         placeholder="NIP sekretaris..."
+                      />
+                    </div>
+
+                    {/* Divider */}
+                    <div className="border-t border-slate-200 my-4"></div>
+
+                    <div className="space-y-1 mb-3">
+                      <h4 className="font-semibold text-slate-700 text-sm">Pejabat Lainnya</h4>
+                      <p className="text-xs text-slate-500">Digunakan untuk surat yang memerlukan tanda tangan pejabat eksternal</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Nama Camat (Opsional)
+                      </label>
+                      <input
+                        type="text"
+                        name="nama_camat"
+                        value={formData.nama_camat || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                        placeholder="Nama Camat Kecamatan..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Nama Kapolsek (Opsional)
+                      </label>
+                      <input
+                        type="text"
+                        name="nama_kapolsek"
+                        value={formData.nama_kapolsek || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                        placeholder="Nama Kapolsek Polsek..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Nama Danramil (Opsional)
+                      </label>
+                      <input
+                        type="text"
+                        name="nama_danramil"
+                        value={formData.nama_danramil || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                        placeholder="Nama Danramil Koramil..."
                       />
                     </div>
                   </div>

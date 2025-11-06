@@ -752,6 +752,7 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
     password: '',
     role: 'warga',
     status: 'aktif',
+    verifikator_level: 'rt',
     rt: '',
     rw: ''
   });
@@ -784,22 +785,38 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
       }
     }
 
-    // Validasi RT/RW untuk verifikator
+    // Validasi RT/RW untuk verifikator berdasarkan level
     if (formData.role === 'verifikator') {
-      // Jika RT diisi, maka RW WAJIB diisi
-      if (formData.rt && !formData.rw) {
-        showError('Jika RT diisi, maka RW juga harus diisi!');
-        return;
-      }
-      
-      // Validasi format 2 digit jika diisi
-      if (formData.rt && formData.rt.length !== 2) {
-        showError('RT harus 2 digit (contoh: 01)!');
-        return;
-      }
-      if (formData.rw && formData.rw.length !== 2) {
-        showError('RW harus 2 digit (contoh: 01)!');
-        return;
+      if (formData.verifikator_level === 'rt') {
+        // Verifikator RT: RT wajib, RW opsional
+        if (!formData.rt) {
+          showError('RT wajib diisi untuk Verifikator RT!');
+          return;
+        }
+        if (formData.rt.length !== 2) {
+          showError('RT harus 2 digit (contoh: 01)!');
+          return;
+        }
+        // RW opsional tapi jika diisi harus 2 digit
+        if (formData.rw && formData.rw.length !== 2) {
+          showError('RW harus 2 digit (contoh: 01)!');
+          return;
+        }
+      } else if (formData.verifikator_level === 'rw') {
+        // Verifikator RW: RW wajib, RT opsional
+        if (!formData.rw) {
+          showError('RW wajib diisi untuk Verifikator RW!');
+          return;
+        }
+        if (formData.rw.length !== 2) {
+          showError('RW harus 2 digit (contoh: 01)!');
+          return;
+        }
+        // RT opsional tapi jika diisi harus 2 digit
+        if (formData.rt && formData.rt.length !== 2) {
+          showError('RT harus 2 digit (contoh: 01)!');
+          return;
+        }
       }
     }
 
@@ -958,12 +975,34 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
               </select>
             </div>
 
+            {/* Verifikator Level - Conditional untuk Verifikator */}
+            {formData.role === 'verifikator' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-purple-600" />
+                  Level Verifikator <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.verifikator_level}
+                  onChange={(e) => setFormData({ ...formData, verifikator_level: e.target.value })}
+                  className="input w-full"
+                  required
+                >
+                  <option value="rt">Verifikator RT</option>
+                  <option value="rw">Verifikator RW</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  RT: Verifikasi untuk RT tertentu | RW: Verifikasi untuk RW tertentu
+                </p>
+              </div>
+            )}
+
             {/* RT - Conditional untuk Verifikator */}
             {formData.role === 'verifikator' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <Hash className="w-4 h-4 text-red-600" />
-                  RT
+                  RT {formData.verifikator_level === 'rt' && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="text"
@@ -972,8 +1011,11 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
                   placeholder="Contoh: 01"
                   maxLength={2}
                   className="input w-full"
+                  required={formData.verifikator_level === 'rt'}
                 />
-                <p className="text-xs text-gray-500 mt-1">Opsional - Jika diisi RT maka RW wajib diisi</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {formData.verifikator_level === 'rt' ? 'Wajib untuk Verifikator RT' : 'Opsional'}
+                </p>
               </div>
             )}
 
@@ -982,7 +1024,7 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <Hash className="w-4 h-4 text-red-600" />
-                  RW
+                  RW {formData.verifikator_level === 'rw' && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="text"
@@ -991,8 +1033,11 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
                   placeholder="Contoh: 01"
                   maxLength={2}
                   className="input w-full"
+                  required={formData.verifikator_level === 'rw'}
                 />
-                <p className="text-xs text-gray-500 mt-1">Opsional - Bisa diisi tanpa RT</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {formData.verifikator_level === 'rw' ? 'Wajib untuk Verifikator RW' : 'Opsional'}
+                </p>
               </div>
             )}
 
@@ -1052,6 +1097,7 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
     role: user.role || 'warga',
     status: user.status || 'aktif',
     email: user.email || '',
+    verifikator_level: user.verifikator_level || 'rt',
     rt: user.rt || '',
     rw: user.rw || ''
   });
@@ -1075,20 +1121,37 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
     
     // Validasi RT/RW untuk verifikator
     if (formData.role === 'verifikator') {
-      // Jika RT diisi, maka RW WAJIB diisi
-      if (formData.rt && !formData.rw) {
-        showError('Jika RT diisi, maka RW juga harus diisi!');
-        return;
-      }
-      
-      // Validasi format 2 digit jika diisi
-      if (formData.rt && formData.rt.length !== 2) {
-        showError('RT harus 2 digit (contoh: 01)!');
-        return;
-      }
-      if (formData.rw && formData.rw.length !== 2) {
-        showError('RW harus 2 digit (contoh: 01)!');
-        return;
+      // Validasi berdasarkan verifikator_level
+      if (formData.verifikator_level === 'rt') {
+        // Level RT: RT wajib, RW opsional
+        if (!formData.rt || formData.rt.trim() === '') {
+          showError('RT wajib diisi untuk Verifikator RT!');
+          return;
+        }
+        if (formData.rt.length !== 2) {
+          showError('RT harus 2 digit (contoh: 01)!');
+          return;
+        }
+        // RW opsional tapi jika diisi harus valid
+        if (formData.rw && formData.rw.length !== 2) {
+          showError('RW harus 2 digit (contoh: 01)!');
+          return;
+        }
+      } else if (formData.verifikator_level === 'rw') {
+        // Level RW: RW wajib, RT opsional
+        if (!formData.rw || formData.rw.trim() === '') {
+          showError('RW wajib diisi untuk Verifikator RW!');
+          return;
+        }
+        if (formData.rw.length !== 2) {
+          showError('RW harus 2 digit (contoh: 01)!');
+          return;
+        }
+        // RT opsional tapi jika diisi harus valid
+        if (formData.rt && formData.rt.length !== 2) {
+          showError('RT harus 2 digit (contoh: 01)!');
+          return;
+        }
       }
     }
     
@@ -1192,11 +1255,34 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
             </p>
           </div>
 
+          {/* Verifikator Level - Conditional untuk Verifikator */}
+          {formData.role === 'verifikator' && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Shield className="w-4 h-4 text-purple-600" />
+                Level Verifikator <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.verifikator_level}
+                onChange={(e) => setFormData({ ...formData, verifikator_level: e.target.value })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
+                required
+              >
+                <option value="rt">Verifikator RT</option>
+                <option value="rw">Verifikator RW</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                RT: Verifikasi untuk RT tertentu | RW: Verifikasi untuk RW tertentu
+              </p>
+            </div>
+          )}
+
           {/* RT - Conditional untuk Verifikator */}
           {formData.role === 'verifikator' && (
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                RT
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Hash className="w-4 h-4 text-red-600" />
+                RT {formData.verifikator_level === 'rt' && <span className="text-red-500">*</span>}
               </label>
               <input
                 type="text"
@@ -1205,16 +1291,20 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
                 placeholder="Contoh: 01"
                 maxLength={2}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
+                required={formData.verifikator_level === 'rt'}
               />
-              <p className="text-xs text-gray-500 mt-1">Opsional - Jika diisi RT maka RW wajib diisi</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.verifikator_level === 'rt' ? 'Wajib untuk Verifikator RT' : 'Opsional'}
+              </p>
             </div>
           )}
 
           {/* RW - Conditional untuk Verifikator */}
           {formData.role === 'verifikator' && (
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                RW
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Hash className="w-4 h-4 text-red-600" />
+                RW {formData.verifikator_level === 'rw' && <span className="text-red-500">*</span>}
               </label>
               <input
                 type="text"
@@ -1223,8 +1313,11 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
                 placeholder="Contoh: 01"
                 maxLength={2}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
+                required={formData.verifikator_level === 'rw'}
               />
-              <p className="text-xs text-gray-500 mt-1">Opsional - Bisa diisi tanpa RT</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.verifikator_level === 'rw' ? 'Wajib untuk Verifikator RW' : 'Opsional'}
+              </p>
             </div>
           )}
 

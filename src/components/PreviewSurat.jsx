@@ -6,6 +6,25 @@ import { safeParseDataSurat, safeParseFields } from '../utils/jsonHelpers';
 const PreviewSurat = ({ pengajuan, surat, onClose }) => {
   const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Get paper size from surat (jenis_surat), default to A4
+  const paperSize = surat?.paper_size || 'a4';
+  
+  // Paper size configuration
+  const paperConfig = {
+    a4: {
+      maxWidth: '210mm',
+      padding: '12mm 18mm',
+      minHeight: '297mm'
+    },
+    legal: {
+      maxWidth: '215.9mm',
+      padding: '15mm 20mm',
+      minHeight: '355.6mm'
+    }
+  };
+  
+  const paper = paperConfig[paperSize] || paperConfig.a4;
 
   useEffect(() => {
     fetchKonfigurasi();
@@ -15,7 +34,40 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
     try {
       const response = await api.get('/auth/konfigurasi');
       if (response.data.success) {
-        setConfig(response.data.data);
+        const configData = response.data.data;
+        
+        // Fetch nama RT/RW berdasarkan penandatangan dari jenis_surat
+        if (surat && surat.penandatangan) {
+          const penandatangan = typeof surat.penandatangan === 'string' 
+            ? JSON.parse(surat.penandatangan) 
+            : surat.penandatangan;
+            
+          for (const ttd of penandatangan) {
+            if (ttd.jabatan === 'ketua_rt' && ttd.rt_number) {
+              try {
+                const rtResponse = await api.get(`/admin/rt-name/${ttd.rt_number}`);
+                if (rtResponse.data.success) {
+                  configData[`nama_rt_${ttd.rt_number}`] = rtResponse.data.nama;
+                }
+              } catch (err) {
+                console.error('Error fetching RT name:', err);
+              }
+            }
+            
+            if (ttd.jabatan === 'ketua_rw' && ttd.rw_number) {
+              try {
+                const rwResponse = await api.get(`/admin/rw-name/${ttd.rw_number}`);
+                if (rwResponse.data.success) {
+                  configData[`nama_rw_${ttd.rw_number}`] = rwResponse.data.nama;
+                }
+              } catch (err) {
+                console.error('Error fetching RW name:', err);
+              }
+            }
+          }
+        }
+        
+        setConfig(configData);
       }
     } catch (error) {
       console.error('Error fetching konfigurasi:', error);
@@ -140,6 +192,259 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
     return rendered;
   };
 
+  const renderSignatureLayout = (doc, config) => {
+    const jenisSurat = doc?.jenis_surat || {};
+    const penandatangan = jenisSurat.penandatangan || [{
+      jabatan: 'kepala_desa',
+      label: config.jabatan_ttd,
+      posisi: 'kanan_bawah',
+      required: true
+    }];
+    const layout = jenisSurat.layout_ttd || '1_kanan';
+    const showMaterai = jenisSurat.show_materai || false;
+
+    // Parse penandatangan if it's a string
+    let signatories = [];
+    try {
+      signatories = typeof penandatangan === 'string' ? JSON.parse(penandatangan) : penandatangan;
+    } catch (e) {
+      signatories = [{
+        jabatan: 'kepala_desa',
+        label: config.jabatan_ttd,
+        posisi: 'kanan_bawah',
+        required: true
+      }];
+    }
+
+    // Default jika tidak ada data
+    if (!signatories || signatories.length === 0) {
+      signatories = [{
+        jabatan: 'kepala_desa',
+        label: config.jabatan_ttd,
+        posisi: 'kanan_bawah',
+        required: true
+      }];
+    }
+
+    // Helper untuk render single TTD box
+    const SignatureBox = ({ data, withDate = false }) => {
+      // Get nama dan NIP berdasarkan jabatan
+      let nama = '(...........................)';
+      let nip = '';
+      
+      if (data.jabatan === 'kepala_desa') {
+        nama = config?.nama_ttd || 'NAMA KEPALA DESA';
+        nip = config?.nip_ttd || '';
+      } else if (data.jabatan === 'sekretaris_desa') {
+        nama = config?.nama_sekretaris || 'NAMA SEKRETARIS DESA';
+        nip = config?.nip_sekretaris || '';
+      } else if (data.jabatan === 'camat') {
+        nama = config?.nama_camat || 'NAMA CAMAT';
+      } else if (data.jabatan === 'kapolsek') {
+        nama = config?.nama_kapolsek || 'NAMA KAPOLSEK';
+      } else if (data.jabatan === 'danramil') {
+        nama = config?.nama_danramil || 'NAMA DANRAMIL';
+      } else if (data.jabatan === 'ketua_rt' && data.rt_number) {
+        nama = config?.[`nama_rt_${data.rt_number}`] || `KETUA RT ${data.rt_number}`;
+      } else if (data.jabatan === 'ketua_rw' && data.rw_number) {
+        nama = config?.[`nama_rw_${data.rw_number}`] || `KETUA RW ${data.rw_number}`;
+      }
+      
+      return (
+        <div style={{ 
+          textAlign: 'center',
+          width: 'clamp(150px, 40vw, 220px)', 
+          flex: layout === '2_horizontal' || layout === '3_horizontal' ? 1 : 'none',
+          flexShrink: 0
+        }}>
+          {withDate && (
+            <p style={{ 
+              fontSize: 'clamp(11px, 3vw, 14px)', 
+              marginBottom: 'clamp(8px, 2vw, 10px)' 
+            }}>
+              {getCurrentDate(doc)}
+            </p>
+          )}
+          {config.isSekretaris && data.jabatan === 'sekretaris_desa' && (
+            <p style={{ 
+              fontSize: 'clamp(11px, 3vw, 14px)', 
+              marginBottom: '2px' 
+            }}>
+              a.n Kepala Desa {config.nama_desa_penandatangan || 'Cibadak'}
+            </p>
+          )}
+          <p style={{ 
+            fontSize: 'clamp(11px, 3vw, 14px)', 
+            marginBottom: '4px' 
+          }}>
+            {data.label || config.jabatan_ttd}
+          </p>
+          <div style={{ height: 'clamp(30px, 7vw, 50px)' }}></div>
+          <p 
+            style={{ 
+              fontSize: 'clamp(11px, 3vw, 14px)', 
+              marginTop: 'clamp(5px, 2vw, 10px)',
+              fontWeight: 'bold',
+              textDecoration: 'underline'
+            }}
+          >
+            {nama}
+          </p>
+          {nip && (
+            <p style={{ 
+              fontSize: 'clamp(9px, 2.5vw, 11px)', 
+              marginTop: '3px' 
+            }}>
+              NIP. {nip}
+            </p>
+          )}
+        </div>
+      );
+    };
+
+    const MateraiBox = () => (
+      <div style={{ 
+        textAlign: 'center', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        width: 'clamp(100px, 30vw, 150px)' 
+      }}>
+        <p style={{ fontSize: 'clamp(9px, 2.5vw, 12px)', marginBottom: '5px' }}>Materai</p>
+        <div 
+          style={{ 
+            width: 'clamp(60px, 20vw, 80px)', 
+            height: 'clamp(60px, 20vw, 80px)', 
+            border: '2px solid #000',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 'clamp(9px, 2.5vw, 11px)',
+            fontWeight: 'bold'
+          }}
+        >
+          Rp 10.000
+        </div>
+      </div>
+    );
+
+    // Layout 1: Hanya Kepala Desa di kanan
+    if (layout === '1_kanan' || signatories.length === 1) {
+      return (
+        <div style={{ 
+          marginTop: 'clamp(10px, 3vw, 18px)', 
+          display: 'flex', 
+          justifyContent: 'flex-end' 
+        }}>
+          <SignatureBox data={signatories[0]} withDate={true} />
+        </div>
+      );
+    }
+
+    // Layout 2 Horizontal: 2 TTD sejajar
+    if (layout === '2_horizontal' && signatories.length >= 2) {
+      return (
+        <div style={{ marginTop: 'clamp(10px, 3vw, 18px)' }}>
+          <p style={{ 
+            fontSize: 'clamp(11px, 3vw, 14px)', 
+            marginBottom: 'clamp(10px, 3vw, 15px)', 
+            textAlign: 'right',
+            paddingRight: 'clamp(150px, 40vw, 220px)'
+          }}>
+            {getCurrentDate(doc)}
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
+            <SignatureBox data={signatories[0]} />
+            <SignatureBox data={signatories[1]} />
+          </div>
+        </div>
+      );
+    }
+
+    // Layout 3 Horizontal: 2 TTD + Materai
+    if (layout === '3_horizontal') {
+      return (
+        <div style={{ marginTop: 'clamp(10px, 3vw, 18px)' }}>
+          <p style={{ 
+            fontSize: 'clamp(11px, 3vw, 14px)', 
+            marginBottom: 'clamp(10px, 3vw, 15px)', 
+            textAlign: 'center' 
+          }}>
+            {getCurrentDate(doc)}
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '8px' }}>
+            <SignatureBox data={signatories[0]} />
+            {showMaterai && <MateraiBox />}
+            <SignatureBox data={signatories[1] || signatories[0]} />
+          </div>
+        </div>
+      );
+    }
+
+    // Layout 2 Vertical: 2 TTD bertingkat
+    if (layout === '2_vertical' && signatories.length >= 2) {
+      return (
+        <div style={{ marginTop: 'clamp(10px, 3vw, 18px)' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
+            <SignatureBox data={signatories[0]} withDate={true} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <SignatureBox data={signatories[1]} />
+          </div>
+        </div>
+      );
+    }
+
+    // Layout 4 Grid: 2x2
+    if (layout === '4_grid') {
+      const kiriAtas = signatories.find(s => s.posisi === 'kiri_atas');
+      const kiriBawah = signatories.find(s => s.posisi === 'kiri_bawah');
+      const kananAtas = signatories.find(s => s.posisi === 'kanan_atas');
+      const kananBawah = signatories.find(s => s.posisi === 'kanan_bawah');
+
+      return (
+        <div style={{ marginTop: 'clamp(10px, 3vw, 18px)' }}>
+          <p style={{ 
+            fontSize: 'clamp(11px, 3vw, 14px)', 
+            marginBottom: 'clamp(10px, 3vw, 15px)', 
+            textAlign: 'center' 
+          }}>
+            {getCurrentDate(doc)}
+          </p>
+          {/* Baris 1 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', marginBottom: '24px' }}>
+            <div style={{ width: 'clamp(150px, 40vw, 220px)' }}>
+              {kiriAtas && <SignatureBox data={kiriAtas} />}
+            </div>
+            <div style={{ width: 'clamp(150px, 40vw, 220px)' }}>
+              {kananAtas && <SignatureBox data={kananAtas} />}
+            </div>
+          </div>
+          {/* Baris 2 */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
+            <div style={{ width: 'clamp(150px, 40vw, 220px)' }}>
+              {kiriBawah && <SignatureBox data={kiriBawah} />}
+            </div>
+            <div style={{ width: 'clamp(150px, 40vw, 220px)' }}>
+              {kananBawah && <SignatureBox data={kananBawah} />}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Fallback: default layout (same as 1_kanan)
+    return (
+      <div style={{ 
+        marginTop: 'clamp(10px, 3vw, 18px)', 
+        display: 'flex', 
+        justifyContent: 'flex-end' 
+      }}>
+        <SignatureBox data={signatories[0]} withDate={true} />
+      </div>
+    );
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -197,8 +502,9 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
             fontFamily: 'Arial, sans-serif',
             // Fixed size untuk konsistensi dengan print
             width: '100%',
-            maxWidth: '210mm',
-            padding: '12mm 18mm', // Sama dengan print
+            maxWidth: paper.maxWidth,
+            minHeight: paper.minHeight,
+            padding: paper.padding,
             boxSizing: 'border-box',
             fontSize: '13px', // Base font size sama dengan print
             lineHeight: '1.35' // Sama dengan print
@@ -419,41 +725,8 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
             </div>
           )}
 
-          {/* Tanda Tangan - Responsive */}
-          <div style={{ marginTop: 'clamp(10px, 3vw, 18px)' }} className="flex justify-end">
-            <div className="text-center" style={{ width: 'clamp(150px, 40vw, 220px)' }}>
-              <p style={{ 
-                fontSize: 'clamp(11px, 3vw, 14px)', 
-                marginBottom: 'clamp(20px, 5vw, 35px)' 
-              }}>
-                {getCurrentDate(doc)}
-              </p>
-              <p style={{ 
-                fontSize: 'clamp(11px, 3vw, 14px)', 
-                marginBottom: '4px' 
-              }}>
-                {config.jabatan_ttd}
-              </p>
-              
-              <p 
-                style={{ 
-                  fontSize: 'clamp(11px, 3vw, 14px)', 
-                  marginTop: 'clamp(30px, 7vw, 50px)' 
-                }}
-                className="font-bold"
-              >
-                {config.nama_ttd}
-              </p>
-              {config.nip_ttd && (
-                <p style={{ 
-                  fontSize: 'clamp(9px, 2.5vw, 11px)', 
-                  marginTop: '3px' 
-                }}>
-                  NIP. {config.nip_ttd}
-                </p>
-              )}
-            </div>
-          </div>
+          {/* Tanda Tangan - Dynamic Layout */}
+          {renderSignatureLayout(doc, config)}
 
           {/* Footer - Responsive */}
           {config.footer_text && (

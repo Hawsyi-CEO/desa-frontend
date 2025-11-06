@@ -182,6 +182,38 @@ const AdminSurat = () => {
       try {
         const configResponse = await api.get('/auth/konfigurasi');
         config = configResponse.data.success ? configResponse.data.data : getDefaultConfig();
+        
+        // Fetch nama RT/RW berdasarkan penandatangan dari jenis_surat
+        const jenisSurat = suratData.jenis_surat;
+        if (jenisSurat && jenisSurat.penandatangan) {
+          const penandatangan = typeof jenisSurat.penandatangan === 'string' 
+            ? JSON.parse(jenisSurat.penandatangan) 
+            : jenisSurat.penandatangan;
+            
+          for (const ttd of penandatangan) {
+            if (ttd.jabatan === 'ketua_rt' && ttd.rt_number) {
+              try {
+                const rtResponse = await api.get(`/admin/rt-name/${ttd.rt_number}`);
+                if (rtResponse.data.success) {
+                  config[`nama_rt_${ttd.rt_number}`] = rtResponse.data.nama;
+                }
+              } catch (err) {
+                console.error('Error fetching RT name:', err);
+              }
+            }
+            
+            if (ttd.jabatan === 'ketua_rw' && ttd.rw_number) {
+              try {
+                const rwResponse = await api.get(`/admin/rw-name/${ttd.rw_number}`);
+                if (rwResponse.data.success) {
+                  config[`nama_rw_${ttd.rw_number}`] = rwResponse.data.nama;
+                }
+              } catch (err) {
+                console.error('Error fetching RW name:', err);
+              }
+            }
+          }
+        }
       } catch (error) {
         config = getDefaultConfig();
       }
@@ -235,8 +267,11 @@ const AdminSurat = () => {
 
     console.log('Print Data:', { suratData, dataSurat, fields }); // Debug
 
+    // Get paper size from jenis_surat, default to A4
+    const paperSize = suratData.jenis_surat?.paper_size || 'a4';
+
     // Generate HTML untuk print
-    const printContent = generatePrintHTML(suratData, dataSurat, fields, config);
+    const printContent = generatePrintHTML(suratData, dataSurat, fields, config, paperSize);
 
     // Buat iframe tersembunyi untuk print
     const iframe = document.createElement('iframe');
@@ -278,9 +313,35 @@ const AdminSurat = () => {
     nip_ttd: '196701011990031005'
   });
 
-  const generatePrintHTML = (suratData, dataSurat, fields, config) => {
+  const generatePrintHTML = (suratData, dataSurat, fields, config, paperSize = 'a4') => {
     const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
                     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    
+    console.log('📄 Print HTML Generation:', {
+      paperSize,
+      jenisSuratName: suratData.jenis_surat?.nama_surat,
+      layout_ttd: suratData.jenis_surat?.layout_ttd
+    });
+    
+    // Paper size configuration
+    const paperConfig = {
+      a4: {
+        size: 'A4 portrait',
+        width: '210mm',
+        height: '297mm',
+        padding: '15mm 20mm'
+      },
+      legal: {
+        size: 'legal portrait',
+        width: '215.9mm',
+        height: '355.6mm',
+        padding: '20mm 25mm'
+      }
+    };
+    
+    const paper = paperConfig[paperSize] || paperConfig.a4;
+    
+    console.log('📐 Using paper config:', paper);
     
     const formatTanggal = (tanggal) => {
       if (!tanggal) return '';
@@ -311,42 +372,36 @@ const AdminSurat = () => {
       if (!template) return '';
       let rendered = template;
       
-      // Handle data object
+      // Handle data object - replace placeholders
       if (data && typeof data === 'object') {
         Object.keys(data).forEach(key => {
           const value = data[key] || '';
+          // Escape special regex characters in key
+          const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          
+          // Replace {{key}} format - double curly braces (PRIORITAS TINGGI)
+          rendered = rendered.replace(new RegExp(`\\{\\{${escapedKey}\\}\\}`, 'gi'), value);
           // Replace ((key)) format - double parenthesis
-          rendered = rendered.replace(new RegExp(`\\(\\(${key}\\)\\)`, 'gi'), value);
+          rendered = rendered.replace(new RegExp(`\\(\\(${escapedKey}\\)\\)`, 'gi'), value);
           // Replace (key) format - single parenthesis
-          rendered = rendered.replace(new RegExp(`\\(${key}\\)`, 'gi'), value);
-          // Replace {{key}} format - double curly braces
-          rendered = rendered.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'gi'), value);
+          rendered = rendered.replace(new RegExp(`\\(${escapedKey}\\)`, 'gi'), value);
           // Replace [key] format - square brackets
-          rendered = rendered.replace(new RegExp(`\\[${key}\\]`, 'gi'), value);
+          rendered = rendered.replace(new RegExp(`\\[${escapedKey}\\]`, 'gi'), value);
         });
       }
       
       // Strip HTML tags dan convert ke plain text
-      // Hilangkan semua tag HTML tapi pertahankan line breaks
       rendered = rendered
-        .replace(/<\/p>/gi, '\n')           // </p> jadi newline
-        .replace(/<br\s*\/?>/gi, '\n')      // <br> jadi newline  
-        .replace(/<\/div>/gi, '\n')         // </div> jadi newline
-        .replace(/<[^>]+>/g, '')            // Hapus semua tag HTML
-        .replace(/&nbsp;/g, ' ')            // &nbsp; jadi spasi
-        .replace(/&lt;/g, '<')              // HTML entities
+        .replace(/<[^>]+>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&amp;/g, '&')
-        .trim();
-      
-      // Split by newline dan hilangkan baris kosong
-      const lines = rendered
         .split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0);
+        .filter(line => line.trim())
+        .join('\n');
       
-      // Return sebagai plain text dengan newline
-      return lines.join('\n');
+      return rendered;
     };
 
     const generateFieldsHTML = () => {
@@ -367,6 +422,157 @@ const AdminSurat = () => {
         }).join('');
     };
 
+    const generateSignatureHTML = () => {
+      const jenisSurat = suratData.jenis_surat || {};
+      const penandatangan = jenisSurat.penandatangan || [{
+        jabatan: 'kepala_desa',
+        label: config.jabatan_ttd,
+        posisi: 'kanan_bawah',
+        required: true
+      }];
+      const layout = jenisSurat.layout_ttd || '1_kanan';
+      const showMaterai = jenisSurat.show_materai || false;
+
+      // Parse penandatangan if it's a string
+      let signatories = [];
+      try {
+        signatories = typeof penandatangan === 'string' ? JSON.parse(penandatangan) : penandatangan;
+      } catch (e) {
+        signatories = [{
+          jabatan: 'kepala_desa',
+          label: config.jabatan_ttd,
+          posisi: 'kanan_bawah',
+          required: true
+        }];
+      }
+
+      // Helper untuk render single TTD
+      const renderSignatureBox = (data, withDate = false) => {
+        // Gunakan nama dari config yang sudah di-fetch sebelumnya
+        let nama = '(...........................)';
+        let nip = '';
+        
+        if (data.jabatan === 'kepala_desa') {
+          nama = config.nama_ttd;
+          nip = config.nip_ttd || '';
+        } else if (data.jabatan === 'sekretaris_desa') {
+          nama = config.nama_sekretaris || config.nama_ttd;
+          nip = config.nip_sekretaris || '';
+        } else if (data.jabatan === 'camat') {
+          nama = config.nama_camat || 'NAMA CAMAT';
+        } else if (data.jabatan === 'kapolsek') {
+          nama = config.nama_kapolsek || 'NAMA KAPOLSEK';
+        } else if (data.jabatan === 'danramil') {
+          nama = config.nama_danramil || 'NAMA DANRAMIL';
+        } else if (data.jabatan === 'ketua_rt' && data.rt_number) {
+          nama = config[`nama_rt_${data.rt_number}`] || 'NAMA RT';
+        } else if (data.jabatan === 'ketua_rw' && data.rw_number) {
+          nama = config[`nama_rw_${data.rw_number}`] || 'NAMA RW';
+        }
+        
+        return `
+          <div style="text-align: center; width: 220px; max-width: 220px; flex: none; display: inline-block; vertical-align: top;">
+            ${withDate ? `<div style="font-size: 14px; margin-bottom: 10px;">${getCurrentDate()}</div>` : ''}
+            ${config.isSekretaris && data.jabatan === 'sekretaris_desa' ? 
+              `<div style="font-size: 14px; margin-bottom: 2px;">a.n Kepala Desa ${config.nama_desa_penandatangan || formatNamaDesa(config.nama_desa) || 'Cibadak'}</div>` 
+              : ''}
+            <div style="font-size: 14px; margin-bottom: 8px;">${data.label || config.jabatan_ttd}</div>
+            <div style="height: 60px;"></div>
+            <div style="font-size: 14px; margin-top: 10px; font-weight: bold; text-decoration: underline;">${nama}</div>
+            ${nip ? `<div style="font-size: 12px; margin-top: 4px;">NIP. ${nip}</div>` : ''}
+          </div>
+        `;
+      };
+
+      const renderMateraiBox = () => `
+        <div style="text-align: center; display: inline-flex; flex-direction: column; align-items: center; width: 150px;">
+          <div style="font-size: 12px; margin-bottom: 5px;">Materai</div>
+          <div style="width: 80px; height: 80px; border: 2px solid #000; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;">
+            Rp 10.000
+          </div>
+        </div>
+      `;
+
+      // Layout 1: Hanya Kepala Desa di kanan
+      if (layout === '1_kanan' || signatories.length === 1) {
+        return `
+          <div style="margin-top: 35px; display: flex; justify-content: flex-end; align-items: flex-start; width: 100%;">
+            ${renderSignatureBox(signatories[0], true)}
+          </div>
+        `;
+      }
+
+      // Layout 2 Horizontal: 2 TTD sejajar
+      if (layout === '2_horizontal' && signatories.length >= 2) {
+        return `
+          <div style="margin-top: 35px;">
+            <div style="font-size: 14px; margin-bottom: 20px; text-align: right; padding-right: 220px;">${getCurrentDate()}</div>
+            <div style="display: flex; justify-content: space-between;">
+              ${renderSignatureBox(signatories[0])}
+              ${renderSignatureBox(signatories[1])}
+            </div>
+          </div>
+        `;
+      }
+
+      // Layout 3 Horizontal: 2 TTD + Materai
+      if (layout === '3_horizontal') {
+        return `
+          <div style="margin-top: 35px;">
+            <div style="font-size: 14px; margin-bottom: 20px; text-align: center;">${getCurrentDate()}</div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+              ${renderSignatureBox(signatories[0])}
+              ${showMaterai ? renderMateraiBox() : '<div style="width: 150px;"></div>'}
+              ${renderSignatureBox(signatories[1] || signatories[0])}
+            </div>
+          </div>
+        `;
+      }
+
+      // Layout 2 Vertical: 2 TTD bertingkat
+      if (layout === '2_vertical' && signatories.length >= 2) {
+        return `
+          <div style="margin-top: 35px;">
+            <div style="display: flex; justify-content: flex-start; margin-bottom: 20px;">
+              ${renderSignatureBox(signatories[0], true)}
+            </div>
+            <div style="display: flex; justify-content: flex-end;">
+              ${renderSignatureBox(signatories[1])}
+            </div>
+          </div>
+        `;
+      }
+
+      // Layout 4 Grid: 2x2
+      if (layout === '4_grid') {
+        const kiriAtas = signatories.find(s => s.posisi === 'kiri_atas');
+        const kiriBawah = signatories.find(s => s.posisi === 'kiri_bawah');
+        const kananAtas = signatories.find(s => s.posisi === 'kanan_atas');
+        const kananBawah = signatories.find(s => s.posisi === 'kanan_bawah');
+
+        return `
+          <div style="margin-top: 35px;">
+            <div style="font-size: 14px; margin-bottom: 20px; text-align: center;">${getCurrentDate()}</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+              <div style="width: 220px;">${kiriAtas ? renderSignatureBox(kiriAtas) : ''}</div>
+              <div style="width: 220px;">${kananAtas ? renderSignatureBox(kananAtas) : ''}</div>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <div style="width: 220px;">${kiriBawah ? renderSignatureBox(kiriBawah) : ''}</div>
+              <div style="width: 220px;">${kananBawah ? renderSignatureBox(kananBawah) : ''}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Fallback: default layout
+      return `
+        <div style="margin-top: 35px; display: flex; justify-content: flex-end;">
+          ${renderSignatureBox(signatories[0], true)}
+        </div>
+      `;
+    };
+
     return `
       <!DOCTYPE html>
       <html>
@@ -375,7 +581,7 @@ const AdminSurat = () => {
         <title>Cetak Surat - ${suratData.nama_surat}</title>
         <style>
           @page {
-            size: A4 portrait;
+            size: ${paper.size};
             margin: 0;
           }
           * {
@@ -385,9 +591,9 @@ const AdminSurat = () => {
           }
           body {
             font-family: Arial, sans-serif;
-            width: 210mm;
-            min-height: 297mm;
-            padding: 15mm 20mm;
+            width: ${paper.width};
+            min-height: ${paper.height};
+            padding: ${paper.padding};
             background: white;
           }
           .kop-surat {
@@ -591,18 +797,8 @@ const AdminSurat = () => {
           ` : ''}
         </div>
 
-        <!-- Tanda Tangan -->
-        <div class="ttd-container">
-          <div class="ttd">
-            <div class="ttd-tanggal">${getCurrentDate()}</div>
-            ${config.isSekretaris ? `
-              <div class="ttd-jabatan" style="margin-bottom: 2px;">a.n Kepala Desa ${config.nama_desa_penandatangan || formatNamaDesa(config.nama_desa) || 'Cibadak'}</div>
-            ` : ''}
-            <div class="ttd-jabatan" style="margin-bottom: 8px;">${config.jabatan_ttd}</div>
-            <div class="ttd-nama">${config.nama_ttd}</div>
-            ${config.nip_ttd ? `<div class="ttd-nip">NIP. ${config.nip_ttd}</div>` : ''}
-          </div>
-        </div>
+        <!-- Tanda Tangan - Dynamic Layout -->
+        ${generateSignatureHTML()}
       </body>
       </html>
     `;

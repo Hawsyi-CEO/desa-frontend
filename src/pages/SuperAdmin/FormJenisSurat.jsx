@@ -18,6 +18,7 @@ const FormJenisSurat = () => {
   const { confirm, confirmState } = useConfirm();
 
   const [loading, setLoading] = useState(false);
+  const [paperSize, setPaperSize] = useState('a4'); // 'a4' or 'legal'
   const [showTips, setShowTips] = useState({
     formatNomor: false,
     kalimatPembuka: false,
@@ -34,7 +35,16 @@ const FormJenisSurat = () => {
     template_konten: '',
     fields: [],
     require_verification: true,
-    status: 'aktif'
+    status: 'aktif',
+    penandatangan: [{
+      jabatan: 'kepala_desa',
+      label: 'Kepala Desa Cibadak',
+      posisi: 'kanan_bawah',
+      required: true
+    }],
+    layout_ttd: '1_kanan',
+    show_materai: false,
+    paper_size: 'a4'
   });
 
   const [newField, setNewField] = useState({
@@ -48,6 +58,8 @@ const FormJenisSurat = () => {
 
   const [editingFieldIndex, setEditingFieldIndex] = useState(null);
   const [draggedIndex, setDraggedIndex] = useState(null);
+  const [rtOptions, setRtOptions] = useState([]);
+  const [rwOptions, setRwOptions] = useState([]);
 
   // Template presets
   const templatePresets = [
@@ -73,6 +85,7 @@ const FormJenisSurat = () => {
     if (isEdit) {
       fetchJenisSurat();
     }
+    fetchRTRWOptions();
   }, [id]);
 
   // Debug: Log formData.fields changes
@@ -80,6 +93,18 @@ const FormJenisSurat = () => {
     console.log('🔄 FormData.fields changed:', formData.fields);
     console.log('📊 Fields count:', formData.fields.length);
   }, [formData.fields]);
+
+  const fetchRTRWOptions = async () => {
+    try {
+      const response = await api.get('/admin/rt-rw-options');
+      if (response.data.success) {
+        setRtOptions(response.data.rt || []);
+        setRwOptions(response.data.rw || []);
+      }
+    } catch (error) {
+      console.error('Error fetching RT/RW options:', error);
+    }
+  };
 
   const fetchJenisSurat = async () => {
     try {
@@ -91,6 +116,24 @@ const FormJenisSurat = () => {
         console.log('📥 Loaded jenis surat data:', data);
         console.log('🔍 require_verification value:', data.require_verification);
         
+        // Parse penandatangan dari JSON jika string
+        let penandatanganData = [{
+          jabatan: 'kepala_desa',
+          label: 'Kepala Desa Cibadak',
+          posisi: 'kanan_bawah',
+          required: true
+        }];
+        
+        if (data.penandatangan) {
+          try {
+            penandatanganData = typeof data.penandatangan === 'string' 
+              ? JSON.parse(data.penandatangan) 
+              : data.penandatangan;
+          } catch (e) {
+            console.error('Error parsing penandatangan:', e);
+          }
+        }
+        
         setFormData({
           nama_surat: data.nama_surat,
           kode_surat: data.kode_surat,
@@ -100,8 +143,15 @@ const FormJenisSurat = () => {
           template_konten: data.template_konten,
           fields: typeof data.fields === 'string' ? JSON.parse(data.fields) : data.fields,
           require_verification: data.require_verification,
-          status: data.status
+          status: data.status,
+          penandatangan: penandatanganData,
+          layout_ttd: data.layout_ttd || '1_kanan',
+          show_materai: data.show_materai || false,
+          paper_size: data.paper_size || 'a4'
         });
+        
+        // Sync paperSize state with loaded data
+        setPaperSize(data.paper_size || 'a4');
         
         console.log('✅ FormData set with require_verification:', data.require_verification);
       }
@@ -346,12 +396,15 @@ const FormJenisSurat = () => {
                 {isEdit ? 'Perbarui data jenis surat' : 'Buat jenis surat baru untuk sistem'}
               </p>
             </div>
-            <button
-              onClick={() => navigate('/superadmin/jenis-surat')}
-              className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              <FiX /> Batal
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => navigate('/admin/jenis-surat')}
+                className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                <FiX /> Batal
+              </button>
+            </div>
           </div>
         </div>
 
@@ -536,6 +589,228 @@ const FormJenisSurat = () => {
               placeholder="Yang bertanda tangan di bawah ini, Kepala Desa Cibadak, dengan ini menerangkan bahwa :"
               required
             />
+          </div>
+
+          {/* Konfigurasi Tanda Tangan */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  Konfigurasi Tanda Tangan
+                </h2>
+                <p className="text-xs text-gray-500 mt-1">Atur layout dan penandatangan surat</p>
+              </div>
+            </div>
+
+            {/* Layout Selector */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Layout Tanda Tangan
+              </label>
+              <select
+                name="layout_ttd"
+                value={formData.layout_ttd}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="1_kanan">1 TTD - Kepala Desa di Kanan</option>
+                <option value="2_horizontal">2 TTD - Horizontal (Kiri | Kanan)</option>
+                <option value="2_vertical">2 TTD - Vertikal (Atas Kiri, Bawah Kanan)</option>
+                <option value="3_horizontal">3 Kolom - Dengan Materai (Kiri | Materai | Kanan)</option>
+                <option value="4_grid">4 TTD - Grid 2x2</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.layout_ttd === '1_kanan' && '📍 Hanya Kepala Desa di kanan bawah (default)'}
+                {formData.layout_ttd === '2_horizontal' && '📍 2 penandatangan sejajar kiri-kanan (contoh: RW | Kepala Desa)'}
+                {formData.layout_ttd === '2_vertical' && '📍 2 penandatangan bertingkat (atas kiri, bawah kanan)'}
+                {formData.layout_ttd === '3_horizontal' && '📍 2 TTD + kotak materai di tengah (contoh: Camat | Materai | Kepala Desa)'}
+                {formData.layout_ttd === '4_grid' && '📍 4 penandatangan dalam grid 2x2 (contoh: Camat, Kapolsek, RW, Kepala Desa)'}
+              </p>
+            </div>
+
+            {/* Show Materai Checkbox */}
+            {formData.layout_ttd === '3_horizontal' && (
+              <div className="mb-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="show_materai"
+                    checked={formData.show_materai}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Tampilkan Kotak Materai</span>
+                </label>
+              </div>
+            )}
+
+            {/* Penandatangan List */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Daftar Penandatangan ({formData.penandatangan.length})
+              </label>
+              
+              {formData.penandatangan.map((ttd, index) => (
+                <div key={index} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                  <div className="grid grid-cols-2 gap-3 mb-2">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Jabatan</label>
+                      <select
+                        value={ttd.jabatan}
+                        onChange={(e) => {
+                          const newPenandatangan = [...formData.penandatangan];
+                          newPenandatangan[index].jabatan = e.target.value;
+                          setFormData(prev => ({ ...prev, penandatangan: newPenandatangan }));
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                      >
+                        <option value="kepala_desa">Kepala Desa</option>
+                        <option value="sekretaris_desa">Sekretaris Desa</option>
+                        <option value="ketua_rt">Ketua RT</option>
+                        <option value="ketua_rw">Ketua RW</option>
+                        <option value="camat">Camat</option>
+                        <option value="kapolsek">Kapolsek</option>
+                        <option value="lainnya">Lainnya</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">Posisi</label>
+                      <select
+                        value={ttd.posisi}
+                        onChange={(e) => {
+                          const newPenandatangan = [...formData.penandatangan];
+                          newPenandatangan[index].posisi = e.target.value;
+                          setFormData(prev => ({ ...prev, penandatangan: newPenandatangan }));
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                      >
+                        {formData.layout_ttd === '4_grid' ? (
+                          <>
+                            <option value="kiri_atas">Kiri Atas</option>
+                            <option value="kanan_atas">Kanan Atas</option>
+                            <option value="kiri_bawah">Kiri Bawah</option>
+                            <option value="kanan_bawah">Kanan Bawah</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="kiri">Kiri</option>
+                            <option value="kanan">Kanan</option>
+                            <option value="kanan_bawah">Kanan Bawah</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mb-2">
+                    <label className="block text-xs text-gray-600 mb-1">Label/Teks yang Tampil</label>
+                    <input
+                      type="text"
+                      value={ttd.label}
+                      onChange={(e) => {
+                        const newPenandatangan = [...formData.penandatangan];
+                        newPenandatangan[index].label = e.target.value;
+                        setFormData(prev => ({ ...prev, penandatangan: newPenandatangan }));
+                      }}
+                      placeholder="Contoh: Kepala Desa Cibadak / Mengetahui, Camat Ciampea"
+                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                    />
+                  </div>
+
+                  {/* RT/RW Number Selector */}
+                  {ttd.jabatan === 'ketua_rt' && (
+                    <div className="mb-2">
+                      <label className="block text-xs text-gray-600 mb-1">Nomor RT</label>
+                      <select
+                        value={ttd.rt_number || ''}
+                        onChange={(e) => {
+                          const newPenandatangan = [...formData.penandatangan];
+                          newPenandatangan[index].rt_number = e.target.value;
+                          setFormData(prev => ({ ...prev, penandatangan: newPenandatangan }));
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                      >
+                        <option value="">-- Pilih RT --</option>
+                        {rtOptions.map(rt => (
+                          <option key={rt} value={rt}>RT {rt}</option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">Nama akan diambil dari database users</p>
+                    </div>
+                  )}
+
+                  {ttd.jabatan === 'ketua_rw' && (
+                    <div className="mb-2">
+                      <label className="block text-xs text-gray-600 mb-1">Nomor RW</label>
+                      <select
+                        value={ttd.rw_number || ''}
+                        onChange={(e) => {
+                          const newPenandatangan = [...formData.penandatangan];
+                          newPenandatangan[index].rw_number = e.target.value;
+                          setFormData(prev => ({ ...prev, penandatangan: newPenandatangan }));
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                      >
+                        <option value="">-- Pilih RW --</option>
+                        {rwOptions.map(rw => (
+                          <option key={rw} value={rw}>RW {rw}</option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">Nama akan diambil dari database users</p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={ttd.required}
+                        onChange={(e) => {
+                          const newPenandatangan = [...formData.penandatangan];
+                          newPenandatangan[index].required = e.target.checked;
+                          setFormData(prev => ({ ...prev, penandatangan: newPenandatangan }));
+                        }}
+                        className="w-3 h-3"
+                      />
+                      <span className="text-xs text-gray-600">Wajib</span>
+                    </label>
+                    {formData.penandatangan.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newPenandatangan = formData.penandatangan.filter((_, i) => i !== index);
+                          setFormData(prev => ({ ...prev, penandatangan: newPenandatangan }));
+                        }}
+                        className="text-xs text-red-600 hover:text-red-700"
+                      >
+                        <FiTrash2 className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {/* Add TTD Button */}
+              {formData.penandatangan.length < 4 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newPenandatangan = [...formData.penandatangan, {
+                      jabatan: 'sekretaris_desa',
+                      label: 'Sekretaris Desa',
+                      posisi: formData.layout_ttd === '4_grid' ? 'kanan_atas' : 'kiri',
+                      required: false
+                    }];
+                    setFormData(prev => ({ ...prev, penandatangan: newPenandatangan }));
+                  }}
+                  className="w-full px-3 py-2 text-sm text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50 flex items-center justify-center gap-2"
+                >
+                  <FiPlus className="w-4 h-4" /> Tambah Penandatangan
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Fields (Opsional) */}
@@ -875,6 +1150,49 @@ const FormJenisSurat = () => {
             </button>
           </div>
         </form>
+
+        {/* Live Preview Surat */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+          {/* Paper Size Selector Header */}
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Preview Surat</h2>
+              <p className="text-sm text-gray-600 mt-1">Preview tampilan surat dengan data sample</p>
+            </div>
+            <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setPaperSize('a4');
+                  setFormData(prev => ({ ...prev, paper_size: 'a4' }));
+                }}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  paperSize === 'a4'
+                    ? 'bg-white text-gray-900 shadow'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                A4 (210×297mm)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPaperSize('legal');
+                  setFormData(prev => ({ ...prev, paper_size: 'legal' }));
+                }}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  paperSize === 'legal'
+                    ? 'bg-white text-gray-900 shadow'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Legal (216×356mm)
+              </button>
+            </div>
+          </div>
+          
+          <PreviewSuratLive formData={formData} paperSize={paperSize} />
+        </div>
       </div>
 
       {/* Confirm Modal */}
@@ -899,6 +1217,486 @@ const FormJenisSurat = () => {
         />
       )}
     </Layout>
+  );
+};
+
+// Preview Surat Live Component
+const PreviewSuratLive = ({ formData, paperSize }) => {
+  const [config, setConfig] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchKonfigurasi();
+  }, [formData.penandatangan]); // Re-fetch when penandatangan changes
+
+  const fetchKonfigurasi = async () => {
+    try {
+      const response = await api.get('/auth/konfigurasi');
+      if (response.data.success) {
+        const configData = response.data.data;
+        
+        // Fetch nama RT/RW berdasarkan penandatangan dari formData
+        if (formData && formData.penandatangan) {
+          const penandatangan = formData.penandatangan;
+          
+          for (const ttd of penandatangan) {
+            if (ttd.jabatan === 'ketua_rt' && ttd.rt_number) {
+              try {
+                const rtResponse = await api.get(`/admin/rt-name/${ttd.rt_number}`);
+                if (rtResponse.data.success) {
+                  configData[`nama_rt_${ttd.rt_number}`] = rtResponse.data.nama;
+                }
+              } catch (err) {
+                console.error('Error fetching RT name:', err);
+                configData[`nama_rt_${ttd.rt_number}`] = `KETUA RT ${ttd.rt_number}`;
+              }
+            }
+            
+            if (ttd.jabatan === 'ketua_rw' && ttd.rw_number) {
+              try {
+                const rwResponse = await api.get(`/admin/rw-name/${ttd.rw_number}`);
+                if (rwResponse.data.success) {
+                  configData[`nama_rw_${ttd.rw_number}`] = rwResponse.data.nama;
+                }
+              } catch (err) {
+                console.error('Error fetching RW name:', err);
+                configData[`nama_rw_${ttd.rw_number}`] = `KETUA RW ${ttd.rw_number}`;
+              }
+            }
+          }
+        }
+        
+        setConfig(configData);
+      } else {
+        setConfig(getDefaultConfig());
+      }
+    } catch (error) {
+      console.error('Error fetching konfigurasi:', error);
+      setConfig(getDefaultConfig());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDefaultConfig = () => ({
+    nama_kabupaten: 'PEMERINTAH KABUPATEN BOGOR',
+    nama_kecamatan: 'KECAMATAN CIAMPEA',
+    nama_desa: 'DESA CIBADAK',
+    nama_desa_penandatangan: 'Cibadak',
+    alamat_kantor: 'Kp. Cibadak Balai Desa No.5 RT.005 RW.001 Desa Cibadak Kecamatan Ciampea Kabupaten Bogor',
+    kota: 'Jawa Barat',
+    kode_pos: '16620',
+    telepon: '0251-1234567',
+    email: 'desacibadak@bogor.go.id',
+    jabatan_ttd: 'Kepala Desa Cibadak',
+    nama_ttd: 'LIYA MULIYA, S.Pd.I., M.Pd.',
+    nip_ttd: '196701011990031005'
+  });
+
+  const sampleData = {
+    // Data pribadi umum
+    nama: 'Ahmad Fauzi',
+    nik: '3201012312980001',
+    tempat_lahir: 'Bogor',
+    tanggal_lahir: '23 Desember 1998',
+    jenis_kelamin: 'Laki-laki',
+    alamat: 'Kp. Cibadak RT.005 RW.001',
+    pekerjaan: 'Wiraswasta',
+    agama: 'Islam',
+    status_perkawinan: 'Belum Kawin',
+    keperluan: 'Melamar Pekerjaan',
+    
+    // Data usaha
+    'Nama Perusahaan': 'CV SAURIL SIDIK',
+    'nama_perusahaan': 'CV SAURIL SIDIK',
+    'Jenis/Sifat Usaha': 'Perdagangan Umum',
+    'Jenis/Sifat usaha': 'Perdagangan Umum',
+    'jenis_sifat_usaha': 'Perdagangan Umum',
+    'Bergerak di bidang': 'Perdagangan Eceran',
+    'Bergerak di bidang g': 'Perdagangan Eceran',
+    'bergerak_di_bidang': 'Perdagangan Eceran',
+    'Penanggung Jawab': 'Ahmad Fauzi',
+    'penanggung_jawab': 'Ahmad Fauzi',
+    'Akta Pendirian': 'Nomor 123/2023',
+    'akta_pendirian': 'Nomor 123/2023',
+    'Jumlah Karyawan': '5 Orang',
+    'jumlah_karyawan': '5 Orang',
+    'Lokasi Usaha': 'Kp. Cibadak Balai Desa',
+    'lokasi_usaha': 'Kp. Cibadak Balai Desa',
+    'Jumlah Permodalan': 'Rp 50.000.000',
+    'jumlah_permodalan': 'Rp 50.000.000',
+    'Status Bangunan': 'Milik Sendiri',
+    'status_bangunan': 'Milik Sendiri',
+    
+    // Data lainnya
+    'skdu': '01 Januari 2025',
+    'Alamat': 'Kp. Cibadak Balai Desa'
+  };
+
+  const renderTemplate = (template) => {
+    if (!template) return '';
+    let rendered = template;
+    
+    // Replace placeholder dengan sample data
+    if (sampleData && typeof sampleData === 'object') {
+      Object.keys(sampleData).forEach(key => {
+        const value = sampleData[key] || '';
+        // Escape special regex characters in key
+        const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        
+        // Replace {{key}} format - double curly braces (PRIORITAS TINGGI)
+        rendered = rendered.replace(new RegExp(`\\{\\{${escapedKey}\\}\\}`, 'gi'), value);
+        // Replace ((key)) format - double parenthesis
+        rendered = rendered.replace(new RegExp(`\\(\\(${escapedKey}\\)\\)`, 'gi'), value);
+        // Replace (key) format - single parenthesis
+        rendered = rendered.replace(new RegExp(`\\(${escapedKey}\\)`, 'gi'), value);
+        // Replace [key] format - square brackets
+        rendered = rendered.replace(new RegExp(`\\[${escapedKey}\\]`, 'gi'), value);
+      });
+    }
+    
+    // Strip HTML tags dan convert ke plain text
+    rendered = rendered
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .split('\n')
+      .filter(line => line.trim())
+      .join('\n');
+    
+    return rendered;
+  };
+
+  const getCurrentDate = () => {
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const date = new Date();
+    const desaName = config?.nama_desa_penandatangan || 'Cibadak';
+    return `${desaName}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+  };
+
+  const generateNomorSurat = (format) => {
+    const date = new Date();
+    const bulan = String(date.getMonth() + 1).padStart(2, '0');
+    const tahun = date.getFullYear();
+    const nomor = '001';
+    
+    return format
+      .replace(/NOMOR/gi, nomor)
+      .replace(/KODE/gi, formData.kode_surat || 'XXX')
+      .replace(/BULAN/gi, bulan)
+      .replace(/TAHUN/gi, tahun);
+  };
+
+  const renderSignatureLayout = () => {
+    const penandatangan = formData.penandatangan || [];
+    const layout = formData.layout_ttd || '1_kanan';
+    const showMaterai = formData.show_materai || false;
+
+    console.log('🔍 Preview Signature Layout:', { 
+      layout, 
+      penandatanganCount: penandatangan.length,
+      penandatangan: penandatangan 
+    });
+
+    const SignatureBox = ({ data, withDate = false }) => {
+      // Get nama berdasarkan jabatan
+      let nama = '(...........................)';
+      let nip = '';
+      
+      if (data.jabatan === 'kepala_desa') {
+        nama = config?.nama_ttd || 'NAMA KEPALA DESA';
+        nip = config?.nip_ttd || '';
+      } else if (data.jabatan === 'sekretaris_desa') {
+        nama = config?.nama_sekretaris || 'NAMA SEKRETARIS DESA';
+        nip = config?.nip_sekretaris || '';
+      } else if (data.jabatan === 'camat') {
+        nama = config?.nama_camat || 'NAMA CAMAT';
+      } else if (data.jabatan === 'kapolsek') {
+        nama = config?.nama_kapolsek || 'NAMA KAPOLSEK';
+      } else if (data.jabatan === 'danramil') {
+        nama = config?.nama_danramil || 'NAMA DANRAMIL';
+      } else if (data.jabatan === 'ketua_rt') {
+        nama = config?.[`nama_rt_${data.rt_number}`] || `KETUA RT ${data.rt_number || ''}`;
+      } else if (data.jabatan === 'ketua_rw') {
+        nama = config?.[`nama_rw_${data.rw_number}`] || `KETUA RW ${data.rw_number || ''}`;
+      }
+      
+      return (
+        <div style={{ 
+          textAlign: 'center', 
+          width: '220px', 
+          flex: layout === '2_horizontal' || layout === '3_horizontal' ? 1 : 'none',
+          flexShrink: 0
+        }}>
+          {withDate && (
+            <p style={{ fontSize: '14px', marginBottom: '10px' }}>{getCurrentDate()}</p>
+          )}
+          <p style={{ fontSize: '14px', marginBottom: '8px' }}>
+            {data.label || config?.jabatan_ttd || 'Kepala Desa'}
+          </p>
+          <div style={{ height: '60px' }}></div>
+          <p style={{ fontSize: '14px', marginTop: '10px', fontWeight: 'bold', textDecoration: 'underline' }}>
+            {nama}
+          </p>
+          {nip && (
+            <p style={{ fontSize: '13px', marginTop: '2px' }}>
+              NIP. {nip}
+            </p>
+          )}
+        </div>
+      );
+    };
+
+    const MateraiBox = () => (
+      <div style={{ 
+        textAlign: 'center', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        width: '150px' 
+      }}>
+        <p style={{ fontSize: '12px', marginBottom: '5px' }}>Materai</p>
+        <div style={{ 
+          width: '80px', 
+          height: '80px', 
+          border: '2px solid #000',
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          fontSize: '11px', 
+          fontWeight: 'bold'
+        }}>
+          Rp 10.000
+        </div>
+      </div>
+    );
+
+    if (layout === '1_kanan' || penandatangan.length === 1) {
+      return (
+        <div style={{ marginTop: '35px', display: 'flex', justifyContent: 'flex-end' }}>
+          <SignatureBox data={penandatangan[0]} withDate={true} />
+        </div>
+      );
+    }
+
+    if (layout === '2_horizontal' && penandatangan.length === 2) {
+      return (
+        <div style={{ marginTop: '35px' }}>
+          <p style={{ fontSize: '14px', marginBottom: '20px', textAlign: 'right', paddingRight: '220px' }}>
+            {getCurrentDate()}
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '32px' }}>
+            <SignatureBox data={penandatangan[0]} />
+            <SignatureBox data={penandatangan[1]} />
+          </div>
+        </div>
+      );
+    }
+
+    if (layout === '3_horizontal') {
+      return (
+        <div style={{ marginTop: '35px' }}>
+          <p style={{ fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>{getCurrentDate()}</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '16px' }}>
+            <SignatureBox data={penandatangan[0]} />
+            {showMaterai && <MateraiBox />}
+            <SignatureBox data={penandatangan[1] || penandatangan[0]} />
+          </div>
+        </div>
+      );
+    }
+
+    if (layout === '2_vertical' && penandatangan.length === 2) {
+      return (
+        <div style={{ marginTop: '35px' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
+            <SignatureBox data={penandatangan[0]} withDate={true} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <SignatureBox data={penandatangan[1]} />
+          </div>
+        </div>
+      );
+    }
+
+    if (layout === '4_grid') {
+      const kiriAtas = penandatangan.find(s => s.posisi === 'kiri_atas');
+      const kiriBawah = penandatangan.find(s => s.posisi === 'kiri_bawah');
+      const kananAtas = penandatangan.find(s => s.posisi === 'kanan_atas');
+      const kananBawah = penandatangan.find(s => s.posisi === 'kanan_bawah');
+
+      return (
+        <div style={{ marginTop: '35px' }}>
+          <p style={{ fontSize: '14px', marginBottom: '20px', textAlign: 'center' }}>{getCurrentDate()}</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '32px', marginBottom: '24px' }}>
+            <div style={{ width: '220px' }}>{kiriAtas && <SignatureBox data={kiriAtas} />}</div>
+            <div style={{ width: '220px' }}>{kananAtas && <SignatureBox data={kananAtas} />}</div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '32px' }}>
+            <div style={{ width: '220px' }}>{kiriBawah && <SignatureBox data={kiriBawah} />}</div>
+            <div style={{ width: '220px' }}>{kananBawah && <SignatureBox data={kananBawah} />}</div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ marginTop: '35px', display: 'flex', justifyContent: 'flex-end' }}>
+        <SignatureBox data={penandatangan[0]} withDate={true} />
+      </div>
+    );
+  };
+
+  if (loading || !config) {
+    return (
+      <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+        <p className="text-gray-500">Memuat preview...</p>
+      </div>
+    );
+  }
+
+  const paperConfig = {
+    a4: { width: '210mm', height: '297mm', padding: '10mm 20mm' },
+    legal: { width: '215.9mm', height: '355.6mm', padding: '15mm 20mm' }
+  };
+
+  const currentPaper = paperConfig[paperSize];
+
+  return (
+    <div className="mt-8">
+      <div className="bg-gradient-to-r from-indigo-700 to-purple-700 rounded-t-lg p-4">
+        <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+          <FiFileText className="w-6 h-6" />
+          Preview Surat ({paperSize.toUpperCase()})
+        </h3>
+      </div>
+      
+      <div className="bg-gray-100 p-8 rounded-b-lg">
+        <div 
+          className="bg-white mx-auto shadow-lg"
+          style={{
+            fontFamily: 'Arial, sans-serif',
+            width: currentPaper.width,
+            minHeight: currentPaper.height,
+            maxWidth: currentPaper.width,
+            padding: currentPaper.padding,
+            boxSizing: 'border-box'
+          }}
+        >
+          {/* Kop Surat */}
+          <div className="pb-3 mb-3" style={{ borderBottom: '3px solid #000' }}>
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0">
+                <img 
+                  src="/assets/Lambang_Kabupaten_Bogor.png"
+                  alt="Logo"
+                  style={{ 
+                    width: paperSize === 'legal' ? '85px' : '90px',
+                    height: paperSize === 'legal' ? '85px' : '90px',
+                    objectFit: 'contain'
+                  }}
+                  onError={(e) => { e.target.src = '/src/assets/Lambang_Kabupaten_Bogor.png'; }}
+                />
+              </div>
+              <div className="flex-1 text-center" style={{ marginRight: paperSize === 'legal' ? '85px' : '90px' }}>
+                <h2 className="font-bold uppercase" style={{ 
+                  fontSize: paperSize === 'legal' ? '19px' : '20px', 
+                  lineHeight: '1.3', marginBottom: '3px' 
+                }}>
+                  {config.nama_kabupaten}
+                </h2>
+                <h3 className="font-bold uppercase" style={{ 
+                  fontSize: paperSize === 'legal' ? '17px' : '18px', 
+                  lineHeight: '1.3', marginBottom: '3px' 
+                }}>
+                  {config.nama_kecamatan}
+                </h3>
+                <h3 className="font-bold uppercase" style={{ 
+                  fontSize: paperSize === 'legal' ? '17px' : '18px', 
+                  lineHeight: '1.3', marginBottom: '5px' 
+                }}>
+                  {config.nama_desa}
+                </h3>
+                <p style={{ 
+                  fontSize: paperSize === 'legal' ? '11px' : '12px', 
+                  lineHeight: '1.4', marginBottom: '2px' 
+                }}>
+                  {config.alamat_kantor}
+                </p>
+                <p style={{ fontSize: paperSize === 'legal' ? '11px' : '12px', lineHeight: '1.4' }}>
+                  {config.kota} {config.kode_pos}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Judul Surat */}
+          <div className="text-center" style={{ 
+            marginBottom: paperSize === 'legal' ? '12px' : '14px', 
+            marginTop: paperSize === 'legal' ? '14px' : '16px' 
+          }}>
+            <h4 className="font-bold uppercase underline" style={{ 
+              fontSize: paperSize === 'legal' ? '15px' : '16px', 
+              marginBottom: '7px' 
+            }}>
+              {formData.nama_surat || 'NAMA SURAT'}
+            </h4>
+            <p className="font-semibold" style={{ fontSize: paperSize === 'legal' ? '13px' : '14px' }}>
+              Nomor : {generateNomorSurat(formData.format_nomor || 'NOMOR/KODE/BULAN/TAHUN')}
+            </p>
+          </div>
+
+          {/* Isi Surat */}
+          <div style={{ 
+            fontSize: paperSize === 'legal' ? '13px' : '14px',
+            lineHeight: paperSize === 'legal' ? '1.6' : '1.7'
+          }}>
+            <p className="text-justify" style={{ marginBottom: paperSize === 'legal' ? '8px' : '10px' }}>
+              {formData.kalimat_pembuka || `Yang bertanda tangan di bawah ini, ${config.jabatan_ttd}, dengan ini menerangkan bahwa :`}
+            </p>
+
+            {formData.fields && formData.fields.length > 0 && (
+              <div style={{ 
+                marginLeft: paperSize === 'legal' ? '25px' : '30px', 
+                marginBottom: paperSize === 'legal' ? '8px' : '10px' 
+              }}>
+                {formData.fields
+                  .filter(field => field.showInDocument !== false)
+                  .map((field, index) => (
+                    <div 
+                      key={index} 
+                      className="flex" 
+                      style={{ marginBottom: paperSize === 'legal' ? '2px' : '3px' }}
+                    >
+                      <div style={{ width: paperSize === 'legal' ? '150px' : '160px' }}>
+                        {field.label}
+                      </div>
+                      <div style={{ width: '25px', textAlign: 'center' }}>:</div>
+                      <div className="flex-1 font-semibold">
+                        {sampleData[field.name] || `[${field.label}]`}
+                      </div>
+                    </div>
+                  ))
+                }
+              </div>
+            )}
+
+            <div 
+              className="text-justify"
+              style={{ whiteSpace: 'pre-line', marginTop: '10px' }}
+            >
+              {renderTemplate(formData.template_konten)}
+            </div>
+          </div>
+
+          {/* Tanda Tangan */}
+          {renderSignatureLayout()}
+        </div>
+      </div>
+    </div>
   );
 };
 

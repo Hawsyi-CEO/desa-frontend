@@ -209,8 +209,8 @@ const Sidebar = () => {
         </div>
       </div>
 
-      {/* Mobile Overlay */}
-      {isOpen && (
+      {/* Mobile Overlay - ONLY show on mobile when sidebar is open */}
+      {isOpen && window.innerWidth < 1024 && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden animate-fade-in"
           onClick={() => {
