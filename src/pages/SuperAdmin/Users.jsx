@@ -748,6 +748,7 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
   const [formData, setFormData] = useState({
     nik: '',
     nama: '',
+    email: '',
     password: '',
     role: 'warga',
     status: 'aktif',
@@ -767,6 +768,20 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
     if (formData.nik.length !== 16) {
       showError('NIK harus 16 digit!');
       return;
+    }
+
+    // Validasi Email untuk verifikator (wajib)
+    if (formData.role === 'verifikator') {
+      if (!formData.email || formData.email.trim() === '') {
+        showError('Email wajib diisi untuk Verifikator!');
+        return;
+      }
+      // Validasi format email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        showError('Format email tidak valid!');
+        return;
+      }
     }
 
     // Validasi RT/RW untuk verifikator
@@ -885,6 +900,25 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
                 className="input w-full"
                 required
               />
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                <Mail className="w-4 h-4 text-purple-600" />
+                Email {formData.role === 'verifikator' && <span className="text-red-500">*</span>}
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="email@example.com"
+                className="input w-full"
+                required={formData.role === 'verifikator'}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.role === 'verifikator' ? 'Wajib untuk Verifikator' : 'Opsional untuk Warga'}
+              </p>
             </div>
 
             {/* Password */}
@@ -1015,12 +1049,27 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
   const [formData, setFormData] = useState({
     role: user.role || 'warga',
     status: user.status || 'aktif',
+    email: user.email || '',
     rt: user.rt || '',
     rw: user.rw || ''
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validasi Email untuk verifikator (wajib)
+    if (formData.role === 'verifikator') {
+      if (!formData.email || formData.email.trim() === '') {
+        showError('Email wajib diisi untuk Verifikator!');
+        return;
+      }
+      // Validasi format email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        showError('Format email tidak valid!');
+        return;
+      }
+    }
     
     // Validasi RT/RW untuk verifikator
     if (formData.role === 'verifikator') {
@@ -1121,6 +1170,24 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
             {user.role === 'super_admin' && (
               <p className="text-xs text-red-600 mt-1">Role Super Admin tidak dapat diubah</p>
             )}
+          </div>
+
+          {/* Email Field */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email {formData.role === 'verifikator' && <span className="text-red-500">*</span>}
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="email@example.com"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
+              required={formData.role === 'verifikator'}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              {formData.role === 'verifikator' ? 'Wajib untuk Verifikator' : 'Opsional untuk Warga'}
+            </p>
           </div>
 
           {/* RT - Conditional untuk Verifikator */}
