@@ -2,22 +2,87 @@ import { useState, useEffect } from 'react';
 import { FiHome, FiFileText, FiUser, FiBell, FiMenu } from 'react-icons/fi';
 import { useNavigate, useLocation } from 'react-router-dom';
 import logoBogor from '../assets/Lambang_Kabupaten_Bogor.png';
+import api from '../services/api';
 
 const WargaLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const userData = JSON.parse(sessionStorage.getItem('user') || '{}');
     setUser(userData);
+    fetchNotifications();
+    fetchPendingCount();
+    
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchNotifications();
+      fetchPendingCount();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await api.get('/warga/notifications');
+      if (response.data.success) {
+        setNotifications(response.data.data || []);
+        setUnreadCount(response.data.data?.filter(n => !n.is_read).length || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  const fetchPendingCount = async () => {
+    try {
+      const response = await api.get('/warga/surat');
+      if (response.data.success) {
+        const suratData = response.data.data || [];
+        const pending = suratData.filter(s => 
+          ['pending', 'menunggu_verifikasi_rt', 'menunggu_verifikasi_rw', 'revisi_rt', 'revisi_rw'].includes(s.status_surat)
+        ).length;
+        setPendingCount(pending);
+      }
+    } catch (error) {
+      console.error('Error fetching pending count:', error);
+    }
+  };
+
+  const markAsRead = async (notificationId) => {
+    try {
+      await api.put(`/warga/notifications/${notificationId}/read`);
+      fetchNotifications();
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const formatNotificationTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Baru saja';
+    if (diffMins < 60) return `${diffMins} menit lalu`;
+    if (diffHours < 24) return `${diffHours} jam lalu`;
+    if (diffDays < 7) return `${diffDays} hari lalu`;
+    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+  };
 
   const bottomNavItems = [
     { icon: FiHome, label: 'Beranda', path: '/warga/dashboard', active: location.pathname === '/warga/dashboard' },
     { icon: FiFileText, label: 'Ajukan', path: '/warga/surat', active: location.pathname === '/warga/surat' },
-    { icon: FiFileText, label: 'Riwayat', path: '/warga/history', active: location.pathname === '/warga/history' },
+    { icon: FiFileText, label: 'Riwayat', path: '/warga/history', active: location.pathname === '/warga/history', badge: pendingCount },
     { icon: FiUser, label: 'Profil', path: '/warga/profile', active: location.pathname === '/warga/profile' }
   ];
 
@@ -54,7 +119,11 @@ const WargaLayout = ({ children }) => {
                 className="relative p-2 hover:bg-slate-600 rounded-full transition-colors"
               >
                 <FiBell size={20} />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full text-white text-xs font-bold flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
               </button>
 
               {/* Profile Avatar */}
@@ -70,23 +139,54 @@ const WargaLayout = ({ children }) => {
         {/* Notifications Dropdown */}
         {showNotifications && (
           <div className="absolute top-full right-4 mt-2 w-80 bg-white rounded-lg shadow-xl overflow-hidden z-50">
-            <div className="bg-slate-700 px-4 py-3 text-white font-semibold">
-              Notifikasi
+            <div className="bg-slate-700 px-4 py-3 text-white font-semibold flex items-center justify-between">
+              <span>Notifikasi</span>
+              {unreadCount > 0 && (
+                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                  {unreadCount} Baru
+                </span>
+              )}
             </div>
             <div className="max-h-96 overflow-y-auto">
-              <div className="p-4 border-b hover:bg-gray-50 cursor-pointer">
-                <div className="flex gap-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Surat Disetujui</p>
-                    <p className="text-xs text-gray-600 mt-1">Surat Keterangan Domisili Anda telah disetujui</p>
-                    <p className="text-xs text-gray-400 mt-1">2 jam yang lalu</p>
+              {notifications.length > 0 ? (
+                notifications.map((notif) => (
+                  <div 
+                    key={notif.id}
+                    onClick={() => {
+                      markAsRead(notif.id);
+                      if (notif.surat_id) {
+                        navigate('/warga/history');
+                        setShowNotifications(false);
+                      }
+                    }}
+                    className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${
+                      !notif.is_read ? 'bg-blue-50' : ''
+                    }`}
+                  >
+                    <div className="flex gap-3">
+                      {!notif.is_read && (
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                      )}
+                      <div className="flex-1">
+                        <p className={`text-sm font-medium ${
+                          !notif.is_read ? 'text-gray-900' : 'text-gray-700'
+                        }`}>
+                          {notif.title}
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1">{notif.message}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {formatNotificationTime(notif.created_at)}
+                        </p>
+                      </div>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="p-8 text-center text-gray-500 text-sm">
+                  <FiBell size={32} className="mx-auto mb-2 text-gray-300" />
+                  <p>Tidak ada notifikasi</p>
                 </div>
-              </div>
-              <div className="p-4 text-center text-gray-500 text-sm">
-                Tidak ada notifikasi baru
-              </div>
+              )}
             </div>
           </div>
         )}
@@ -112,10 +212,15 @@ const WargaLayout = ({ children }) => {
                     : 'text-gray-400 hover:text-slate-600'
                 }`}
               >
-                <div className={`p-2 rounded-xl transition-all ${
+                <div className={`p-2 rounded-xl transition-all relative ${
                   item.active ? 'bg-slate-100' : ''
                 }`}>
                   <Icon size={22} strokeWidth={item.active ? 2.5 : 2} />
+                  {item.badge > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  )}
                 </div>
                 <span className={`text-xs mt-1 font-medium ${
                   item.active ? 'text-slate-800' : 'text-gray-500'

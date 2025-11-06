@@ -88,9 +88,9 @@ const WargaUniversalHistory = () => {
                 <p style="margin: 5px 0;">Nomor: ${surat.nomor_surat}</p>
               </div>
 
-              <div style="text-align: justify; line-height: 1.8; font-size: 14px; margin: 20px 0;">
-                <p>${kalimatPembuka}</p>
-                ${content}
+              <div style="text-align: justify; line-height: 1.5; font-size: 14px; margin: 20px 0;">
+                <p style="margin-bottom: 5px; line-height: 1.5;">${kalimatPembuka}</p>
+                <div style="line-height: 1.5;">${content}</div>
               </div>
 
               <div style="margin-top: 50px; text-align: right;">

@@ -13,6 +13,13 @@ const WargaHistoryMobile = () => {
 
   useEffect(() => {
     fetchSuratHistory();
+    
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchSuratHistory();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const fetchSuratHistory = async () => {
@@ -72,7 +79,7 @@ const WargaHistoryMobile = () => {
     ? suratList 
     : suratList.filter(s => {
         if (filterStatus === 'pending') return ['pending', 'menunggu_verifikasi_rt', 'menunggu_verifikasi_rw'].includes(s.status_surat);
-        if (filterStatus === 'selesai') return s.status_surat === 'selesai';
+        if (filterStatus === 'selesai') return ['selesai', 'disetujui', 'disetujui_rt', 'disetujui_rw'].includes(s.status_surat);
         if (filterStatus === 'ditolak') return s.status_surat === 'ditolak';
         if (filterStatus === 'revisi') return ['revisi_rt', 'revisi_rw'].includes(s.status_surat);
         return true;
@@ -107,7 +114,7 @@ const WargaHistoryMobile = () => {
             {[
               { key: 'all', label: 'Semua', count: suratList.length },
               { key: 'pending', label: 'Proses', count: suratList.filter(s => ['pending', 'menunggu_verifikasi_rt', 'menunggu_verifikasi_rw'].includes(s.status_surat)).length },
-              { key: 'selesai', label: 'Selesai', count: suratList.filter(s => s.status_surat === 'selesai').length },
+              { key: 'selesai', label: 'Selesai', count: suratList.filter(s => ['selesai', 'disetujui', 'disetujui_rt', 'disetujui_rw'].includes(s.status_surat)).length },
               { key: 'revisi', label: 'Revisi', count: suratList.filter(s => ['revisi_rt', 'revisi_rw'].includes(s.status_surat)).length },
               { key: 'ditolak', label: 'Ditolak', count: suratList.filter(s => s.status_surat === 'ditolak').length }
             ].map(tab => (

@@ -315,16 +315,38 @@ const AdminSurat = () => {
       if (data && typeof data === 'object') {
         Object.keys(data).forEach(key => {
           const value = data[key] || '';
-          // Replace (key) format
-          rendered = rendered.replace(new RegExp(`\\(${key}\\)`, 'g'), value);
-          // Replace {{key}} format
-          rendered = rendered.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
-          // Replace [key] format
-          rendered = rendered.replace(new RegExp(`\\[${key}\\]`, 'g'), value);
+          // Replace ((key)) format - double parenthesis
+          rendered = rendered.replace(new RegExp(`\\(\\(${key}\\)\\)`, 'gi'), value);
+          // Replace (key) format - single parenthesis
+          rendered = rendered.replace(new RegExp(`\\(${key}\\)`, 'gi'), value);
+          // Replace {{key}} format - double curly braces
+          rendered = rendered.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'gi'), value);
+          // Replace [key] format - square brackets
+          rendered = rendered.replace(new RegExp(`\\[${key}\\]`, 'gi'), value);
         });
       }
       
-      return rendered;
+      // Strip HTML tags dan convert ke plain text
+      // Hilangkan semua tag HTML tapi pertahankan line breaks
+      rendered = rendered
+        .replace(/<\/p>/gi, '\n')           // </p> jadi newline
+        .replace(/<br\s*\/?>/gi, '\n')      // <br> jadi newline  
+        .replace(/<\/div>/gi, '\n')         // </div> jadi newline
+        .replace(/<[^>]+>/g, '')            // Hapus semua tag HTML
+        .replace(/&nbsp;/g, ' ')            // &nbsp; jadi spasi
+        .replace(/&lt;/g, '<')              // HTML entities
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
+        .trim();
+      
+      // Split by newline dan hilangkan baris kosong
+      const lines = rendered
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+      
+      // Return sebagai plain text dengan newline
+      return lines.join('\n');
     };
 
     const generateFieldsHTML = () => {
@@ -336,7 +358,7 @@ const AdminSurat = () => {
         .map(field => {
           const value = dataSurat[field.name] || '[Data tidak tersedia]';
           return `
-            <div style="display: flex; margin-bottom: 4px;">
+            <div style="display: flex; margin-bottom: 0px; line-height: 1.5;">
               <div style="width: 150px;">${field.label}</div>
               <div style="width: 20px; text-align: center;">:</div>
               <div style="flex: 1;">${value}</div>
@@ -457,17 +479,19 @@ const AdminSurat = () => {
           }
           .data-pemohon {
             margin-left: 30px;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            line-height: 1.5;
+          }
+          .data-pemohon div {
+            margin-bottom: 0;
+            line-height: 1.5;
           }
           .template-konten {
             text-align: justify;
-            white-space: pre-line;
             margin-top: 8px;
-            line-height: 1.4;
-          }
-          .template-konten p {
-            margin-bottom: 3px !important;
-            line-height: 1.4 !important;
+            line-height: 1.5;
+            font-size: 14px;
+            white-space: pre-line;
           }
           .ttd-container {
             margin-top: 35px;
@@ -550,7 +574,7 @@ const AdminSurat = () => {
 
         <!-- Isi Surat -->
         <div class="isi-surat">
-          <p>${suratData.jenis_surat?.kalimat_pembuka || `Yang bertanda tangan di bawah ini, ${config.jabatan_ttd}, dengan ini menerangkan bahwa :`}</p>
+          <p>${renderTemplate(suratData.jenis_surat?.kalimat_pembuka || `Yang bertanda tangan di bawah ini, ${config.jabatan_ttd}, dengan ini menerangkan bahwa :`, dataSurat)}</p>
 
           ${fields && fields.length > 0 ? `
             <div class="data-pemohon">

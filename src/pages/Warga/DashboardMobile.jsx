@@ -30,6 +30,13 @@ const WargaDashboardMobile = () => {
     const userData = JSON.parse(sessionStorage.getItem('user') || '{}');
     setUser(userData);
     fetchDashboardData();
+    
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const fetchDashboardData = async () => {
@@ -48,7 +55,12 @@ const WargaDashboardMobile = () => {
           s.status_surat === 'menunggu_verifikasi_rt' || 
           s.status_surat === 'menunggu_verifikasi_rw'
         ).length,
-        approved: suratData.filter(s => s.status_surat === 'selesai').length,
+        approved: suratData.filter(s => 
+          s.status_surat === 'selesai' || 
+          s.status_surat === 'disetujui' || 
+          s.status_surat === 'disetujui_rt' || 
+          s.status_surat === 'disetujui_rw'
+        ).length,
         rejected: suratData.filter(s => s.status_surat === 'ditolak').length
       });
       

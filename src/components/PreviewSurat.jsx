@@ -497,48 +497,70 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
           background-color: #f9f9f9;
         }
         
-        /* Compact spacing for paragraphs */
+        /* Compact spacing for paragraphs - DIPERBAIKI */
         #surat-preview p {
-          margin-bottom: 2px;
-          line-height: 1.15;
+          margin: 0 0 3px 0 !important;
+          padding: 0 !important;
+          line-height: 1.4 !important;
         }
         
-        /* Reduce space in content area */
+        /* Reduce space in content area - DIPERBAIKI */
         #surat-preview > div > p {
-          margin-top: 0;
-          margin-bottom: 2px;
-          line-height: 1.15;
+          margin: 0 0 3px 0 !important;
+          padding: 0 !important;
+          line-height: 1.4 !important;
         }
         
-        /* Compact spacing untuk konten dari RichTextEditor */
+        /* Compact spacing untuk konten dari RichTextEditor - DIPERBAIKI */
         #surat-preview .text-justify p {
-          margin: 0 0 2px 0 !important;
-          line-height: 1.15 !important;
+          margin: 0 0 3px 0 !important;
+          padding: 0 !important;
+          line-height: 1.4 !important;
         }
         
+        /* Menghilangkan extra space dari br tag - BARU */
+        #surat-preview br {
+          display: block;
+          margin: 0 !important;
+          padding: 0 !important;
+          content: "";
+          line-height: 0 !important;
+        }
+        
+        /* Heading spacing - DIPERBAIKI */
         #surat-preview .text-justify h1,
         #surat-preview .text-justify h2,
         #surat-preview .text-justify h3,
         #surat-preview .text-justify h4,
         #surat-preview .text-justify h5,
         #surat-preview .text-justify h6 {
-          margin: 6px 0 2px 0 !important;
-          line-height: 1.1 !important;
+          margin: 6px 0 3px 0 !important;
+          padding: 0 !important;
+          line-height: 1.2 !important;
         }
         
+        /* List spacing - DIPERBAIKI */
         #surat-preview .text-justify ul,
         #surat-preview .text-justify ol {
-          margin: 2px 0 !important;
-          padding-left: 20px;
+          margin: 3px 0 !important;
+          padding: 0 0 0 20px !important;
         }
         
         #surat-preview .text-justify li {
-          margin: 1px 0 !important;
-          line-height: 1.15 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          line-height: 1.4 !important;
         }
         
+        /* Table spacing */
         #surat-preview .text-justify table {
           margin: 6px 0 !important;
+        }
+        
+        /* Div spacing - BARU untuk handle div wrapper */
+        #surat-preview .text-justify div {
+          margin: 0 !important;
+          padding: 0 !important;
         }
         
         /* Mobile Responsive Adjustments */
@@ -555,9 +577,11 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
             overflow-wrap: break-word;
           }
           
-          /* Better spacing on mobile */
+          /* Better spacing on mobile - DIPERBAIKI */
           #surat-preview p {
-            margin-bottom: 6px !important;
+            margin: 0 0 4px 0 !important;
+            padding: 0 !important;
+            line-height: 1.4 !important;
           }
           
           /* Responsive table on mobile */
@@ -576,6 +600,44 @@ const PreviewSurat = ({ pengajuan, surat, onClose }) => {
           #surat-preview .flex {
             display: flex !important;
             flex-wrap: wrap;
+          }
+        }
+        
+        /* Print Styles - BARU untuk konsistensi cetak */
+        @media print {
+          #surat-preview {
+            width: 210mm;
+            padding: 12mm 18mm;
+            font-size: 13px;
+            line-height: 1.35;
+          }
+          
+          /* Kompak untuk print */
+          #surat-preview p {
+            margin: 0 0 2px 0 !important;
+            padding: 0 !important;
+            line-height: 1.35 !important;
+          }
+          
+          #surat-preview .text-justify p {
+            margin: 0 0 2px 0 !important;
+            padding: 0 !important;
+            line-height: 1.35 !important;
+          }
+          
+          #surat-preview br {
+            line-height: 0 !important;
+          }
+          
+          /* Hide scroll */
+          body {
+            overflow: visible !important;
+          }
+          
+          /* Ensure A4 page */
+          @page {
+            size: A4;
+            margin: 0;
           }
         }
       `}</style>
