@@ -33,6 +33,7 @@ export default function DataWarga() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [availableRtRw, setAvailableRtRw] = useState({ rt: [], rw: [] });
 
   // Debug: Check user and token
   useEffect(() => {
@@ -46,12 +47,24 @@ export default function DataWarga() {
   // Load statistik
   useEffect(() => {
     loadStatistik();
+    loadAvailableRtRw();
   }, []);
 
   // Load data warga
   useEffect(() => {
     loadWarga();
   }, [currentPage, currentLimit, search, filterRt, filterRw, filterJenisKelamin, filterPekerjaan, viewAll]);
+
+  const loadAvailableRtRw = async () => {
+    try {
+      const response = await api.get('/admin/warga/rt-rw-list');
+      if (response.data.success) {
+        setAvailableRtRw(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error loading RT/RW list:', error);
+    }
+  };
 
   const loadStatistik = async () => {
     try {
@@ -319,9 +332,9 @@ export default function DataWarga() {
                     className="input w-full h-11 rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Semua RT</option>
-                    {[...Array(20)].map((_, i) => (
-                      <option key={i} value={String(i + 1).padStart(2, '0')}>
-                        RT {String(i + 1).padStart(2, '0')}
+                    {availableRtRw.rt.map((rt) => (
+                      <option key={rt} value={rt}>
+                        RT {rt}
                       </option>
                     ))}
                   </select>
@@ -338,9 +351,9 @@ export default function DataWarga() {
                     className="input w-full h-11 rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Semua RW</option>
-                    {[...Array(20)].map((_, i) => (
-                      <option key={i} value={String(i + 1).padStart(2, '0')}>
-                        RW {String(i + 1).padStart(2, '0')}
+                    {availableRtRw.rw.map((rw) => (
+                      <option key={rw} value={rw}>
+                        RW {rw}
                       </option>
                     ))}
                   </select>
