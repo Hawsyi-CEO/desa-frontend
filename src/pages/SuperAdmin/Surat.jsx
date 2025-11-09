@@ -441,10 +441,14 @@ const AdminSurat = () => {
           } else if (data.jabatan === 'danramil') {
             nama = config.nama_danramil || 'NAMA DANRAMIL';
             nip = config.nip_danramil || '';
-          } else if (data.jabatan === 'ketua_rt' && data.rt_number) {
-            nama = config[`nama_rt_${data.rt_number}`] || 'NAMA RT';
-          } else if (data.jabatan === 'ketua_rw' && data.rw_number) {
-            nama = config[`nama_rw_${data.rw_number}`] || 'NAMA RW';
+          } else if (data.jabatan === 'ketua_rt') {
+            // Coba ambil dari rt_number, atau extract dari label
+            const rtNum = data.rt_number || (data.label?.match(/RT\s*(\d+)/i)?.[1]);
+            nama = config[`nama_rt_${rtNum}`] || 'NAMA RT';
+          } else if (data.jabatan === 'ketua_rw') {
+            // Coba ambil dari rw_number, atau extract dari label
+            const rwNum = data.rw_number || (data.label?.match(/RW\s*(\d+)/i)?.[1]);
+            nama = config[`nama_rw_${rwNum}`] || 'NAMA RW';
           }
         }
         
@@ -508,11 +512,38 @@ const AdminSurat = () => {
         `;
       }
 
-      // Layout 3 Horizontal: 2 TTD + Materai
-      if (layout === '3_horizontal' && signatories.length >= 2) {
-        // Urutkan berdasarkan posisi: kiri dulu, baru kanan
+      // Layout 3 Horizontal: 2 TTD atas + 1 TTD bawah tengah
+      if (layout === '3_horizontal' && signatories.length >= 3) {
+        const atasKiri = signatories.find(s => s.posisi === 'atas_kiri') || signatories[0];
+        const atasKanan = signatories.find(s => s.posisi === 'atas_kanan') || signatories[1];
+        const bawahTengah = signatories.find(s => s.posisi === 'bawah_tengah') || signatories[2];
+        
+        return `
+          <div style="margin-top: 35px;">
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+              <div style="width: 220px; text-align: center;">
+                <div style="font-size: 14px;">${getCurrentDate()}</div>
+              </div>
+            </div>
+            
+            <!-- Baris Atas: 2 TTD -->
+            <div style="display: flex; justify-content: space-between; gap: 32px;">
+              ${renderSignatureBox(atasKiri)}
+              ${renderSignatureBox(atasKanan)}
+            </div>
+            
+            <!-- Baris Bawah: 1 TTD Tengah -->
+            <div style="display: flex; justify-content: center; margin-top: 20px;">
+              ${renderSignatureBox(bawahTengah)}
+            </div>
+          </div>
+        `;
+      }
+
+      // Layout 3 With Materai: 2 TTD + Materai di tengah
+      if (layout === '3_with_materai' && signatories.length >= 2) {
         const kiri = signatories.find(s => s.posisi === 'kiri') || signatories[0];
-        const kanan = signatories.find(s => s.posisi === 'kanan') || signatories[1] || signatories[0];
+        const kanan = signatories.find(s => s.posisi === 'kanan') || signatories[1];
         
         return `
           <div style="margin-top: 35px;">
@@ -819,7 +850,7 @@ const AdminSurat = () => {
         <!-- Judul Surat -->
         <div class="judul-surat">
           <h4>${suratData.jenis_surat?.nama_surat || 'SURAT KETERANGAN'}</h4>
-          <p>Nomor : ${suratData.no_surat}</p>
+          <p>${suratData.no_surat}</p>
         </div>
 
         <!-- Isi Surat -->

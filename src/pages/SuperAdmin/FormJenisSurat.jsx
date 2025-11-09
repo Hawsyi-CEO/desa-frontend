@@ -30,7 +30,7 @@ const FormJenisSurat = () => {
     nama_surat: '',
     kode_surat: '',
     deskripsi: '',
-    format_nomor: 'NOMOR/KODE/BULAN/TAHUN',
+    format_nomor: 'Nomor : NOMOR/KODE/BULAN/TAHUN',
     kalimat_pembuka: '',
     template_konten: '',
     fields: [],
@@ -91,20 +91,33 @@ const FormJenisSurat = () => {
 
   // Auto-fill nama & NIP untuk penandatangan pertama kali setelah config loaded
   useEffect(() => {
-    if (config && !isEdit && formData.penandatangan.length > 0 && !formData.penandatangan[0].nama) {
+    if (config && !isEdit && formData.penandatangan.length > 0) {
       const updatedPenandatangan = formData.penandatangan.map(ttd => {
-        if (ttd.jabatan === 'kepala_desa' && !ttd.nama) {
-          return {
-            ...ttd,
-            nama: config.nama_ttd || '',
-            nip: config.nip_ttd || ''
-          };
+        // Skip jika sudah ada nama (manual input)
+        if (ttd.nama) return ttd;
+        
+        // Auto-fill berdasarkan jabatan
+        if (ttd.jabatan === 'kepala_desa') {
+          return { ...ttd, nama: config.nama_ttd || '', nip: config.nip_ttd || '' };
+        } else if (ttd.jabatan === 'sekretaris_desa') {
+          return { ...ttd, nama: config.nama_sekretaris || '', nip: config.nip_sekretaris || '' };
+        } else if (ttd.jabatan === 'camat') {
+          return { ...ttd, nama: config.nama_camat || '', nip: config.nip_camat || '' };
+        } else if (ttd.jabatan === 'kapolsek') {
+          return { ...ttd, nama: config.nama_kapolsek || '', nip: config.nip_kapolsek || '' };
+        } else if (ttd.jabatan === 'danramil') {
+          return { ...ttd, nama: config.nama_danramil || '', nip: config.nip_danramil || '' };
         }
+        
         return ttd;
       });
-      setFormData(prev => ({ ...prev, penandatangan: updatedPenandatangan }));
+      
+      // Hanya update jika ada perubahan
+      if (JSON.stringify(updatedPenandatangan) !== JSON.stringify(formData.penandatangan)) {
+        setFormData(prev => ({ ...prev, penandatangan: updatedPenandatangan }));
+      }
     }
-  }, [config]);
+  }, [config, isEdit]);
 
   // Debug: Log formData.fields changes
   useEffect(() => {
@@ -156,7 +169,7 @@ const FormJenisSurat = () => {
           nama_surat: data.nama_surat,
           kode_surat: data.kode_surat,
           deskripsi: data.deskripsi || '',
-          format_nomor: data.format_nomor || 'NOMOR/KODE/BULAN/TAHUN',
+          format_nomor: data.format_nomor || 'Nomor : NOMOR/KODE/BULAN/TAHUN',
           kalimat_pembuka: data.kalimat_pembuka || 'Yang bertanda tangan di bawah ini, Kepala Desa Cibadak, dengan ini menerangkan bahwa :',
           template_konten: data.template_konten,
           fields: typeof data.fields === 'string' ? JSON.parse(data.fields) : data.fields,
@@ -668,20 +681,22 @@ const FormJenisSurat = () => {
                 <option value="1_kanan">1 TTD - Kepala Desa di Kanan</option>
                 <option value="2_horizontal">2 TTD - Horizontal (Kiri | Kanan)</option>
                 <option value="2_vertical">2 TTD - Vertikal (Atas Kiri, Bawah Kanan)</option>
-                <option value="3_horizontal">3 Kolom - Dengan Materai (Kiri | Materai | Kanan)</option>
+                <option value="3_horizontal">3 TTD - Horizontal (Kiri | Tengah | Kanan)</option>
+                <option value="3_with_materai">3 Kolom - Dengan Materai (Kiri | Materai | Kanan)</option>
                 <option value="4_grid">4 TTD - Grid 2x2</option>
               </select>
               <p className="text-xs text-gray-500 mt-1">
                 {formData.layout_ttd === '1_kanan' && '📍 Hanya Kepala Desa di kanan bawah (default)'}
                 {formData.layout_ttd === '2_horizontal' && '📍 2 penandatangan sejajar kiri-kanan (contoh: RW | Kepala Desa)'}
                 {formData.layout_ttd === '2_vertical' && '📍 2 penandatangan bertingkat (atas kiri, bawah kanan)'}
-                {formData.layout_ttd === '3_horizontal' && '📍 2 TTD + kotak materai di tengah (contoh: Camat | Materai | Kepala Desa)'}
+                {formData.layout_ttd === '3_horizontal' && '📍 3 penandatangan sejajar (contoh: RW | Kepala Desa | RT)'}
+                {formData.layout_ttd === '3_with_materai' && '📍 2 TTD + kotak materai di tengah (contoh: Camat | Materai | Kepala Desa)'}
                 {formData.layout_ttd === '4_grid' && '📍 4 penandatangan dalam grid 2x2 (contoh: Camat, Kapolsek, RW, Kepala Desa)'}
               </p>
             </div>
 
             {/* Show Materai Checkbox */}
-            {formData.layout_ttd === '3_horizontal' && (
+            {formData.layout_ttd === '3_with_materai' && (
               <div className="mb-4">
                 <label className="flex items-center gap-2">
                   <input
@@ -745,6 +760,7 @@ const FormJenisSurat = () => {
                         <option value="ketua_rw">Ketua RW</option>
                         <option value="camat">Camat</option>
                         <option value="kapolsek">Kapolsek</option>
+                        <option value="danramil">Danramil</option>
                         <option value="lainnya">Lainnya</option>
                       </select>
                     </div>
@@ -765,6 +781,12 @@ const FormJenisSurat = () => {
                             <option value="kanan_atas">Kanan Atas</option>
                             <option value="kiri_bawah">Kiri Bawah</option>
                             <option value="kanan_bawah">Kanan Bawah</option>
+                          </>
+                        ) : formData.layout_ttd === '3_horizontal' ? (
+                          <>
+                            <option value="atas_kiri">Atas Kiri</option>
+                            <option value="atas_kanan">Atas Kanan</option>
+                            <option value="bawah_tengah">Bawah Tengah</option>
                           </>
                         ) : (
                           <>
@@ -901,25 +923,41 @@ const FormJenisSurat = () => {
               ))}
 
               {/* Add TTD Button */}
-              {formData.penandatangan.length < 4 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newPenandatangan = [...formData.penandatangan, {
-                      jabatan: 'sekretaris_desa',
-                      label: 'Sekretaris Desa',
-                      posisi: formData.layout_ttd === '4_grid' ? 'kanan_atas' : 'kiri',
-                      required: false,
-                      nama: config?.nama_sekretaris || '',
-                      nip: config?.nip_sekretaris || ''
-                    }];
-                    setFormData(prev => ({ ...prev, penandatangan: newPenandatangan }));
-                  }}
-                  className="w-full px-3 py-2 text-sm text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50 flex items-center justify-center gap-2"
-                >
-                  <FiPlus className="w-4 h-4" /> Tambah Penandatangan
-                </button>
-              )}
+              {(() => {
+                const maxTTD = formData.layout_ttd === '3_horizontal' ? 3 : 4;
+                return formData.penandatangan.length < maxTTD && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      let defaultPosisi = 'kiri';
+                      
+                      if (formData.layout_ttd === '4_grid') {
+                        defaultPosisi = 'kanan_atas';
+                      } else if (formData.layout_ttd === '3_horizontal') {
+                        // Untuk 3_horizontal: atas_kiri -> atas_kanan -> bawah_tengah
+                        if (formData.penandatangan.length === 1) {
+                          defaultPosisi = 'atas_kanan';
+                        } else if (formData.penandatangan.length === 2) {
+                          defaultPosisi = 'bawah_tengah';
+                        }
+                      }
+                      
+                      const newPenandatangan = [...formData.penandatangan, {
+                        jabatan: 'sekretaris_desa',
+                        label: 'Sekretaris Desa',
+                        posisi: defaultPosisi,
+                        required: false,
+                        nama: config?.nama_sekretaris || '',
+                        nip: config?.nip_sekretaris || ''
+                      }];
+                      setFormData(prev => ({ ...prev, penandatangan: newPenandatangan }));
+                    }}
+                    className="w-full px-3 py-2 text-sm text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50 flex items-center justify-center gap-2"
+                  >
+                    <FiPlus className="w-4 h-4" /> Tambah Penandatangan
+                  </button>
+                );
+              })()}
             </div>
           </div>
 
@@ -1320,27 +1358,33 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
           const penandatangan = formData.penandatangan;
           
           for (const ttd of penandatangan) {
-            if (ttd.jabatan === 'ketua_rt' && ttd.rt_number) {
-              try {
-                const rtResponse = await api.get(`/admin/rt-name/${ttd.rt_number}`);
-                if (rtResponse.data.success) {
-                  configData[`nama_rt_${ttd.rt_number}`] = rtResponse.data.nama;
+            if (ttd.jabatan === 'ketua_rt') {
+              const rtNum = ttd.rt_number || (ttd.label?.match(/RT\s*(\d+)/i)?.[1]);
+              if (rtNum) {
+                try {
+                  const rtResponse = await api.get(`/admin/rt-name/${rtNum}`);
+                  if (rtResponse.data.success) {
+                    configData[`nama_rt_${rtNum}`] = rtResponse.data.nama;
+                  }
+                } catch (err) {
+                  console.error('Error fetching RT name:', err);
+                  configData[`nama_rt_${rtNum}`] = `KETUA RT ${rtNum}`;
                 }
-              } catch (err) {
-                console.error('Error fetching RT name:', err);
-                configData[`nama_rt_${ttd.rt_number}`] = `KETUA RT ${ttd.rt_number}`;
               }
             }
             
-            if (ttd.jabatan === 'ketua_rw' && ttd.rw_number) {
-              try {
-                const rwResponse = await api.get(`/admin/rw-name/${ttd.rw_number}`);
-                if (rwResponse.data.success) {
-                  configData[`nama_rw_${ttd.rw_number}`] = rwResponse.data.nama;
+            if (ttd.jabatan === 'ketua_rw') {
+              const rwNum = ttd.rw_number || (ttd.label?.match(/RW\s*(\d+)/i)?.[1]);
+              if (rwNum) {
+                try {
+                  const rwResponse = await api.get(`/admin/rw-name/${rwNum}`);
+                  if (rwResponse.data.success) {
+                    configData[`nama_rw_${rwNum}`] = rwResponse.data.nama;
+                  }
+                } catch (err) {
+                  console.error('Error fetching RW name:', err);
+                  configData[`nama_rw_${rwNum}`] = `KETUA RW ${rwNum}`;
                 }
-              } catch (err) {
-                console.error('Error fetching RW name:', err);
-                configData[`nama_rw_${ttd.rw_number}`] = `KETUA RW ${ttd.rw_number}`;
               }
             }
           }
@@ -1493,14 +1537,21 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
           nip = config?.nip_sekretaris || '';
         } else if (data.jabatan === 'camat') {
           nama = config?.nama_camat || 'NAMA CAMAT';
+          nip = config?.nip_camat || '';
         } else if (data.jabatan === 'kapolsek') {
           nama = config?.nama_kapolsek || 'NAMA KAPOLSEK';
+          nip = config?.nip_kapolsek || '';
         } else if (data.jabatan === 'danramil') {
           nama = config?.nama_danramil || 'NAMA DANRAMIL';
+          nip = config?.nip_danramil || '';
         } else if (data.jabatan === 'ketua_rt') {
-          nama = config?.[`nama_rt_${data.rt_number}`] || `KETUA RT ${data.rt_number || ''}`;
+          // Coba ambil dari rt_number, atau extract dari label
+          const rtNum = data.rt_number || (data.label?.match(/RT\s*(\d+)/i)?.[1]);
+          nama = config?.[`nama_rt_${rtNum}`] || `KETUA RT ${rtNum || ''}`;
         } else if (data.jabatan === 'ketua_rw') {
-          nama = config?.[`nama_rw_${data.rw_number}`] || `KETUA RW ${data.rw_number || ''}`;
+          // Coba ambil dari rw_number, atau extract dari label
+          const rwNum = data.rw_number || (data.label?.match(/RW\s*(\d+)/i)?.[1]);
+          nama = config?.[`nama_rw_${rwNum}`] || `KETUA RW ${rwNum || ''}`;
         }
       }
       
@@ -1589,10 +1640,39 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
       );
     }
 
-    if (layout === '3_horizontal') {
-      // Urutkan berdasarkan posisi: kiri dulu, baru kanan
+    // Layout 3 Horizontal: 2 TTD atas + 1 TTD bawah tengah
+    if (layout === '3_horizontal' && penandatangan.length >= 3) {
+      const atasKiri = penandatangan.find(s => s.posisi === 'atas_kiri') || penandatangan[0];
+      const atasKanan = penandatangan.find(s => s.posisi === 'atas_kanan') || penandatangan[1];
+      const bawahTengah = penandatangan.find(s => s.posisi === 'bawah_tengah') || penandatangan[2];
+      
+      return (
+        <div style={{ marginTop: '35px' }}>
+          {/* Tanggal di kanan atas */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+            <p style={{ fontSize: '14px', textAlign: 'center', width: '220px' }}>
+              {getCurrentDate()}
+            </p>
+          </div>
+          
+          {/* Baris Atas: 2 TTD kiri-kanan */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '32px', marginTop: '-10px' }}>
+            <SignatureBox data={atasKiri} />
+            <SignatureBox data={atasKanan} />
+          </div>
+          
+          {/* Baris Bawah: 1 TTD tengah */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+            <SignatureBox data={bawahTengah} />
+          </div>
+        </div>
+      );
+    }
+
+    // Layout 3 With Materai: 2 TTD + Materai di tengah
+    if (layout === '3_with_materai' && penandatangan.length >= 2) {
       const kiri = penandatangan.find(s => s.posisi === 'kiri') || penandatangan[0];
-      const kanan = penandatangan.find(s => s.posisi === 'kanan') || penandatangan[1] || penandatangan[0];
+      const kanan = penandatangan.find(s => s.posisi === 'kanan') || penandatangan[1];
       
       return (
         <div style={{ marginTop: '35px' }}>
@@ -1787,7 +1867,7 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
               {formData.nama_surat || 'NAMA SURAT'}
             </h4>
             <p className="font-semibold" style={{ fontSize: '14px' }}>
-              Nomor : {generateNomorSurat(formData.format_nomor || 'NOMOR/KODE/BULAN/TAHUN')}
+              {generateNomorSurat(formData.format_nomor || 'Nomor : NOMOR/KODE/BULAN/TAHUN')}
             </p>
           </div>
 
