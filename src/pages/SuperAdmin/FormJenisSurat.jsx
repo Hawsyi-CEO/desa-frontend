@@ -1620,7 +1620,12 @@ const PreviewSuratLive = ({ formData, paperSize }) => {
     if ((layout === '2_horizontal' || penandatangan.length === 2) && penandatangan.length >= 2) {
       // Urutkan berdasarkan posisi: kiri dulu, baru kanan
       const kiri = penandatangan.find(s => s.posisi === 'kiri') || penandatangan[0];
-      const kanan = penandatangan.find(s => s.posisi === 'kanan') || penandatangan[1];
+      const kanan = penandatangan.find(s => s.posisi === 'kanan' || s.posisi === 'kanan_bawah') || penandatangan[1];
+      
+      console.log('🔍 2_horizontal Layout:', {
+        kiri: { jabatan: kiri.jabatan, label: kiri.label, posisi: kiri.posisi },
+        kanan: { jabatan: kanan.jabatan, label: kanan.label, posisi: kanan.posisi }
+      });
       
       return (
         <div style={{ marginTop: '35px' }}>

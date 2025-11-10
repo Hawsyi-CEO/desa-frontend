@@ -923,7 +923,7 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                 <Mail className="w-4 h-4 text-purple-600" />
-                Email {formData.role === 'verifikator' && <span className="text-red-500">*</span>}
+                Email
               </label>
               <input
                 type="email"
@@ -931,10 +931,9 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="email@example.com"
                 className="input w-full"
-                required={formData.role === 'verifikator'}
               />
               <p className="text-xs text-gray-500 mt-1">
-                {formData.role === 'verifikator' ? 'Wajib untuk Verifikator' : 'Opsional untuk Warga'}
+                Opsional - Untuk notifikasi dan recovery password
               </p>
             </div>
 
@@ -997,29 +996,29 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
               </div>
             )}
 
-            {/* RT - Conditional untuk Verifikator */}
-            {formData.role === 'verifikator' && (
+            {/* RT - Hanya untuk Verifikator RT */}
+            {formData.role === 'verifikator' && formData.verifikator_level === 'rt' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                   <Hash className="w-4 h-4 text-red-600" />
-                  RT {formData.verifikator_level === 'rt' && <span className="text-red-500">*</span>}
+                  RT <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.rt}
                   onChange={(e) => setFormData({ ...formData, rt: e.target.value })}
-                  placeholder="Contoh: 01"
+                  placeholder="Contoh: 01, 02, 03"
                   maxLength={2}
                   className="input w-full"
-                  required={formData.verifikator_level === 'rt'}
+                  required
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {formData.verifikator_level === 'rt' ? 'Wajib untuk Verifikator RT' : 'Opsional'}
+                  Nomor RT yang akan diverifikasi (2 digit dengan leading zero)
                 </p>
               </div>
             )}
 
-            {/* RW - Conditional untuk Verifikator */}
+            {/* RW - Untuk Verifikator RT (opsional) dan RW (wajib) */}
             {formData.role === 'verifikator' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
@@ -1030,13 +1029,15 @@ function AddUserModal({ onClose, onSuccess, showToast, showError }) {
                   type="text"
                   value={formData.rw}
                   onChange={(e) => setFormData({ ...formData, rw: e.target.value })}
-                  placeholder="Contoh: 01"
+                  placeholder="Contoh: 01, 02, 03"
                   maxLength={2}
                   className="input w-full"
                   required={formData.verifikator_level === 'rw'}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {formData.verifikator_level === 'rw' ? 'Wajib untuk Verifikator RW' : 'Opsional'}
+                  {formData.verifikator_level === 'rw' 
+                    ? 'Nomor RW yang akan diverifikasi (2 digit dengan leading zero)' 
+                    : 'Opsional - RW dari RT ini (2 digit)'}
                 </p>
               </div>
             )}
@@ -1240,7 +1241,7 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
           {/* Email Field */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email {formData.role === 'verifikator' && <span className="text-red-500">*</span>}
+              Email
             </label>
             <input
               type="email"
@@ -1248,10 +1249,9 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="email@example.com"
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
-              required={formData.role === 'verifikator'}
             />
             <p className="text-xs text-gray-500 mt-1">
-              {formData.role === 'verifikator' ? 'Wajib untuk Verifikator' : 'Opsional untuk Warga'}
+              Opsional - Untuk notifikasi dan recovery password
             </p>
           </div>
 
@@ -1277,29 +1277,29 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
             </div>
           )}
 
-          {/* RT - Conditional untuk Verifikator */}
-          {formData.role === 'verifikator' && (
+          {/* RT - Hanya untuk Verifikator RT */}
+          {formData.role === 'verifikator' && formData.verifikator_level === 'rt' && (
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                 <Hash className="w-4 h-4 text-red-600" />
-                RT {formData.verifikator_level === 'rt' && <span className="text-red-500">*</span>}
+                RT <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.rt}
                 onChange={(e) => setFormData({ ...formData, rt: e.target.value })}
-                placeholder="Contoh: 01"
+                placeholder="Contoh: 01, 02, 03"
                 maxLength={2}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
-                required={formData.verifikator_level === 'rt'}
+                required
               />
               <p className="text-xs text-gray-500 mt-1">
-                {formData.verifikator_level === 'rt' ? 'Wajib untuk Verifikator RT' : 'Opsional'}
+                Nomor RT yang akan diverifikasi (2 digit dengan leading zero)
               </p>
             </div>
           )}
 
-          {/* RW - Conditional untuk Verifikator */}
+          {/* RW - Untuk Verifikator RT (opsional) dan RW (wajib) */}
           {formData.role === 'verifikator' && (
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
@@ -1310,13 +1310,15 @@ function EditUserModal({ user, onClose, onSuccess, showToast, showError }) {
                 type="text"
                 value={formData.rw}
                 onChange={(e) => setFormData({ ...formData, rw: e.target.value })}
-                placeholder="Contoh: 01"
+                placeholder="Contoh: 01, 02, 03"
                 maxLength={2}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
                 required={formData.verifikator_level === 'rw'}
               />
               <p className="text-xs text-gray-500 mt-1">
-                {formData.verifikator_level === 'rw' ? 'Wajib untuk Verifikator RW' : 'Opsional'}
+                {formData.verifikator_level === 'rw' 
+                  ? 'Nomor RW yang akan diverifikasi (2 digit dengan leading zero)' 
+                  : 'Opsional - RW dari RT ini (2 digit)'}
               </p>
             </div>
           )}

@@ -452,6 +452,16 @@ const AdminSurat = () => {
           }
         }
         
+        console.log('👤 renderSignatureBox:', { 
+          jabatan: data.jabatan, 
+          label: label,
+          nama: nama, 
+          nip: nip,
+          data_nama: data.nama,
+          config_nama_ttd: config.nama_ttd,
+          config_nama_camat: config.nama_camat
+        });
+        
         return `
           <div style="text-align: center; width: 220px; max-width: 220px; flex: none; display: inline-block; vertical-align: top;">
             ${withDate ? `<div style="font-size: 14px; margin-bottom: 10px;">${getCurrentDate()}</div>` : ''}
@@ -491,10 +501,14 @@ const AdminSurat = () => {
 
       // Layout 2 Horizontal: 2 TTD sejajar (AUTO-DETECT jika 2 penandatangan)
       if (signatories.length === 2) {
-        console.log('📝 Rendering 2 TTD (horizontal)', { kiri: signatories[0], kanan: signatories[1] });
         // Urutkan berdasarkan posisi: kiri dulu, baru kanan
         const kiri = signatories.find(s => s.posisi === 'kiri') || signatories[0];
-        const kanan = signatories.find(s => s.posisi === 'kanan') || signatories[1];
+        const kanan = signatories.find(s => s.posisi === 'kanan' || s.posisi === 'kanan_bawah') || signatories[1];
+        
+        console.log('📝 Rendering 2 TTD (horizontal)', { 
+          kiri: { jabatan: kiri.jabatan, label: kiri.label, posisi: kiri.posisi },
+          kanan: { jabatan: kanan.jabatan, label: kanan.label, posisi: kanan.posisi }
+        });
         
         return `
           <div style="margin-top: 35px;">
